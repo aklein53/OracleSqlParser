@@ -309,7 +309,7 @@ public class ExpertStressTests(OracleFixture db)
         var q = (QuerySpecification)((SelectStatement)s.Statements[0]).Body;
         Assert.True(q.NoCycle);
         Assert.Contains("(Equals (Prior O.ID) O.PARENT_ID)", Str(q.ConnectBy!));
-        Assert.Contains("CONNECT_BY_ROOT", Str(q.SelectList[2]));
+        Assert.Contains("(ConnectByRoot ", Str(q.SelectList[2]));
         await VerifyAsync(sql, []);
     }
 
@@ -593,7 +593,7 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var rn = Find<FunctionCall>(s).Single(f => Str(f).StartsWith("(FunctionCall name=[ROW_NUMBER]"));
-        Assert.Contains("CONNECT_BY_ROOT", Str(rn));
+        Assert.Contains("(ConnectByRoot ", Str(rn));
         Assert.Contains("(FunctionCall name=[COUNT]", Str(s));
         await VerifyAsync(sql, []);
     }
