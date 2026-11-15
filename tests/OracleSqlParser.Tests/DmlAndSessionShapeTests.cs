@@ -189,6 +189,12 @@ public class DmlAndSessionShapeTests
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))",
             Shape.Of("@../packages/*.pks\n@@sub/x--y.sql\nSELECT 1 FROM dual"));
 
+    // A '/' alone on its line ends a query or view; it is not a division (the next statement starts with SELECT).
+    [Theory]
+    [InlineData("CREATE VIEW v AS SELECT * FROM t WHERE a > 1\n/\nSELECT 2 FROM dual")]
+    [InlineData("SELECT * FROM t WHERE a > (5\n/1440)\n/\nSELECT 2 FROM dual")]
+    public void LoneSlashEndsAQueryStatement(string sql) => Assert.Equal(2, Shape.Parse(sql).Statements.Count);
+
     // A line starting with '@' after a table name is a database link, not a SQL*Plus file run.
     [Fact]
     public void Line_Starting_With_At_After_Table_Is_DbLink() =>

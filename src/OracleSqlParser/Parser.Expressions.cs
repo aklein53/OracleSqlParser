@@ -193,7 +193,8 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         var left = ParseUnary();
-        while (Cur.Type == TokenType.Operator && Cur.Text is "*" or "/")
+        // A '/' alone on its line is the SQL*Plus terminator, not a division (see AtStatementEnd).
+        while (Cur.Type == TokenType.Operator && Cur.Text is "*" or "/" && !IsLoneSlash(_p))
         {
             var op = Next().Text;
             left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseUnary() }, start);
