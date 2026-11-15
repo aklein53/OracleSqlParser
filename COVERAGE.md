@@ -12,7 +12,7 @@ clauses as a nested token tree (`WordItem`/`LiteralItem`/`SymbolItem`/`GroupItem
 | Statement | Node | Level | Tests |
 |---|---|---|---|
 | SELECT (all clauses, set ops, WITH incl. SEARCH/CYCLE/`WITH FUNCTION`, partitioned outer join, `FETCH [EXACT\|APPROX] ... [WITH TARGET ACCURACY]`, PIVOT/LEFT/SAMPLE/FETCH as aliases where no clause can start; the vector-search `accuracy_clause` is not modeled) | `SelectStatement`, `QuerySpecification` | typed | QueryShape |
-| PIVOT / UNPIVOT / MATCH_RECOGNIZE / MODEL / XMLTABLE / JSON_TABLE / flashback / SAMPLE / VALUES table (also as a CTE body) | `PivotTable` … `ValuesTable`, `ValuesQuery` | typed | QueryShape, MiscShape |
+| PIVOT / UNPIVOT / MATCH_RECOGNIZE / MODEL / XMLTABLE / JSON_TABLE / flashback / SAMPLE / VALUES table (also as a CTE body) | `PivotTable` … `ValuesTable`, `ValuesQuery`; a table function in FROM without `TABLE(...)` (Oracle 18c+) is a `TableFunction` with `WithoutTableKeyword` | typed | QueryShape, MiscShape, FromTableFunctionShapeTests |
 | GRAPH_TABLE (MATCH paths: vertex/edge patterns, IS labels, WHERE, all arrows incl. `<-[..]->`, `{n}`, `{n,m}`, `{,m}` on edges and sub-paths `( ... ){n}`; ONE ROW PER; COLUMNS with optional AS) | `GraphTable` | typed; Oracle-rejected forms (`*`, `+`, `{n,}`, `AS` before the alias, bare sub-path) are rejected |  QueryShape |
 | INSERT (single, multitable, RETURNING, LOG ERRORS, `VALUES rec`) | `InsertStatement`, `MultiTableInsertStatement` | typed | DmlAndSessionShape, MiscShape |
 | UPDATE (incl. `SET ROW`, 23ai `FROM`, RETURNING `OLD`/`NEW`), DELETE (23ai `FROM` direct joins), MERGE (incl. `LOG ERRORS`) | `UpdateStatement` … | typed | DmlAndSessionShape, MiscShape |

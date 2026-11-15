@@ -790,7 +790,7 @@ public sealed partial class SqlParser
     private TableReference ParseJoinedTable()
     {
         var start = Cur;
-        var left = ParseTablePrimary();
+        var left = ParseTablePrimary(queryFrom: true);
         int prog4 = -1;
         while (Progress(ref prog4))
         {
@@ -816,7 +816,7 @@ public sealed partial class SqlParser
             else if (leftPartition.Count > 0) throw FailExpected("Expected an outer join after PARTITION BY", "an outer join");
             else break;
 
-            var right = ParseTablePrimary();
+            var right = ParseTablePrimary(queryFrom: true);
             var join = new JoinTable { Left = left, Right = right, Kind = kind, Natural = natural, LeftPartitionBy = leftPartition };
             if (IsKw("PARTITION") && IsKwAt(1, "BY")) { Next(); Next(); join.RightPartitionBy = ParsePartitionByList(); }
             // Oracle: a partitioned outer join is a LEFT or RIGHT join (never FULL), natural or not, on one side only.
@@ -862,7 +862,19 @@ public sealed partial class SqlParser
         return list;
     }
 
-    private TableReference ParseTablePrimary()
+    /// <summary>
+    /// Whether the tokens ahead are a dotted name followed by '(' (a function call, as in <c>hr.pkg.f(1)</c>).
+    /// </summary>
+    private bool IsTableFunctionCallAhead()
+    {
+        int k = 0;
+        if (!IsNameAt(k)) return false;
+        for (k = 1; IsOpAt(k, ".") && IsNameAt(k + 1); k += 2) { }
+        return IsOpAt(k, "(");
+    }
+
+    /// <param name="queryFrom">True for a table of a query's FROM clause (including joins and parenthesised tables), where a table function may omit TABLE.</param>
+    private TableReference ParseTablePrimary(bool queryFrom = false)
     {
         var start = Cur;
         TableReference t;
@@ -910,6 +922,13 @@ public sealed partial class SqlParser
             var e = ParseExpr();
             ExpectOp(")");
             t = new TableFunction { Expression = e };
+        }
+        else if (queryFrom && IsTableFunctionCallAhead())
+        {
+            // Oracle 18c+: a table function may be named in FROM without TABLE(...), as in FROM hr.pkg.f(1, 2) t.
+            // Only a call is taken here (no operators or clauses after it), and only in a query's FROM clause.
+            var fname = ParseDottedName();
+            t = new TableFunction { Expression = ParseFunctionCall(fname, start), WithoutTableKeyword = true };
         }
         else
         {

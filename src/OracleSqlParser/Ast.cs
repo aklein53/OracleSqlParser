@@ -532,11 +532,16 @@ public sealed partial class SubqueryTable : TableReference
     public required SelectStatement Query { get; set; }
 }
 
-/// <summary>TABLE(expr) collection expression.</summary>
+/// <summary>TABLE(expr) collection expression, or a table function named in FROM without TABLE (see <see cref="WithoutTableKeyword"/>).</summary>
 public sealed partial class TableFunction : TableReference
 {
-    /// <summary>The collection expression, such as <c>f(1)</c> in <c>TABLE(f(1))</c>.</summary>
+    /// <summary>The collection expression, such as <c>f(1)</c> in <c>TABLE(f(1))</c>; a function call in the form without TABLE.</summary>
     public required Expression Expression { get; set; }
+    /// <summary>
+    /// True when the function is named in FROM without the <c>TABLE</c> keyword (Oracle 18c and later), as in
+    /// <c>FROM hr.pkg.f(1, 2) t</c>; false for <c>TABLE(expr)</c>.
+    /// </summary>
+    public bool WithoutTableKeyword { get; set; }
 }
 
 /// <summary>A table reference in parentheses, such as <c>(a JOIN b ON a.id = b.id)</c>.</summary>

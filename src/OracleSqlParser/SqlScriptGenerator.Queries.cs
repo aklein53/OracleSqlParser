@@ -201,7 +201,11 @@ public sealed partial class SqlScriptGenerator
                     }
                     break;
                 case SubqueryTable sq: if (sq.Lateral) Add("LATERAL "); ParenQuery(sq.Query); Alias(sq); break;
-                case TableFunction tf: Add("TABLE("); Expr(tf.Expression); Add(")"); Alias(tf); break;
+                case TableFunction tf:
+                    if (tf.WithoutTableKeyword) Expr(tf.Expression);
+                    else { Add("TABLE("); Expr(tf.Expression); Add(")"); }
+                    Alias(tf);
+                    break;
                 case ParenthesizedTable pt: Add("("); Table(pt.Inner); Add(")"); Alias(pt); break;
                 case JoinTable jt: Join(jt); break;
                 case ValuesTable vt:

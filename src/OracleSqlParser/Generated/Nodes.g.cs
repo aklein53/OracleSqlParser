@@ -16754,6 +16754,7 @@ public partial class TableFunction
     internal override NodeProperty[] NodeProperties() =>
     [
         new("Expression", Expression),
+        new("WithoutTableKeyword", WithoutTableKeyword),
         new("Alias", Alias),
     ];
 
@@ -16767,6 +16768,7 @@ public partial class TableFunction
         var c = new TableFunction
         {
             Expression = CloneChild(Expression)!,
+            WithoutTableKeyword = WithoutTableKeyword,
             Alias = CloneChild(Alias),
         };
         CopySpan(this, c);
@@ -16777,6 +16779,7 @@ public partial class TableFunction
     {
         var o = (TableFunction)other;
         return Pair(Expression, o.Expression, pending)
+            && WithoutTableKeyword == o.WithoutTableKeyword
             && Pair(Alias, o.Alias, pending);
     }
 }

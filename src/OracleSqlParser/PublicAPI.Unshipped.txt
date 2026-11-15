@@ -5928,3 +5928,5 @@ override OracleSqlParser.InlinePragmaStatement.GetChildren() -> System.Collectio
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.InlinePragmaStatement! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.InlinePragmaStatement! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.InlinePragmaStatement! node) -> void
+OracleSqlParser.TableFunction.WithoutTableKeyword.get -> bool
+OracleSqlParser.TableFunction.WithoutTableKeyword.set -> void

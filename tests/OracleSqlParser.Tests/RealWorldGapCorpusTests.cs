@@ -19,6 +19,9 @@ public class RealWorldGapCorpusTests
     [InlineData("REVOKE my_role FROM PROCEDURE hr.p")]
     [InlineData("BEGIN PRAGMA INLINE(get_logical_suite, 'YES'); x := get_logical_suite(1); END;")]
     [InlineData("BEGIN PRAGMA INLINE(get_logical_suite, 'NO'); x := get_logical_suite(1); END;")]
+    [InlineData("SELECT * FROM dbms_xplan.display()")]
+    [InlineData("SELECT * FROM hr.pkg.f(1, 2) t")]
+    [InlineData("SELECT * FROM (pkg.match_paths(a, b)) m")]
     public void Parses(string sql)
     {
         var r = SqlParser.Parse(sql);
