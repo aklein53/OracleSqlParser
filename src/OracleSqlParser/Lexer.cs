@@ -115,6 +115,7 @@ public sealed class Lexer
 
     /// <param name="sql">The text to tokenise.</param>
     /// <param name="substitutionEnabled">False when substitution variables are off from the start (<see cref="ParseOptions.SubstitutionEnabled"/>).</param>
+    /// <param name="sqlPlusScript">True to apply the SQL*Plus line rules (<see cref="ParseOptions.SqlPlusScript"/>).</param>
     public Lexer(string sql, bool substitutionEnabled = true, bool sqlPlusScript = false)
     {
         _s = sql;

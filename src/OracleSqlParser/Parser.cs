@@ -1105,6 +1105,16 @@ public sealed partial class SqlParser
     private Identifier ParseIdentifier()
     {
         var t = Cur;
+        // A SQL*Plus substitution variable can stand for a name (CREATE USER &owner ...), kept as typed. The lexer ends the
+        // variable at its dot, so an identifier written right after it continues the name (&&owner._suffix).
+        if (t.Type == TokenType.Substitution)
+        {
+            Next();
+            string text = t.Text;
+            if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier && Cur.Start == t.End)
+                text += Next().Text;
+            return Fin(new Identifier { Value = text, Text = text }, t);
+        }
         if (t.Type is not (TokenType.Identifier or TokenType.QuotedIdentifier))
             throw FailExpected($"Expected identifier but found {Describe(t)}", "identifier");
         Next();

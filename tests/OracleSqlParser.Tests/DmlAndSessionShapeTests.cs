@@ -189,6 +189,19 @@ public class DmlAndSessionShapeTests
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))",
             Shape.Of("@../packages/*.pks\n@@sub/x--y.sql\nSELECT 1 FROM dual"));
 
+    // A substitution variable can stand for a name (CREATE USER &owner ...), and it keeps the text that continues it.
+    [Fact]
+    public void SubstitutionVariable_CanBeAName()
+    {
+        var sql = "CREATE USER &LOGGER_USER IDENTIFIED BY &PASSWD;\nGRANT SELECT ON &&ut3_owner._cbac_role TO &&ut3_owner;";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+        var printed = new SqlScriptGenerator().Generate(r.Script);
+        Assert.Contains("CREATE USER &LOGGER_USER IDENTIFIED BY &PASSWD", printed);
+        Assert.Contains("&&ut3_owner._cbac_role", printed);
+    }
+
     // SQL*Plus script reading (ParseOptions.SqlPlusScript): a '-' at the end of a line continues the command, and a blank
     // line ends an unterminated statement unless SET SQLBLANKLINES ON. Plain SQL keeps both as ordinary text.
     [Fact]
@@ -197,7 +210,7 @@ public class DmlAndSessionShapeTests
         var script = new ParseOptions { SqlPlusScript = true };
         var r = SqlParser.Parse("SELECT 1726-\n,'AR'-\n,'x' FROM dual", script);
         Assert.True(r.Success, string.Join("; ", r.Errors));
-        Assert.Equal(1, r.Script.Statements.Count);
+        Assert.Single(r.Script.Statements);
         Assert.True(SqlParser.Parse("SELECT 1-\n2 FROM dual").Success);
     }
 
@@ -207,8 +220,8 @@ public class DmlAndSessionShapeTests
         var script = new ParseOptions { SqlPlusScript = true };
         var r = SqlParser.Parse("SELECT 1 AS a1\nFROM dual\n\nBEGIN NULL; END;", script);
         Assert.True(r.Success, string.Join("; ", r.Errors));
-        Assert.Equal(2, r.Script.Statements.Count);
-        Assert.Equal(1, SqlParser.Parse("SELECT 1\n\nFROM dual").Script.Statements.Count); // plain SQL: a blank line is just whitespace
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+        Assert.True(SqlParser.Parse("SELECT 1\n\nFROM dual").Script.Statements.Count == 1); // plain SQL: a blank line is just whitespace
     }
 
     // Blank lines inside a PL/SQL unit (anonymous block, CREATE PACKAGE/TYPE ...) do not end it: SQL*Plus runs it at its lone '/'.
@@ -228,7 +241,7 @@ public class DmlAndSessionShapeTests
     {
         var r = SqlParser.Parse("SET SQLBLANKLINES ON\nSELECT 1\n\nFROM dual", new ParseOptions { SqlPlusScript = true });
         Assert.True(r.Success, string.Join("; ", r.Errors));
-        Assert.Equal(2, r.Script.Statements.Count);
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
     }
 
     // A '/' alone on its line ends a query or view; it is not a division (the next statement starts with SELECT).
