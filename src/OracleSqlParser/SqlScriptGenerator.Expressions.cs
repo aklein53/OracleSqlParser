@@ -327,6 +327,7 @@ public sealed partial class SqlScriptGenerator
             {
                 foreach (var op in fc.Operations) { Add(", "); JsonOp(op); }
             }
+            if (fc.PartitionBy.Count > 0) { Add("PARTITION BY "); Sep(fc.PartitionBy, e => Expr(e)); }
             if (fc.OrderBy.Count > 0) { Add(" ORDER BY "); Sep(fc.OrderBy, OrderItem); }
             foreach (var c in fc.Clauses) { Add(" "); Clause(c); }
             Add(")");

@@ -490,6 +490,12 @@ public sealed partial class SqlParser
             else if (IsKw("ALL") && !IsOpAt(1, ",") && !IsOpAt(1, ")")) { Next(); fc.Quantifier = QuantifierKind.All; }
 
             if (simple == "JSON_TRANSFORM") ParseJsonTransformArgs(fc);
+            else if (IsKw("PARTITION") && IsKwAt(1, "BY"))
+            {
+                // APPROX_RANK(PARTITION BY expr_list ORDER BY ...): no argument list, the ORDER BY follows below
+                Next(); Next();
+                do fc.PartitionBy.Add(ParseExpr()); while (AcceptOp(","));
+            }
             else
             {
                 do

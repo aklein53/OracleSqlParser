@@ -211,6 +211,16 @@ public class ExpressionShapeTests
 
 public class ExpertStressRegressionTests
 {
+    // APPROX_RANK(PARTITION BY ... ORDER BY ...) is a hypothetical rank: the partition list comes before the ORDER BY.
+    [Fact]
+    public void ApproxRankTakesPartitionByBeforeOrderBy()
+    {
+        var sql = "select owner, approx_rank(partition by owner order by approx_count(*) desc) from all_objects";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("PARTITION BY owner ORDER BY", new SqlScriptGenerator().Generate(r.Script));
+    }
+
     // TREAT(x AS t) yields a value of subtype t, so it takes attributes and methods, and a collection element can follow a method call.
     [Theory]
     [InlineData("SELECT TREAT (main_course AS dessert_ot).contains_chocolate FROM t", "(MemberAccess")]

@@ -1130,6 +1130,8 @@ public sealed partial class FunctionCall : Expression
     public WindowSpec? Over { get; set; }
     /// <summary>The <c>ORDER BY</c> items written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; empty when absent.</summary>
     public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>PARTITION BY</c> expressions of a hypothetical-rank call, <c>APPROX_RANK(PARTITION BY owner ORDER BY n)</c>; empty when absent.</summary>
+    public List<Expression> PartitionBy { get; set; } = [];
 }
 
 /// <summary>The keyword that introduces a special argument of an XML or JSON function.</summary>

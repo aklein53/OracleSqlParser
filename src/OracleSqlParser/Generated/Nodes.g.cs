@@ -8286,6 +8286,7 @@ public partial class FunctionCall
         if (Keep is not null) yield return Keep;
         if (Over is not null) yield return Over;
         if (OrderBy is not null) foreach (var x in OrderBy) yield return x;
+        if (PartitionBy is not null) foreach (var x in PartitionBy) yield return x;
     }
 
     /// <inheritdoc/>
@@ -8299,6 +8300,7 @@ public partial class FunctionCall
         Keep?.Accept(visitor);
         Over?.Accept(visitor);
         if (OrderBy is not null) foreach (var x in OrderBy) x.Accept(visitor);
+        if (PartitionBy is not null) foreach (var x in PartitionBy) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8311,6 +8313,7 @@ public partial class FunctionCall
         Keep = SqlNodeRewriter.RewriteOptional(rewriter, Keep, "FunctionCall.Keep");
         Over = SqlNodeRewriter.RewriteOptional(rewriter, Over, "FunctionCall.Over");
         SqlNodeRewriter.RewriteList(rewriter, OrderBy, "FunctionCall.OrderBy");
+        SqlNodeRewriter.RewriteList(rewriter, PartitionBy, "FunctionCall.PartitionBy");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8329,6 +8332,7 @@ public partial class FunctionCall
         new("Keep", Keep),
         new("Over", Over),
         new("OrderBy", OrderBy),
+        new("PartitionBy", PartitionBy),
     ];
 
     /// <inheritdoc/>
@@ -8354,6 +8358,7 @@ public partial class FunctionCall
             Keep = CloneChild(Keep),
             Over = CloneChild(Over),
             OrderBy = CloneList(OrderBy),
+            PartitionBy = CloneList(PartitionBy),
         };
         CopySpan(this, c);
         return c;
@@ -8375,7 +8380,8 @@ public partial class FunctionCall
             && PairList(WithinGroup, o.WithinGroup, pending)
             && Pair(Keep, o.Keep, pending)
             && Pair(Over, o.Over, pending)
-            && PairList(OrderBy, o.OrderBy, pending);
+            && PairList(OrderBy, o.OrderBy, pending)
+            && PairList(PartitionBy, o.PartitionBy, pending);
     }
 }
 
