@@ -289,7 +289,14 @@ public static class SqlAnalysis
     {
         ArgumentNullException.ThrowIfNull(node);
         // A bare expression has no enclosing statement, so its column references are reported as SQL references.
-        var collector = new Collector(node is Expression ? 1 : 0);
+        int sqlDepth = node is Expression ? 1 : 0;
+        // The visitor recurses once per tree level; TreeShape runs a deep tree on a thread sized for it.
+        return TreeShape.RunForDepth(node, () => AnalyzeOn(node, sqlDepth));
+    }
+
+    private static Collector AnalyzeOn(SqlNode node, int sqlDepth)
+    {
+        var collector = new Collector(sqlDepth);
         node.Accept(collector);
         return collector;
     }
@@ -980,7 +987,7 @@ public static class SqlAnalysis
                     // One FROM item here, but an enclosing block could own the name too (a correlated reference).
                     return HasSourcesAbove(s) ? (ColumnResolution.Ambiguous, null) : (ColumnResolution.Resolved, s.Sources[0]);
                 }
-                var matches = s.Sources.Where(source => Matches(source, qualifier)).ToList();
+                var matches = s.Matching(qualifier);
                 if (matches.Count == 1) return (ColumnResolution.Resolved, matches[0]);
                 if (matches.Count > 1) return (ColumnResolution.Ambiguous, null);
             }
@@ -996,19 +1003,20 @@ public static class SqlAnalysis
         }
 
         /// <summary>
-        /// Oracle's rule: an aliased FROM item is known only by its alias; an unaliased table is known by its name, or by
-        /// schema.name when the qualifier has two parts.
+        /// Oracle's rule, as index keys: an aliased FROM item is known only by its alias; an unaliased table is known by
+        /// each trailing part of its name (name, schema.name, ...). A qualifier matches a source when it equals one of its keys.
         /// </summary>
-        private static bool Matches(TableReference source, List<string> qualifier)
+        private static IEnumerable<string[]> QualifierKeys(TableReference source)
         {
             if (source is NamedTable named && named.Alias is null)
             {
-                if (qualifier.Count > named.Name.Count) return false;
-                for (int i = 0; i < qualifier.Count; i++)
-                    if (named.Name[named.Name.Count - qualifier.Count + i].Value != qualifier[i]) return false;
-                return true;
+                var parts = named.Name.Select(p => p.Value).ToArray();
+                for (int k = 1; k <= parts.Length; k++) yield return parts[^k..];
             }
-            return qualifier.Count == 1 && source.Alias is not null && source.Alias.Value == qualifier[0];
+            else if (source.Alias is not null)
+            {
+                yield return [source.Alias.Value];
+            }
         }
 
         private static string? SourceNameOf(TableReference source) =>
@@ -1060,6 +1068,41 @@ public static class SqlAnalysis
             public IReadOnlyList<TableReference> Sources { get; } = sources;
             public Scope? Parent { get; } = parent;
             public bool StopsLookup { get; } = stopsLookup;
+
+            private Dictionary<string[], List<TableReference>>? _byQualifier;
+
+            /// <summary>
+            /// The sources a qualified name can refer to, in FROM order. Built on first use: a join chain of n items is then
+            /// resolved in time proportional to n, not n per column.
+            /// </summary>
+            public List<TableReference> Matching(List<string> qualifier)
+            {
+                if (_byQualifier is null)
+                {
+                    _byQualifier = new Dictionary<string[], List<TableReference>>(QualifierComparer.Instance);
+                    foreach (var source in Sources)
+                        foreach (var key in QualifierKeys(source))
+                        {
+                            if (!_byQualifier.TryGetValue(key, out var list)) _byQualifier[key] = list = [];
+                            list.Add(source);
+                        }
+                }
+                return _byQualifier.TryGetValue(qualifier.ToArray(), out var found) ? found : [];
+            }
+        }
+
+        private sealed class QualifierComparer : IEqualityComparer<string[]>
+        {
+            public static readonly QualifierComparer Instance = new();
+
+            public bool Equals(string[]? x, string[]? y) => x is not null && y is not null && x.AsSpan().SequenceEqual(y);
+
+            public int GetHashCode(string[] obj)
+            {
+                var h = new HashCode();
+                foreach (var part in obj) h.Add(part, StringComparer.Ordinal);
+                return h.ToHashCode();
+            }
         }
 
         /// <summary>A PL/SQL name in scope (a variable, parameter or loop index), innermost first.</summary>

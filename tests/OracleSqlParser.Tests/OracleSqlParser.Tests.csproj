@@ -23,6 +23,12 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- The fuzzer's contract and input generator (tools/Fuzz), shared so the unit smoke test and the fuzzer cannot diverge. -->
+  <ItemGroup>
+    <Compile Include="..\..\tools\Fuzz\Contract.cs" Link="Fuzzing\Contract.cs" />
+    <Compile Include="..\..\tools\Fuzz\Inputs.cs" Link="Fuzzing\Inputs.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\OracleSqlParser\OracleSqlParser.csproj" />
     <!-- AstGen (net10.0 only) backs GeneratedCode_IsUpToDate, which does not depend on the runtime version. -->

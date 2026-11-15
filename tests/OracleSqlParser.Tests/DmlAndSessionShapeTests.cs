@@ -254,6 +254,17 @@ public class DmlAndSessionShapeTests
         Assert.Equal(2, r.Script.Statements.Count);
     }
 
+    // Found by the fuzzer: '$x' (no space) is not a host command, so it must not parse as one whose generated form
+    // ('$ x', which is) reparses differently.
+    [Fact]
+    public void SqlPlus_DollarWithoutSpaceIsNotAHostCommand()
+    {
+        var r = SqlParser.Parse("$IF x");
+        Assert.False(r.Success);
+        Assert.DoesNotContain(r.Script.Statements, s => s is SqlPlusCommandStatement);
+        Assert.Equal("(SqlPlusCommandStatement command=!)", AstPrinter.Print(SqlParser.Parse("!").Script.Statements[0]));
+    }
+
     // In PL/SQL a '-' at a line end is still a minus (checked on Oracle 23: v := 5 - newline 3 gives 2).
     [Fact]
     public void SqlPlusScript_HyphenInsidePlsqlIsAMinus()

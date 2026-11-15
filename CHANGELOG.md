@@ -21,6 +21,29 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   `Not`, `Prior`, `ConnectByRoot`). `!=`, `^=` and `~=` are all `NotEquals`; the spelling written is kept in the new
   `OperatorSpelling` property, and `OperatorExtensions.ToSql()` gives the canonical SQL text. Shapes and JSON show the
   member name (for example `(Equals a 1)` and `"operator": "Equals"`).
+- `MergeClause.InsertColumns` is a list of `ColumnReference` (was `Identifier`); `CastExpression.Type` is nullable
+  (`XMLSERIALIZE(... NO INDENT)` has no type).
+- `@file` / `@@file` take the rest of the line as one raw string argument.
+
+### Added
+- `ParseOptions.SqlPlusScript` (default off) for SQL*Plus script line rules: a line-end `-` continues a command or SQL
+  statement, and a blank line ends an unterminated SQL statement (unless `SET SQLBLANKLINES ON`).
+- SQL*Plus host commands `$ cmd` / `! cmd`; `&name`/`&&name` substitution variables as names (`CREATE USER &u`,
+  `&&owner..pkg.f`).
+- `CREATE TYPE t;` (`TypeKind.Incomplete`), `TABLE OF REF t` (`DataType.Ref`), `APPROX_RANK(PARTITION BY ...)`
+  (`FunctionCall.PartitionBy`), `(SELF AS t).m()` (`CastKind.GeneralizedInvocation`), `SET(nt)`, member access after
+  `TREAT(...)` and method calls.
+- `tools/RealWorldCorpus` (parse and round-trip whole repositories) and `tools/Fuzz` (contract fuzzer); a deterministic
+  fuzz run is part of the unit suite.
+
+### Fixed
+- Found by parsing 915 files from open-source PL/SQL projects (utPLSQL, Logger, Oracle sample schemas and examples, and
+  others; 97% of files now parse cleanly and all of them round-trip): a `/` line after `CREATE TYPE`, `DROP` and other
+  statements without `;` now ends them instead of being read as division or swallowing the next statement; `/*` in an
+  `@` path is no longer a comment; `FILE` is a valid PL/SQL variable name.
+- Found by fuzzing (530,000 inputs): no stack overflow when printing, generating, cloning or analysing very deep trees or
+  10,000-join chains; indented JSON stays linear for deep trees; `a IN (1) IN (2)` and similar chained comparisons,
+  AUDIT options, column constraints after unrecognised words, and quoted statement labels round-trip.
 
 ### Changed
 - `OracleSqlParser.Guard` is versioned independently of the core library and stays 0.x while experimental.
