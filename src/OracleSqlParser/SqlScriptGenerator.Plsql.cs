@@ -218,11 +218,12 @@ public sealed partial class SqlScriptGenerator
             if (po.Deterministic) parts.Add(() => Add("DETERMINISTIC"));
             if (po.Pipelined) parts.Add(() => { Add("PIPELINED"); if (po.PipelinedUsing.Count > 0) { Add(" USING "); Name(po.PipelinedUsing); } });
             if (po.ParallelEnable != null) parts.Add(() => ParallelEnable(po.ParallelEnable));
-            if (po.ResultCache)
+            if (po.ResultCache || po.RelyOn.Count > 0)
                 parts.Add(() =>
                 {
-                    Add("RESULT_CACHE");
-                    if (po.RelyOn.Count > 0) { Add(" RELIES_ON ("); Sep(po.RelyOn, Name); Add(")"); }
+                    // RELIES_ON alone is possible only in a conditional group whose RESULT_CACHE is in another group.
+                    if (po.ResultCache) Add("RESULT_CACHE");
+                    if (po.RelyOn.Count > 0) { if (po.ResultCache) Add(" "); Add("RELIES_ON ("); Sep(po.RelyOn, Name); Add(")"); }
                 });
             if (po.AggregateUsing.Count > 0) parts.Add(() => { Add("AGGREGATE USING "); Name(po.AggregateUsing); });
             if (po.SqlMacro != null) parts.Add(() => Add(po.SqlMacro == MacroKind.Table ? "SQL_TABLE_MACRO" : "SQL_MACRO"));

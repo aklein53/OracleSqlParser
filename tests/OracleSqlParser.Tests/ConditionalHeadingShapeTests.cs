@@ -64,6 +64,35 @@ public class ConditionalHeadingShapeTests
         Assert.Equal(AstPrinter.Print(r.Script), AstPrinter.Print(again.Script));
     }
 
+    // Oracle's logger.pkb: RESULT_CACHE in one group, RELIES_ON in a group nested in it.
+    [Fact]
+    public void ReliesOnMaySplitFromItsResultCache()
+    {
+        const string sql = "create or replace package body p as function get_pref return varchar2 " +
+                           "$if not dbms_db_version.ver_le_10_2 $then result_cache " +
+                           "$if $$no_op is null or not $$no_op $then relies_on (logger_prefs, logger_prefs_by_client_id) $end " +
+                           "$end is begin return null; end; end;";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        var text = new SqlScriptGenerator().Generate(r.Script);
+        Assert.Contains("RESULT_CACHE $IF", text);
+        Assert.Contains("RELIES_ON (LOGGER_PREFS, LOGGER_PREFS_BY_CLIENT_ID)", text.ToUpperInvariant());
+        var again = SqlParser.Parse(text);
+        Assert.True(again.Success, string.Join("; ", again.Errors));
+        Assert.Equal(AstPrinter.Print(r.Script), AstPrinter.Print(again.Script));
+    }
+
+    // RELIES_ON is only a clause after a RESULT_CACHE of the same heading; a bare one stays an error.
+    [Theory]
+    [InlineData("create or replace package p as function f return number relies_on (a) ; end;")]
+    [InlineData("create or replace package p as function f return number $if 1 = 1 $then relies_on (a) $end; end;")]
+    [InlineData("create or replace package p as function f return number result_cache deterministic relies_on (a); end;")]
+    public void BareReliesOnIsAnError(string sql)
+    {
+        var r = SqlParser.Parse(sql);
+        Assert.False(r.Success, sql);
+    }
+
     [Fact]
     public void ElsifAndElseBranchesHoldTheirClauses()
     {

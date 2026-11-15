@@ -350,6 +350,7 @@ public sealed partial class SqlParser
             if (IsKw("SELF") && IsKwAt(1, "AS") && IsKwAt(2, "RESULT")) { Next(); Next(); Next(); sp.ReturnSelfAsResult = true; }
             else sp.ReturnType = ParseDataType();
         }
+        _headingResultCache = false;
         sp.Options = ParseProgramOptions(() => IsKw("IS") || IsKw("AS") || IsKw("LANGUAGE") || IsKw("EXTERNAL") || IsKw("MLE") || IsOp(";") || IsOp(","), allowConditional: true);
         if (IsKw("LANGUAGE") || IsKw("EXTERNAL") || IsKw("MLE")) sp.External = ParseExternalCall();
         else if (IsKw("IS") || IsKw("AS"))
@@ -361,9 +362,13 @@ public sealed partial class SqlParser
         return Fin(sp, start);
     }
 
+    /// <summary>True once a RESULT_CACHE clause has been read in the subprogram heading being parsed (see RELIES_ON).</summary>
+    private bool _headingResultCache;
+
     /// <param name="stop">Ends the clause list (the token that follows the clauses).</param>
     /// <param name="allowConditional">True in a subprogram heading, where a $IF group may wrap clauses (see <see cref="ConditionalProgramOptions"/>).</param>
-    private ProgramOptions? ParseProgramOptions(Func<bool> stop, bool allowConditional = false)
+    /// <param name="inGroup">True for the clauses of a $IF branch, where RELIES_ON may follow a RESULT_CACHE that an earlier group or clause gave.</param>
+    private ProgramOptions? ParseProgramOptions(Func<bool> stop, bool allowConditional = false, bool inGroup = false)
     {
         var s = Cur;
         var po = new ProgramOptions();
@@ -375,6 +380,11 @@ public sealed partial class SqlParser
             {
                 case "$IF" when allowConditional:
                     po.Conditionals.Add(ParseConditionalProgramOptions());
+                    break;
+                // RESULT_CACHE and RELIES_ON may be split by conditional compilation: RESULT_CACHE $IF ... $THEN RELIES_ON (...) $END
+                case "RELIES_ON" when inGroup && _headingResultCache:
+                    Next();
+                    ParseReliesOn(po);
                     break;
                 case "AUTHID":
                     Next();
@@ -389,13 +399,8 @@ public sealed partial class SqlParser
                     break;
                 case "PARALLEL_ENABLE": po.ParallelEnable = ParseParallelEnable(); break;
                 case "RESULT_CACHE":
-                    Next(); po.ResultCache = true;
-                    if (AcceptKw("RELIES_ON"))
-                    {
-                        ExpectOp("(");
-                        do po.RelyOn.Add(ParseDottedName()); while (AcceptOp(","));
-                        ExpectOp(")");
-                    }
+                    Next(); po.ResultCache = true; _headingResultCache = true;
+                    if (AcceptKw("RELIES_ON")) ParseReliesOn(po);
                     break;
                 case "AGGREGATE": Next(); ExpectKw("USING"); po.AggregateUsing = ParseDottedName(); break;
                 case "SQL_MACRO" or "SQL_TABLE_MACRO":
@@ -444,23 +449,31 @@ public sealed partial class SqlParser
         return any ? Fin(po, s) : null;
     }
 
+    /// <summary>The name list of RELIES_ON, after the keyword: (name, ...).</summary>
+    private void ParseReliesOn(ProgramOptions po)
+    {
+        ExpectOp("(");
+        do po.RelyOn.Add(ParseDottedName()); while (AcceptOp(","));
+        ExpectOp(")");
+    }
+
     /// <summary>$IF cond $THEN clauses [$ELSIF cond $THEN clauses] [$ELSE clauses] $END in a subprogram heading.</summary>
     private ConditionalProgramOptions ParseConditionalProgramOptions()
     {
         var start = Next(); // $IF
         var c = new ConditionalProgramOptions { Condition = ParseExpr() };
         ExpectKw("$THEN");
-        c.ThenOptions = ParseProgramOptions(AtDirectiveEnd, allowConditional: true);
+        c.ThenOptions = ParseProgramOptions(AtDirectiveEnd, allowConditional: true, inGroup: true);
         int prog = -1;
         while (IsKw("$ELSIF") && Progress(ref prog))
         {
             var bs = Next();
             var br = new ConditionalProgramOptionsBranch { Condition = ParseExpr() };
             ExpectKw("$THEN");
-            br.Options = ParseProgramOptions(AtDirectiveEnd, allowConditional: true);
+            br.Options = ParseProgramOptions(AtDirectiveEnd, allowConditional: true, inGroup: true);
             c.ElsifBranches.Add(Fin(br, bs));
         }
-        if (AcceptKw("$ELSE")) c.ElseOptions = ParseProgramOptions(AtDirectiveEnd, allowConditional: true);
+        if (AcceptKw("$ELSE")) c.ElseOptions = ParseProgramOptions(AtDirectiveEnd, allowConditional: true, inGroup: true);
         ExpectKw("$END");
         return Fin(c, start);
     }
