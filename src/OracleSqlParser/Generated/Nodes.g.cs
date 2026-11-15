@@ -8579,23 +8579,28 @@ public partial class Grantee
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Name is not null) yield return Name;
+        if (ProgramSchema is not null) yield return ProgramSchema;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Name?.Accept(visitor);
+        ProgramSchema?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteOptional(rewriter, Name, "Grantee.Name");
+        ProgramSchema = SqlNodeRewriter.RewriteOptional(rewriter, ProgramSchema, "Grantee.ProgramSchema");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
         new("Name", Name),
         new("Public", Public),
+        new("ProgramKind", ProgramKind),
+        new("ProgramSchema", ProgramSchema),
     ];
 
     /// <inheritdoc/>
@@ -8609,6 +8614,8 @@ public partial class Grantee
         {
             Name = CloneChild(Name),
             Public = Public,
+            ProgramKind = ProgramKind,
+            ProgramSchema = CloneChild(ProgramSchema),
         };
         CopySpan(this, c);
         return c;
@@ -8618,7 +8625,9 @@ public partial class Grantee
     {
         var o = (Grantee)other;
         return Pair(Name, o.Name, pending)
-            && Public == o.Public;
+            && Public == o.Public
+            && ProgramKind == o.ProgramKind
+            && Pair(ProgramSchema, o.ProgramSchema, pending);
     }
 }
 

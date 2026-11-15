@@ -58,6 +58,8 @@ public static class OracleHarness
         46401, // traditional AUDIT desupported (policy check after parsing)
         14100, // partition-extended name on remote object (semantic)
         6576,  // not a valid function or procedure name (CALL of a missing routine)
+        1924,  // role not granted or does not exist (GRANT role TO PACKAGE: the role is a name resolved after parsing)
+        28702, // program unit is not owned by the grantor (GRANT role TO PACKAGE: privilege check after parsing)
         // NOT listed on purpose: 1741 (illegal zero-length identifier) is a lexical error; 905/923/925/933/3001 are syntax-level.
     ];
 

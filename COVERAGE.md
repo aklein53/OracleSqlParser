@@ -20,7 +20,7 @@ clauses as a nested token tree (`WordItem`/`LiteralItem`/`SymbolItem`/`GroupItem
 | COMMIT, ROLLBACK, SAVEPOINT, SET TRANSACTION, SET CONSTRAINT(S) | `CommitStatement` … `SetConstraintsStatement` | typed | DmlAndSessionShape |
 | ALTER SESSION (SET, ENABLE/DISABLE/FORCE, CLOSE DATABASE LINK, ADVISE, SYNC) | `AlterSessionStatement` | typed (`FeatureSyntax` token tree for unmodeled ENABLE/DISABLE features) | DmlAndSessionShape |
 | SET ROLE | `SetRoleStatement` | typed | DmlAndSessionShape |
-| GRANT / REVOKE | `GrantStatement` | typed | DmlAndSessionShape |
+| GRANT / REVOKE (including a role to or from a PACKAGE, FUNCTION or PROCEDURE: `Grantee.ProgramKind`) | `GrantStatement` | typed | DmlAndSessionShape, GrantProgramUnitShape |
 | TRUNCATE, COMMENT, RENAME, PURGE, FLASHBACK TABLE | `TruncateStatement` … `FlashbackTableStatement` | typed | DmlAndSessionShape |
 | CREATE TABLE (columns, constraints, identity, virtual, partitioning, storage, CTAS) | `CreateTableStatement` | typed; LOB/external-table/other physical details are `OtherAttribute` token trees | DdlShape |
 | CREATE INDEX, VIEW, MATERIALIZED VIEW, SEQUENCE, SYNONYM | `CreateIndexStatement` … | typed | DdlShape |

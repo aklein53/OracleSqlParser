@@ -5908,3 +5908,11 @@ OracleSqlParser.MergeClause.InsertColumns.get -> System.Collections.Generic.List
 OracleSqlParser.ParseOptions.SqlPlusScript.get -> bool
 OracleSqlParser.ParseOptions.SqlPlusScript.init -> void
 OracleSqlParser.TypeKind.Incomplete = 4 -> OracleSqlParser.TypeKind
+OracleSqlParser.Grantee.ProgramKind.get -> OracleSqlParser.GranteeProgramKind?
+OracleSqlParser.Grantee.ProgramKind.set -> void
+OracleSqlParser.Grantee.ProgramSchema.get -> OracleSqlParser.Identifier?
+OracleSqlParser.Grantee.ProgramSchema.set -> void
+OracleSqlParser.GranteeProgramKind
+OracleSqlParser.GranteeProgramKind.Function = 1 -> OracleSqlParser.GranteeProgramKind
+OracleSqlParser.GranteeProgramKind.Package = 0 -> OracleSqlParser.GranteeProgramKind
+OracleSqlParser.GranteeProgramKind.Procedure = 2 -> OracleSqlParser.GranteeProgramKind

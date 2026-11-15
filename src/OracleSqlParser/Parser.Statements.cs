@@ -353,13 +353,34 @@ public sealed partial class SqlParser
             st.Object = ParseDottedName();
         }
         if (!AcceptKw("TO")) ExpectKw("FROM");
+        bool toProgram = false;
         do
         {
             var gs = Cur;
             var g = new Grantee();
-            if (AcceptKw("PUBLIC")) g.Public = true; else g.Name = ParseIdentifier();
+            if (AcceptKw("PUBLIC")) g.Public = true;
+            else if (ProgramUnitKindAhead() is { } kind)
+            {
+                // GRANT role TO {PACKAGE|FUNCTION|PROCEDURE} [schema.]name: a code-based grant of a role to a program unit.
+                Next();
+                g.ProgramKind = kind;
+                var first = ParseIdentifier();
+                if (AcceptOp(".")) { g.ProgramSchema = first; g.Name = ParseIdentifier(); }
+                else g.Name = first;
+                toProgram = true;
+            }
+            else g.Name = ParseIdentifier();
             st.Grantees.Add(Fin(g, gs));
+            if (toProgram) break; // one program unit, and nothing else in the list
         } while (AcceptOp(","));
+        if (toProgram)
+        {
+            // The program form takes a role name only: no ON object, column list or ALL PRIVILEGES, and no WITH/CASCADE/FORCE after it.
+            if (st.AllPrivileges || st.ObjectKind != null || st.Object.Count > 0 || st.Privileges.Any(p => p.Columns.Count > 0))
+                throw Fail("A grant to a program unit names a role only (no ON object, column list or ALL PRIVILEGES)");
+            if (!AtStatementEnd()) throw Fail($"Unexpected {Describe(Cur)} after a grant to a program unit");
+            return Fin(st, start);
+        }
         int prog18 = -1;
         while (!AtStatementEnd() && Progress(ref prog18))
         {
@@ -372,6 +393,22 @@ public sealed partial class SqlParser
             else throw Fail($"Unexpected {Describe(Cur)} in GRANT/REVOKE");
         }
         return Fin(st, start);
+    }
+
+    /// <summary>
+    /// The program-unit kind when the current word is PACKAGE, FUNCTION or PROCEDURE followed by a name (GRANT ... TO PACKAGE p).
+    /// PACKAGE is not reserved, so a bare <c>TO package</c> (a user of that name) stays a grantee, as before.
+    /// </summary>
+    private GranteeProgramKind? ProgramUnitKindAhead()
+    {
+        if (Cur.Type != TokenType.Identifier || PeekTok().Type is not (TokenType.Identifier or TokenType.QuotedIdentifier or TokenType.Substitution)) return null;
+        return Cur.Value switch
+        {
+            "PACKAGE" => GranteeProgramKind.Package,
+            "FUNCTION" => GranteeProgramKind.Function,
+            "PROCEDURE" => GranteeProgramKind.Procedure,
+            _ => null,
+        };
     }
 
     // ---- object kinds ----

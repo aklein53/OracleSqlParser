@@ -337,10 +337,25 @@ public sealed partial class GrantPrivilege : SqlNode
 /// <summary>A user, role or <c>PUBLIC</c> that receives or loses a privilege.</summary>
 public sealed partial class Grantee : SqlNode
 {
-    /// <summary>The grantee name, or null for <c>PUBLIC</c>.</summary>
+    /// <summary>The grantee name, or null for <c>PUBLIC</c>. For a program unit (see <see cref="ProgramKind"/>) it is the unit name without its schema.</summary>
     public Identifier? Name { get; set; }
     /// <summary>True for <c>PUBLIC</c>.</summary>
     public bool Public { get; set; }
+    /// <summary>The kind of program unit when the role is granted to or revoked from a <c>PACKAGE</c>, <c>FUNCTION</c> or <c>PROCEDURE</c>; null for a user or role.</summary>
+    public GranteeProgramKind? ProgramKind { get; set; }
+    /// <summary>The schema of a program unit named as <c>schema.name</c>, or null when the name is not qualified.</summary>
+    public Identifier? ProgramSchema { get; set; }
+}
+
+/// <summary>The kind of program unit that a role is granted to or revoked from (<c>GRANT role TO PACKAGE p</c>).</summary>
+public enum GranteeProgramKind
+{
+    /// <summary><c>PACKAGE</c>.</summary>
+    Package,
+    /// <summary><c>FUNCTION</c>.</summary>
+    Function,
+    /// <summary><c>PROCEDURE</c>.</summary>
+    Procedure,
 }
 
 /// <summary>The kind of object named after <c>ON</c> in a <c>GRANT</c> or <c>REVOKE</c>.</summary>

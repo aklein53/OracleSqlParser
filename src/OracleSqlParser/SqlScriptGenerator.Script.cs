@@ -218,7 +218,13 @@ public sealed partial class SqlScriptGenerator
                 Name(g.Object);
             }
             Add(g.Revoke ? " FROM " : " TO ");
-            Sep(g.Grantees, x => { if (x.Public) Add("PUBLIC"); else Id(x.Name!); });
+            Sep(g.Grantees, x =>
+            {
+                if (x.Public) { Add("PUBLIC"); return; }
+                if (x.ProgramKind != null) Add(x.ProgramKind switch { GranteeProgramKind.Package => "PACKAGE ", GranteeProgramKind.Function => "FUNCTION ", _ => "PROCEDURE " });
+                if (x.ProgramSchema != null) { Id(x.ProgramSchema); Add("."); }
+                Id(x.Name!);
+            });
             if (g.WithGrantOption) Add(" WITH GRANT OPTION");
             if (g.WithAdminOption) Add(" WITH ADMIN OPTION");
             if (g.WithHierarchyOption) Add(" WITH HIERARCHY OPTION");

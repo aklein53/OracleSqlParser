@@ -32,6 +32,8 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   `&&owner..pkg.f`).
 - Under `ParseOptions.SqlPlusScript`, a `HOST` command continued with a line-end `-` is one `SqlPlusCommandStatement`
   whose arguments cover both lines (SQL*Plus drops the hyphen and joins the lines; so does the parser).
+- Code-based access control: `GRANT role TO PACKAGE|FUNCTION|PROCEDURE [schema.]name` and the matching `REVOKE` (Oracle 12c+),
+  with substitution names. The grantee carries `ProgramKind` and `ProgramSchema` (`Name` stays the unit name).
 - `CREATE TYPE t;` (`TypeKind.Incomplete`), `TABLE OF REF t` (`DataType.Ref`), `APPROX_RANK(PARTITION BY ...)`
   (`FunctionCall.PartitionBy`), `(SELF AS t).m()` (`CastKind.GeneralizedInvocation`), `SET(nt)`, member access after
   `TREAT(...)` and method calls.
