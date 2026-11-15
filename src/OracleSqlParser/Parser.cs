@@ -1085,7 +1085,7 @@ public sealed partial class SqlParser
             else if (AcceptKw("DELETE")) { if (AcceptKw("WHERE")) mc.DeleteWhere = ParseExpr(); }
             else if (AcceptKw("INSERT"))
             {
-                if (AcceptOp("(")) { mc.InsertColumns = ParseIdentifierList(); ExpectOp(")"); }
+                if (IsOp("(")) mc.InsertColumns = ParseColumnRefList(true); // the parenthesized column list, consumed to its ')'
                 ExpectKw("VALUES");
                 ExpectOp("(");
                 do mc.InsertValues.Add(ParseExpr()); while (AcceptOp(","));

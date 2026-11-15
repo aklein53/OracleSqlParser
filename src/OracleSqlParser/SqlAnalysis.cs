@@ -573,7 +573,7 @@ public static class SqlAnalysis
                         }
                         clause.UpdateWhere?.Accept(this);
                         clause.DeleteWhere?.Accept(this);
-                        foreach (var column in clause.InsertColumns) AddColumn(column, [column], write: true, target);
+                        foreach (var column in clause.InsertColumns) AddColumn(column, column.Parts, write: true, target);
                         foreach (var value in clause.InsertValues) value.Accept(this);
                         clause.InsertWhere?.Accept(this);
                     }

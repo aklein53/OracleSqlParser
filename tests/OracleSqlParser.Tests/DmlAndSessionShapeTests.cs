@@ -221,6 +221,16 @@ public class DmlAndSessionShapeTests
             r.Script.Statements.Select(st => AstPrinter.Print(st)));
     }
 
+    // The MERGE insert column list may be qualified by the target alias (Oracle accepts INSERT (p.a, p.b)).
+    [Fact]
+    public void MergeInsertColumnsMayBeQualified()
+    {
+        var sql = "MERGE INTO t p USING s d ON (p.a = d.a) WHEN NOT MATCHED THEN INSERT (p.a, p.b) VALUES (d.a, d.b)";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("INSERT (p.a, p.b)", new SqlScriptGenerator().Generate(r.Script));
+    }
+
     // SQL*Plus script reading (ParseOptions.SqlPlusScript): a '-' at the end of a line continues the command, and a blank
     // line ends an unterminated statement unless SET SQLBLANKLINES ON. Plain SQL keeps both as ordinary text.
     [Fact]

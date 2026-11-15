@@ -506,8 +506,8 @@ public sealed partial class MergeClause : SqlNode
     /// <summary>The <c>WHERE</c> condition of the <c>DELETE</c> part, or null when absent.</summary>
     public Expression? DeleteWhere { get; set; }
     // WHEN NOT MATCHED THEN INSERT
-    /// <summary>The column list of the insert; empty when absent.</summary>
-    public List<Identifier> InsertColumns { get; set; } = [];
+    /// <summary>The column list of the insert, each optionally qualified by the target alias (<c>INSERT (p.a, p.b)</c>); empty when absent.</summary>
+    public List<ColumnReference> InsertColumns { get; set; } = [];
     /// <summary>The values of the insert, in source order; empty for the update and delete forms.</summary>
     public List<Expression> InsertValues { get; set; } = [];
     /// <summary>The <c>WHERE</c> condition of the insert, or null when absent.</summary>
