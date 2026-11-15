@@ -19,6 +19,23 @@ The packages were renamed to match the namespace: `PlsqlParser` is now `OracleSq
 
 Versions are published as pre-releases (`0.1.0-preview.N`) until the API stabilises.
 
+## Public API changes
+
+The public API of `OracleSqlParser` and `OracleSqlParser.Guard` is checked by
+[Microsoft.CodeAnalysis.PublicApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/tree/main/src/PublicApiAnalyzers).
+Every public member must be listed in the `PublicAPI.Shipped.txt` or `PublicAPI.Unshipped.txt` file of its project
+(one line per member, the analyzer's own signature format). A change that adds, removes or changes a public member
+fails the build with `RS0016` (a public member that is not declared in the file), so the build with `-warnaserror` is the gate.
+
+- `PublicAPI.Unshipped.txt` lists the API of the next release. Changing the API means updating this file in the same commit.
+  Populate it with `dotnet format analyzers --diagnostics RS0016 <project>`, then check the diff for accidental members
+  (helpers, implicit constructors, record-generated members) before committing.
+- `PublicAPI.Shipped.txt` lists the API of released versions. It is empty until 1.0.0 (the preview versions are not frozen).
+- At the 1.0.0 release, move every line of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` and leave the
+  unshipped file with only its `#nullable enable` header. From then on the public API is frozen until 2.0: a breaking
+  change needs a new major version, and additions are added to the unshipped file.
+- Internal types and members are not checked. Tests see them through `InternalsVisibleTo`.
+
 ## Releasing
 
 Publishing uses nuget.org Trusted Publishing (GitHub OIDC) bound to `.github/workflows/build.yml`; no API key

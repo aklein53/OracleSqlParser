@@ -1,0 +1,78 @@
+#nullable enable
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.AccessFilter() -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.AccessIdColumn.get -> string!
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.AccessIdColumn.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.AccessSql.get -> string!
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.AccessSql.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.KeyColumn.get -> string!
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.KeyColumn.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.Style.get -> OracleSqlParser.Guard.AccessJoinStyle
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessFilter.Style.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessJoinStyle
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessJoinStyle.InnerJoin = 1 -> OracleSqlParser.Guard.AccessJoinStyle
+[PLSQLGUARD001]OracleSqlParser.Guard.AccessJoinStyle.InSubquery = 0 -> OracleSqlParser.Guard.AccessJoinStyle
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.<Clone>$() -> OracleSqlParser.Guard.GuardedSql!
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.BindNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.BindNames.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.Deconstruct(out string! Sql, out System.Collections.Generic.IReadOnlyList<string!>! BindNames) -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.Equals(OracleSqlParser.Guard.GuardedSql? other) -> bool
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.GuardedSql(string! Sql, System.Collections.Generic.IReadOnlyList<string!>! BindNames) -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.Sql.get -> string!
+[PLSQLGUARD001]OracleSqlParser.Guard.GuardedSql.Sql.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.<Clone>$() -> OracleSqlParser.Guard.PolicyViolation!
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Code.get -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Code.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Column.get -> int
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Column.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Deconstruct(out OracleSqlParser.Guard.ViolationCode Code, out string! Message, out int Line, out int Column) -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Equals(OracleSqlParser.Guard.PolicyViolation? other) -> bool
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Line.get -> int
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Line.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Message.get -> string!
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.Message.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.PolicyViolation.PolicyViolation(OracleSqlParser.Guard.ViolationCode Code, string! Message, int Line = 0, int Column = 0) -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryGuard
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.AllowedFunctions.get -> System.Collections.Generic.ISet<string!>?
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.AllowedFunctions.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.AllowedTables.get -> System.Collections.Generic.ISet<string!>!
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.AllowedTables.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.AllowStar.get -> bool
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.AllowStar.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.QueryPolicy() -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.RequiredColumns.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryPolicy.RequiredColumns.init -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryRejectedException
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryRejectedException.QueryRejectedException(System.Collections.Generic.IReadOnlyList<OracleSqlParser.Guard.PolicyViolation!>! violations) -> void
+[PLSQLGUARD001]OracleSqlParser.Guard.QueryRejectedException.Violations.get -> System.Collections.Generic.IReadOnlyList<OracleSqlParser.Guard.PolicyViolation!>!
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.BindNameCollision = 13 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.DatabaseLink = 3 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.DuplicateColumnName = 12 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.ForUpdate = 5 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.FunctionNotAllowed = 8 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.IntoClause = 4 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.MissingRequiredColumn = 11 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.NotSingleSelect = 1 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.ParseError = 0 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.PlsqlDeclaration = 6 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.StarNotAllowed = 10 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.SubstitutionVariable = 7 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.TableNotAllowed = 2 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.UnknownQualifier = 9 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]OracleSqlParser.Guard.ViolationCode.UnsupportedAccessSql = 14 -> OracleSqlParser.Guard.ViolationCode
+[PLSQLGUARD001]override OracleSqlParser.Guard.GuardedSql.Equals(object? obj) -> bool
+[PLSQLGUARD001]override OracleSqlParser.Guard.GuardedSql.GetHashCode() -> int
+[PLSQLGUARD001]override OracleSqlParser.Guard.GuardedSql.ToString() -> string!
+[PLSQLGUARD001]override OracleSqlParser.Guard.PolicyViolation.Equals(object? obj) -> bool
+[PLSQLGUARD001]override OracleSqlParser.Guard.PolicyViolation.GetHashCode() -> int
+[PLSQLGUARD001]override OracleSqlParser.Guard.PolicyViolation.ToString() -> string!
+[PLSQLGUARD001]static OracleSqlParser.Guard.GuardedSql.operator !=(OracleSqlParser.Guard.GuardedSql? left, OracleSqlParser.Guard.GuardedSql? right) -> bool
+[PLSQLGUARD001]static OracleSqlParser.Guard.GuardedSql.operator ==(OracleSqlParser.Guard.GuardedSql? left, OracleSqlParser.Guard.GuardedSql? right) -> bool
+[PLSQLGUARD001]static OracleSqlParser.Guard.PolicyViolation.operator !=(OracleSqlParser.Guard.PolicyViolation? left, OracleSqlParser.Guard.PolicyViolation? right) -> bool
+[PLSQLGUARD001]static OracleSqlParser.Guard.PolicyViolation.operator ==(OracleSqlParser.Guard.PolicyViolation? left, OracleSqlParser.Guard.PolicyViolation? right) -> bool
+[PLSQLGUARD001]static OracleSqlParser.Guard.QueryGuard.RestrictToIds(string! userSql, OracleSqlParser.Guard.QueryPolicy! policy, OracleSqlParser.Guard.AccessFilter! filter) -> OracleSqlParser.Guard.GuardedSql!
+[PLSQLGUARD001]static OracleSqlParser.Guard.QueryGuard.Validate(string! sql, OracleSqlParser.Guard.QueryPolicy! policy) -> System.Collections.Generic.IReadOnlyList<OracleSqlParser.Guard.PolicyViolation!>!
