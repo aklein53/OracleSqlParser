@@ -1113,7 +1113,7 @@ public sealed partial class SqlParser
             string text = t.Text;
             if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier && Cur.Start == t.End)
                 text += Next().Text;
-            return Fin(new Identifier { Value = text, Text = text }, t);
+            return Fin(new Identifier { Value = text.ToUpperInvariant(), Text = text }, t);
         }
         if (t.Type is not (TokenType.Identifier or TokenType.QuotedIdentifier))
             throw FailExpected($"Expected identifier but found {Describe(t)}", "identifier");

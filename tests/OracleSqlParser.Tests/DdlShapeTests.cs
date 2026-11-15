@@ -125,6 +125,7 @@ public class DdlShapeTests
     [Theory]
     [InlineData("DROP TABLE IF EXISTS t CASCADE CONSTRAINTS PURGE", "(DropStatement kind=Table ifExists name=[T] cascadeConstraints purge)")]
     [InlineData("DROP PUBLIC SYNONYM s", "(DropStatement kind=Synonym public name=[S])")]
+    [InlineData("GRANT &&owner._role TO &&owner", "(GrantStatement privileges=[(GrantPrivilege name=&&owner._role)] grantees=[(Grantee name=&&OWNER)])")]
     [InlineData("DROP SEQUENCE s\n/\nBEGIN NULL; END;", "(DropStatement kind=Sequence name=[S]) ; (Block statements=[(NullStatement)])")]
     [InlineData("DROP MATERIALIZED VIEW LOG ON t", "(DropStatement kind=MaterializedViewLog onTable=[T])")]
     [InlineData("DROP PACKAGE BODY pkg", "(DropStatement kind=PackageBody name=[PKG])")]
