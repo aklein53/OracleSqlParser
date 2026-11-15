@@ -67,7 +67,7 @@ Conditional blocks (``) in parameter lists are typed (`ConditionalParameter`); t
 
 ## Script level
 
-SQL*Plus commands (`SET`, `SPOOL`, `DEFINE`, `@script`, `PROMPT`, `REM`, `WHENEVER`, ...) → `SqlPlusCommand`
+SQL*Plus commands (`SET`, `SPOOL`, `DEFINE`, `@script`, `PROMPT`, `REM`, `WHENEVER`, ...) → `SqlPlusCommandStatement`
 (arguments are a token tree); `EXEC`/`EXECUTE` call or `target := value` → `ExecStatement` whose body is a `ProcedureCallStatement` or `AssignmentStatement` (SQL*Plus runs it as `BEGIN body; END;`); `&var`/`&&var` → `SubstitutionVariable`; `/` terminators.
 Error recovery resyncs at `;`, or for PL/SQL units at a `/` alone on its line (else the `;` after `END`).
 
