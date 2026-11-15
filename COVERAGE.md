@@ -68,6 +68,7 @@ Conditional blocks (``) in parameter lists are typed (`ConditionalParameter`); t
 ## Script level
 
 SQL*Plus commands (`SET`, `SPOOL`, `DEFINE`, `@script`, `PROMPT`, `REM`, `WHENEVER`, ...) → `SqlPlusCommand`
+(`@file` and `@@file` take the rest of the line as one raw string, so `/*` in a path is not a comment; the script-only line rules are in `ParseOptions.SqlPlusScript`)
 (arguments are a token tree); `EXEC`/`EXECUTE` call or `target := value` → `ExecStatement` whose body is a `ProcedureCallStatement` or `AssignmentStatement` (SQL*Plus runs it as `BEGIN body; END;`); `&var`/`&&var` → `SubstitutionVariable`; `/` terminators.
 Error recovery resyncs at `;`, or for PL/SQL units at a `/` alone on its line (else the `;` after `END`).
 
@@ -84,6 +85,7 @@ Caveats:
 
 - SQL_MACRO was backported to 19c release updates (19.7 and later RUs), but it is gated at 21 regardless. Users on a patched 19c should target `Oracle21` or ignore that diagnostic.
 - The MLE objects and `LANGUAGE MLE` call specs are gated at 23 as the conservative choice. Their 21c release could not be confirmed, so a 21c target may see a false error.
+- Real-world corpus (oracle-db-examples, utPLSQL, Logger, alexandria-plsql-utils, db-sample-schemas, OOS-Utils, starter-project-template): see the `RealWorldCorpus` tool. Forms found there and now parsed: CREATE TYPE with a `/` terminator, an incomplete `CREATE TYPE t;` / `... OID 'x';`, `REF type` in collections, `SET(nt)`, `TREAT(x AS t).attr`, `(x AS t).method` downcasts, `APPROX_RANK(PARTITION BY ... ORDER BY ...)`, `NTH_VALUE(x, n FROM LAST)`, `XMLSERIALIZE(... NO INDENT)` without AS, substitution variables as names (`CREATE USER &owner`, `GRANT &&owner._role`, `&&owner..pkg.x`), MERGE insert columns qualified by the alias.
 - `TREAT(expr AS JSON)` is not gated, because its release is not confirmed. `CAST(expr AS JSON)` is gated with the JSON data type.
 
 Not gated:

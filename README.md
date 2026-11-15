@@ -50,6 +50,8 @@ string json = AstJson.Serialize(result.Script, includePositions: true);
 
 SQL*Plus scripts: `&name` and `&&name` are substitution variables by default. A `SET DEFINE OFF` line (or `SET DEF OFF`) turns substitution off for the rest of the input, so `&` is then ordinary text, as it already is inside string literals; `SET DEFINE ON` turns it back on, and `SET DEFINE <char>` (for example `SET DEFINE ^`) makes that character the prefix instead. Only a `SET` that starts a line and is followed by nothing but the value counts, so `UPDATE t SET define = 1` is unaffected. For plain SQL that is not a script, `new ParseOptions { SubstitutionEnabled = false }` turns substitution off from the start.
 
+`new ParseOptions { SqlPlusScript = true }` reads the input with two more SQL*Plus client rules. A `-` that ends a line continues the command onto the next line (the hyphen and the line break are removed). A blank line ends an unterminated SQL statement, as it does by default in SQL*Plus (`SET SQLBLANKLINES ON` turns this off). Blank lines inside a PL/SQL unit, and a lone `/` or `.` line, behave as in SQL*Plus. Both rules change how plain SQL reads (`a -` at a line end, a blank line inside a query), so they are off by default.
+
 ## Entry points and errors
 
 | Method | Throws `ParseException`? | Returns |
