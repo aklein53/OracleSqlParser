@@ -13,7 +13,7 @@ public class QueryShapeTests
 
     [Theory]
     [InlineData("SELECT a, b x FROM t WHERE a > 1",
-        "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A) (ExpressionSelectItem expression=B alias=X)] from=[(NamedTable name=[T])] where=(> A 1)))")]
+        "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A) (ExpressionSelectItem expression=B alias=X)] from=[(NamedTable name=[T])] where=(GreaterThan A 1)))")]
     [InlineData("SELECT DISTINCT a AS \"Alias\" FROM s.t",
         "(SelectStatement body=(QuerySpecification quantifier=Distinct selectList=[(ExpressionSelectItem expression=A alias=\"Alias\")] from=[(NamedTable name=[S T])]))")]
     [InlineData("SELECT e.*, * FROM emp e",
@@ -32,13 +32,13 @@ public class QueryShapeTests
 
     [Theory]
     [InlineData("SELECT * FROM a LEFT OUTER JOIN b ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(= A.ID B.ID))")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID))")]
     [InlineData("SELECT * FROM a PARTITION BY (a.x) RIGHT OUTER JOIN b ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Right right=(NamedTable name=[B]) on=(= A.ID B.ID) leftPartitionBy=[A.X])")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Right right=(NamedTable name=[B]) on=(Equals A.ID B.ID) leftPartitionBy=[A.X])")]
     [InlineData("SELECT * FROM a LEFT JOIN b PARTITION BY (b.x) ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(= A.ID B.ID) rightPartitionBy=[B.X])")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID) rightPartitionBy=[B.X])")]
     [InlineData("SELECT * FROM a PARTITION BY (a.x, a.y) LEFT OUTER JOIN b ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(= A.ID B.ID) leftPartitionBy=[A.X A.Y])")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID) leftPartitionBy=[A.X A.Y])")]
     [InlineData("SELECT * FROM a JOIN b USING (id, x)",
         "(JoinTable left=(NamedTable name=[A]) kind=Inner right=(NamedTable name=[B]) using=[ID X])")]
     [InlineData("SELECT * FROM a NATURAL JOIN b",
@@ -48,7 +48,7 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM a CROSS APPLY (SELECT 1 FROM dual) s",
         "(JoinTable left=(NamedTable name=[A]) kind=CrossApply right=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])) alias=S))")]
     [InlineData("SELECT * FROM a FULL JOIN b ON 1 = 1 RIGHT JOIN c ON 2 = 2",
-        "(JoinTable left=(JoinTable left=(NamedTable name=[A]) kind=Full right=(NamedTable name=[B]) on=(= 1 1)) kind=Right right=(NamedTable name=[C]) on=(= 2 2))")]
+        "(JoinTable left=(JoinTable left=(NamedTable name=[A]) kind=Full right=(NamedTable name=[B]) on=(Equals 1 1)) kind=Right right=(NamedTable name=[C]) on=(Equals 2 2))")]
     public void Joins(string sql, string expected) => Assert.Equal(expected, Shape.Of<JoinTable>(sql));
 
     // Non-reserved words that also start a clause: an alias where the clause cannot start, the clause elsewhere.
@@ -61,7 +61,7 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM t fetch", "(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[T] alias=FETCH)]))")]
     [InlineData("SELECT * FROM t SAMPLE (10) sample", "(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[T] sample=(SampleClause percent=10) alias=SAMPLE)]))")]
     [InlineData("SELECT * FROM t sample (10)", "(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[T] sample=(SampleClause percent=10))]))")]
-    [InlineData("SELECT * FROM t LEFT JOIN u ON 1 = 1", "(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(JoinTable left=(NamedTable name=[T]) kind=Left right=(NamedTable name=[U]) on=(= 1 1))]))")]
+    [InlineData("SELECT * FROM t LEFT JOIN u ON 1 = 1", "(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(JoinTable left=(NamedTable name=[T]) kind=Left right=(NamedTable name=[U]) on=(Equals 1 1))]))")]
     [InlineData("SELECT * FROM t FETCH FIRST 1 ROW ONLY", "(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[T])]) fetch=(FetchClause count=1))")]
     public void ContextualKeywordAliases(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
@@ -76,7 +76,7 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM hr.dept@link PARTITION (p1) d", "(NamedTable name=[HR DEPT] dbLink=[LINK] partition=P1 alias=D)")]
     [InlineData("SELECT * FROM emp SAMPLE BLOCK (10) SEED (3) e", "(NamedTable name=[EMP] sample=(SampleClause block percent=10 seed=3) alias=E)")]
     [InlineData("SELECT * FROM emp AS OF TIMESTAMP SYSTIMESTAMP - INTERVAL '1' HOUR e",
-        "(NamedTable name=[EMP] flashback=(FlashbackClause mode=AsOf unit=Timestamp value=(- SYSTIMESTAMP (IntervalLiteral value='1' from=Hour))) alias=E)")]
+        "(NamedTable name=[EMP] flashback=(FlashbackClause mode=AsOf unit=Timestamp value=(Subtract SYSTIMESTAMP (IntervalLiteral value='1' from=Hour))) alias=E)")]
     [InlineData("SELECT * FROM emp AS OF SCN 100", "(NamedTable name=[EMP] flashback=(FlashbackClause mode=AsOf unit=Scn value=100))")]
     [InlineData("SELECT * FROM emp VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE",
         "(NamedTable name=[EMP] flashback=(FlashbackClause mode=VersionsBetween unit=Scn value=MINVALUE toValue=MAXVALUE))")]
@@ -89,17 +89,17 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM (SELECT 1 FROM dual) s", "(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])) alias=S)")]
     [InlineData("SELECT * FROM LATERAL (SELECT 1 FROM dual) l", "(SubqueryTable lateral query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])) alias=L)")]
     [InlineData("SELECT * FROM TABLE(f(1)) tf", "(TableFunction expression=(FunctionCall name=[F] arguments=[(Argument value=1)]) alias=TF)")]
-    [InlineData("SELECT * FROM (a JOIN b ON 1 = 1) x", "(ParenthesizedTable inner=(JoinTable left=(NamedTable name=[A]) kind=Inner right=(NamedTable name=[B]) on=(= 1 1)) alias=X)")]
+    [InlineData("SELECT * FROM (a JOIN b ON 1 = 1) x", "(ParenthesizedTable inner=(JoinTable left=(NamedTable name=[A]) kind=Inner right=(NamedTable name=[B]) on=(Equals 1 1)) alias=X)")]
     public void OtherTableReferences(string sql, string expected) =>
         Assert.Equal(expected, Shape.Parse(sql).Descendants().OfType<TableReference>().Where(t => t is not NamedTable || true).Skip(0).Select(AstPrinter.Print).First(p => !p.StartsWith("(NamedTable name=[DUAL")));
 
     [Theory]
     [InlineData("SELECT a FROM t GROUP BY ROLLUP(a, b), CUBE(c), d HAVING COUNT(*) > 1",
-        "groupBy=[(FunctionCall name=[ROLLUP] arguments=[(Argument value=A) (Argument value=B)]) (FunctionCall name=[CUBE] arguments=[(Argument value=C)]) D] having=(> (FunctionCall name=[COUNT] arguments=[(Argument value=*)]) 1)")]
+        "groupBy=[(FunctionCall name=[ROLLUP] arguments=[(Argument value=A) (Argument value=B)]) (FunctionCall name=[CUBE] arguments=[(Argument value=C)]) D] having=(GreaterThan (FunctionCall name=[COUNT] arguments=[(Argument value=*)]) 1)")]
     [InlineData("SELECT a FROM t GROUP BY GROUPING SETS ((a, b), (a), ())",
         "groupBy=[(FunctionCall name=[GROUPING SETS] arguments=[(Argument value=(ExpressionList items=[A B])) (Argument value=(ExpressionList items=[A])) (Argument value=(ExpressionList))])]")]
     [InlineData("SELECT empno FROM emp START WITH mgr IS NULL CONNECT BY NOCYCLE PRIOR empno = mgr",
-        "startWith=(IsExpression value=MGR test=Null) connectBy=(= (PRIOR EMPNO) MGR) noCycle")]
+        "startWith=(IsExpression value=MGR test=Null) connectBy=(Equals (Prior EMPNO) MGR) noCycle")]
     [InlineData("SELECT a INTO x, y FROM t", "into=[X Y]")]
     [InlineData("SELECT a BULK COLLECT INTO tab FROM t", "into=[TAB] intoBulkCollect")]
     public void QuerySpecificationClauses(string sql, string expectedFragment) =>
@@ -141,7 +141,7 @@ public class QueryShapeTests
     {
         Assert.Equal(
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(FunctionCall name=[F] arguments=[(Argument value=1)]))] from=[(NamedTable name=[DUAL])]) " +
-            "withDeclarations=[(SubprogramDeclaration isFunction name=[F] parameters=[(Parameter name=X type=(DataType name=NUMBER))] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(* X 2))]))])",
+            "withDeclarations=[(SubprogramDeclaration isFunction name=[F] parameters=[(Parameter name=X type=(DataType name=NUMBER))] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Multiply X 2))]))])",
             Shape.Of<SelectStatement>("WITH FUNCTION f(x NUMBER) RETURN NUMBER IS BEGIN RETURN x * 2; END; SELECT f(1) FROM dual"));
     }
 
@@ -172,13 +172,13 @@ public class QueryShapeTests
             "(PatternQuantified inner=(PatternGroup inner=(PatternAlternation items=[(PatternVariable name=A) (PatternVariable name=B)])) min=0) " +
             "(PatternAnchor isStart) (PatternAnchor)]) " +
             "subsets=[(PatternSubset name=U members=[STRT UP])] " +
-            "define=[(PatternDefine variable=DOWN condition=(< PRICE (FunctionCall name=[PREV] arguments=[(Argument value=PRICE)]))) (PatternDefine variable=UP condition=(> PRICE (FunctionCall name=[PREV] arguments=[(Argument value=PRICE)])))] alias=M)",
+            "define=[(PatternDefine variable=DOWN condition=(LessThan PRICE (FunctionCall name=[PREV] arguments=[(Argument value=PRICE)]))) (PatternDefine variable=UP condition=(GreaterThan PRICE (FunctionCall name=[PREV] arguments=[(Argument value=PRICE)])))] alias=M)",
             Shape.Of<MatchRecognizeTable>(sql));
     }
 
     [Theory]
     [InlineData("SELECT * FROM x MATCH_RECOGNIZE (ORDER BY ts ALL ROWS PER MATCH WITH UNMATCHED ROWS AFTER MATCH SKIP PAST LAST ROW SEEK PATTERN (a) DEFINE a AS 1 = 1)",
-        "(MatchRecognizeTable source=(NamedTable name=[X]) orderBy=[(OrderByItem expression=TS)] rowsPerMatch=AllRows allRowsMode=WithUnmatchedRows skip=PastLastRow seek pattern=(PatternVariable name=A) define=[(PatternDefine variable=A condition=(= 1 1))])")]
+        "(MatchRecognizeTable source=(NamedTable name=[X]) orderBy=[(OrderByItem expression=TS)] rowsPerMatch=AllRows allRowsMode=WithUnmatchedRows skip=PastLastRow seek pattern=(PatternVariable name=A) define=[(PatternDefine variable=A condition=(Equals 1 1))])")]
     public void MatchRecognize_Options(string sql, string expected) => Assert.Equal(expected, Shape.Of<MatchRecognizeTable>(sql));
 
     [Fact]
@@ -205,8 +205,8 @@ public class QueryShapeTests
         Assert.Equal(
             "(ModelClause nav=IgnoreNav uniqueness=UniqueDimension return=UpdatedRows partitionBy=[(ExpressionSelectItem expression=COUNTRY)] " +
             "dimensionBy=[(ExpressionSelectItem expression=PRODUCT) (ExpressionSelectItem expression=YEAR)] measures=[(ExpressionSelectItem expression=AMT alias=SALES)] " +
-            "rulesMode=UpsertAll rulesOrder=Sequential iterate=10 iterateUntil=(> (CellReference base=AMT subscripts=['x' 2003]) 5) " +
-            "rules=[(ModelRule mode=Update target=(CellReference base=AMT subscripts=['x' 2003]) orderBy=[(OrderByItem expression=PRODUCT descending)] value=(+ (CellReference base=AMT subscripts=['x' 2002]) 1)) " +
+            "rulesMode=UpsertAll rulesOrder=Sequential iterate=10 iterateUntil=(GreaterThan (CellReference base=AMT subscripts=['x' 2003]) 5) " +
+            "rules=[(ModelRule mode=Update target=(CellReference base=AMT subscripts=['x' 2003]) orderBy=[(OrderByItem expression=PRODUCT descending)] value=(Add (CellReference base=AMT subscripts=['x' 2002]) 1)) " +
             "(ModelRule target=(CellReference base=AMT subscripts=[ANY 2004]) value=(FunctionCall name=[SUM] arguments=[(Argument value=AMT)]))])",
             Shape.Of<ModelClause>("SELECT * FROM s MODEL IGNORE NAV UNIQUE DIMENSION RETURN UPDATED ROWS PARTITION BY (country) DIMENSION BY (product, year) MEASURES (amt sales) " +
                 "RULES UPSERT ALL SEQUENTIAL ORDER ITERATE (10) UNTIL (amt['x', 2003] > 5) (UPDATE amt['x', 2003] ORDER BY product DESC = amt['x', 2002] + 1, amt[ANY, 2004] = SUM(amt))"));
@@ -221,7 +221,7 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a) COLUMNS (a.name)) gt",
         "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A)])] columns=[(GraphColumn value=A.NAME)] alias=GT)")]
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a IS person WHERE a.age > 1)-[e IS knows]->(b IS person|company) COLUMNS (a.name AS who, vertex_id(b)))",
-        "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A label=(GraphLabelExpression labels=[PERSON]) where=(> A.AGE 1)) (GraphEdgePattern direction=Right bracketed variable=E label=(GraphLabelExpression labels=[KNOWS])) (GraphVertexPattern variable=B label=(GraphLabelExpression labels=[PERSON COMPANY]))])] columns=[(GraphColumn value=A.NAME alias=WHO) (GraphColumn value=(FunctionCall name=[VERTEX_ID] arguments=[(Argument value=B)]))])")]
+        "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A label=(GraphLabelExpression labels=[PERSON]) where=(GreaterThan A.AGE 1)) (GraphEdgePattern direction=Right bracketed variable=E label=(GraphLabelExpression labels=[KNOWS])) (GraphVertexPattern variable=B label=(GraphLabelExpression labels=[PERSON COMPANY]))])] columns=[(GraphColumn value=A.NAME alias=WHO) (GraphColumn value=(FunctionCall name=[VERTEX_ID] arguments=[(Argument value=B)]))])")]
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a)<-[]-(b)-[]-(c)->(d)-(e)<-(f) COLUMNS (a.x))",
         "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A) (GraphEdgePattern direction=Left bracketed) (GraphVertexPattern variable=B) (GraphEdgePattern direction=Any bracketed) (GraphVertexPattern variable=C) (GraphEdgePattern direction=Right) (GraphVertexPattern variable=D) (GraphEdgePattern direction=Any) (GraphVertexPattern variable=E) (GraphEdgePattern direction=Left) (GraphVertexPattern variable=F)])] columns=[(GraphColumn value=A.X)])")]
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a)-[e]->{1,3}(b) COLUMNS (a.x))",
@@ -229,7 +229,7 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a)-[e]-{2}(b) COLUMNS (a.x))",
         "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A) (GraphEdgePattern direction=Any bracketed variable=E quantifier=(GraphQuantifier kind=Exact min=2)) (GraphVertexPattern variable=B)])] columns=[(GraphColumn value=A.X)])")]
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a)-[e]->(b), (c) WHERE a.x = 1 ONE ROW PER VERTEX(a) COLUMNS (a.x))",
-        "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A) (GraphEdgePattern direction=Right bracketed variable=E) (GraphVertexPattern variable=B)]) (GraphPathPattern elements=[(GraphVertexPattern variable=C)])] where=(= A.X 1) rowsPer=Vertex rowsPerVariables=[A] columns=[(GraphColumn value=A.X)])")]
+        "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A) (GraphEdgePattern direction=Right bracketed variable=E) (GraphVertexPattern variable=B)]) (GraphPathPattern elements=[(GraphVertexPattern variable=C)])] where=(Equals A.X 1) rowsPer=Vertex rowsPerVariables=[A] columns=[(GraphColumn value=A.X)])")]
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a)-[e]->(b) COLUMNS (a.x))", "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A) (GraphEdgePattern direction=Right bracketed variable=E) (GraphVertexPattern variable=B)])] columns=[(GraphColumn value=A.X)])")]
     [InlineData("SELECT * FROM GRAPH_TABLE(g MATCH (a)-[e]->(b) ONE ROW PER STEP(a, e, b) COLUMNS (a.x))", "(GraphTable graph=[G] match=[(GraphPathPattern elements=[(GraphVertexPattern variable=A) (GraphEdgePattern direction=Right bracketed variable=E) (GraphVertexPattern variable=B)])] rowsPer=Step rowsPerVariables=[A E B] columns=[(GraphColumn value=A.X)])")]
     public void GraphTable_TypedPatterns(string sql, string expected) => Assert.Equal(expected, Shape.Of<GraphTable>(sql));

@@ -104,7 +104,7 @@ public class TreePlumbingTests
         {
             base.Rewrite(node); // rewrite nested subqueries first
             var p = SqlParser.ParseExpression(predicate);
-            node.Where = node.Where is null ? p : new BinaryExpression { Left = node.Where, Operator = "AND", Right = p };
+            node.Where = node.Where is null ? p : new BinaryExpression { Left = node.Where, Operator = BinaryOperator.And, Right = p };
             return node;
         }
     }

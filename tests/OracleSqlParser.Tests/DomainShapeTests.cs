@@ -9,9 +9,9 @@ public class DomainShapeTests
     [InlineData("CREATE DOMAIN d AS NUMBER(3)",
         "(CreateDomainStatement name=[D] type=(DataType name=NUMBER arguments=[3]))")]
     [InlineData("CREATE USECASE DOMAIN IF NOT EXISTS hr.d AS VARCHAR2(20) DEFAULT 'x' CONSTRAINT nn CHECK (LENGTH(d) > 1) NOT DEFERRABLE COLLATE binary_ci DISPLAY d ORDER d",
-        "(CreateDomainStatement useCase ifNotExists name=[HR D] type=(DataType name=VARCHAR2 arguments=[20]) default='x' constraints=[(TableConstraint name=NN kind=Check check=(> (FunctionCall name=[LENGTH] arguments=[(Argument value=D)]) 1) state=(ConstraintState deferrable=false))] collation=BINARY_CI display=D order=D)")]
+        "(CreateDomainStatement useCase ifNotExists name=[HR D] type=(DataType name=VARCHAR2 arguments=[20]) default='x' constraints=[(TableConstraint name=NN kind=Check check=(GreaterThan (FunctionCall name=[LENGTH] arguments=[(Argument value=D)]) 1) state=(ConstraintState deferrable=false))] collation=BINARY_CI display=D order=D)")]
     [InlineData("ALTER DOMAIN d ADD DISPLAY d || 'x'",
-        "(AlterDomainStatement name=[D] action=(AlterDomainAction kind=AddDisplay value=(|| D 'x')))")]
+        "(AlterDomainStatement name=[D] action=(AlterDomainAction kind=AddDisplay value=(Concatenate D 'x')))")]
     [InlineData("ALTER DOMAIN d DROP ORDER",
         "(AlterDomainStatement name=[D] action=(AlterDomainAction kind=DropOrder))")]
     [InlineData("CREATE TABLE t (c NUMBER DOMAIN d)",

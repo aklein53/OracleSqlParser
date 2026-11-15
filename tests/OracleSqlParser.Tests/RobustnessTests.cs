@@ -164,7 +164,7 @@ public class RobustnessTests
     [Fact]
     public void Printer_OutputUnchanged_ForSmallSpines()
     {
-        Assert.Equal("(AND (AND (= A 1) (= B 2)) (= C 3))", Shape.Expr("a = 1 AND b = 2 AND c = 3"));
+        Assert.Equal("(And (And (Equals A 1) (Equals B 2)) (Equals C 3))", Shape.Expr("a = 1 AND b = 2 AND c = 3"));
         Assert.Contains("(SetOperation left=(SetOperation left=", Shape.Of("SELECT 1 FROM a UNION SELECT 2 FROM b UNION ALL SELECT 3 FROM c"));
     }
 

@@ -27,16 +27,16 @@ public class DmlAndSessionShapeTests
     [InlineData("INSERT ALL INTO a (x) VALUES (1) INTO b VALUES (2) SELECT 1 FROM dual",
         "(MultiTableInsertStatement branches=[(MultiInsertBranch targets=[(InsertIntoClause table=(NamedTable name=[A]) columns=[X] values=[1]) (InsertIntoClause table=(NamedTable name=[B]) values=[2])])] query=" + SelDual + ")")]
     [InlineData("INSERT FIRST WHEN x > 1 THEN INTO a WHEN x > 0 THEN INTO b ELSE INTO c SELECT 1 FROM dual",
-        "(MultiTableInsertStatement first conditional branches=[(MultiInsertBranch when=(> X 1) targets=[(InsertIntoClause table=(NamedTable name=[A]))]) (MultiInsertBranch when=(> X 0) targets=[(InsertIntoClause table=(NamedTable name=[B]))])] else=(MultiInsertBranch targets=[(InsertIntoClause table=(NamedTable name=[C]))]) query=" + SelDual + ")")]
+        "(MultiTableInsertStatement first conditional branches=[(MultiInsertBranch when=(GreaterThan X 1) targets=[(InsertIntoClause table=(NamedTable name=[A]))]) (MultiInsertBranch when=(GreaterThan X 0) targets=[(InsertIntoClause table=(NamedTable name=[B]))])] else=(MultiInsertBranch targets=[(InsertIntoClause table=(NamedTable name=[C]))]) query=" + SelDual + ")")]
     public void MultitableInserts(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]
     [InlineData("UPDATE t SET a = 1, (b, c) = (SELECT 1, 2 FROM dual) WHERE id = 5",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1) (SetClause columns=[B C] value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=[(NamedTable name=[DUAL])]))))] where=(= ID 5))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1) (SetClause columns=[B C] value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=[(NamedTable name=[DUAL])]))))] where=(Equals ID 5))")]
     [InlineData("UPDATE t SET a = 1 WHERE CURRENT OF c1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] where=(CurrentOfExpression cursor=C1))")]
     [InlineData("UPDATE t SET a = DEFAULT RETURNING a INTO v", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=DEFAULT)] returning=[(ReturningItem expression=A)] returningInto=[V])")]
     [InlineData("DELETE FROM t x WHERE x.a = 1 RETURNING a BULK COLLECT INTO tab",
-        "(DeleteStatement target=(NamedTable name=[T] alias=X) where=(= X.A 1) returning=[(ReturningItem expression=A)] returningBulkCollect returningInto=[TAB])")]
+        "(DeleteStatement target=(NamedTable name=[T] alias=X) where=(Equals X.A 1) returning=[(ReturningItem expression=A)] returningBulkCollect returningInto=[TAB])")]
     [InlineData("DELETE t", "(DeleteStatement target=(NamedTable name=[T]))")]
     [InlineData("UPDATE t SET a = 1 RETURNING OLD a, NEW a INTO :o, :n",
         "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=[(ReturningItem image=Old expression=A) (ReturningItem image=New expression=A)] returningInto=[:o :n])")]
@@ -45,11 +45,11 @@ public class DmlAndSessionShapeTests
     [InlineData("UPDATE t SET a = 1 RETURNING NEW SUM(a) INTO :n",
         "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=[(ReturningItem image=New expression=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] returningInto=[:n])")]
     [InlineData("UPDATE t SET t.a = u.a FROM u WHERE t.id = u.id",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[T.A] value=U.A)] from=[(NamedTable name=[U])] where=(= T.ID U.ID))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[T.A] value=U.A)] from=[(NamedTable name=[U])] where=(Equals T.ID U.ID))")]
     [InlineData("DELETE FROM t FROM u WHERE t.id = u.id",
-        "(DeleteStatement target=(NamedTable name=[T]) from=[(NamedTable name=[U])] where=(= T.ID U.ID))")]
+        "(DeleteStatement target=(NamedTable name=[T]) from=[(NamedTable name=[U])] where=(Equals T.ID U.ID))")]
     [InlineData("DELETE FROM t x FROM t y JOIN u ON y.id = u.id WHERE x.id = y.id",
-        "(DeleteStatement target=(NamedTable name=[T] alias=X) from=[(JoinTable left=(NamedTable name=[T] alias=Y) kind=Inner right=(NamedTable name=[U]) on=(= Y.ID U.ID))] where=(= X.ID Y.ID))")]
+        "(DeleteStatement target=(NamedTable name=[T] alias=X) from=[(JoinTable left=(NamedTable name=[T] alias=Y) kind=Inner right=(NamedTable name=[U]) on=(Equals Y.ID U.ID))] where=(Equals X.ID Y.ID))")]
     [InlineData("DELETE FROM t RETURNING OLD a INTO :o",
         "(DeleteStatement target=(NamedTable name=[T]) returning=[(ReturningItem image=Old expression=A)] returningInto=[:o])")]
     public void UpdatesAndDeletes(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
@@ -57,16 +57,16 @@ public class DmlAndSessionShapeTests
     [Fact]
     public void Merge_Shape() =>
         Assert.Equal(
-            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[S])])) alias=S) on=(paren (= T.ID S.ID)) clauses=[" +
-            "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)] updateWhere=(> S.V 0) deleteWhere=(= T.V 0)) " +
-            "(MergeClause insertColumns=[ID V] insertValues=[S.ID S.V] insertWhere=(> S.V 1))])",
+            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[S])])) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
+            "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)] updateWhere=(GreaterThan S.V 0) deleteWhere=(Equals T.V 0)) " +
+            "(MergeClause insertColumns=[ID V] insertValues=[S.ID S.V] insertWhere=(GreaterThan S.V 1))])",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 DELETE WHERE t.v = 0 WHEN NOT MATCHED THEN INSERT (id, v) VALUES (s.id, s.v) WHERE s.v > 1")
                 );
 
     [Fact]
     public void Merge_LogErrors_Shape() =>
         Assert.Equal(
-            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[S])])) alias=S) on=(paren (= T.ID S.ID)) clauses=[" +
+            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[S])])) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
             "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)])] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v LOG ERRORS INTO err_t ('x') REJECT LIMIT 5"));
 
@@ -123,7 +123,7 @@ public class DmlAndSessionShapeTests
     [InlineData("PURGE TABLE t", "(PurgeStatement target=Table name=[T])")]
     [InlineData("PURGE TABLESPACE ts USER u", "(PurgeStatement target=Tablespace name=[TS] user=U)")]
     [InlineData("FLASHBACK TABLE t TO BEFORE DROP RENAME TO t2", "(FlashbackTableStatement tables=[[T]] target=BeforeDrop renameTo=T2 before)")]
-    [InlineData("FLASHBACK TABLE t1, s.t2 TO TIMESTAMP SYSDATE - 1 ENABLE TRIGGERS", "(FlashbackTableStatement tables=[[T1] [S T2]] target=Timestamp point=(- SYSDATE 1) enableTriggers)")]
+    [InlineData("FLASHBACK TABLE t1, s.t2 TO TIMESTAMP SYSDATE - 1 ENABLE TRIGGERS", "(FlashbackTableStatement tables=[[T1] [S T2]] target=Timestamp point=(Subtract SYSDATE 1) enableTriggers)")]
     [InlineData("FLASHBACK TABLE t TO BEFORE SCN 123", "(FlashbackTableStatement tables=[[T]] target=Scn point=123 before)")]
     [InlineData("FLASHBACK TABLE t TO RESTORE POINT rp", "(FlashbackTableStatement tables=[[T]] target=RestorePoint point=RP)")]
     public void OtherStatements(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));

@@ -32,7 +32,7 @@ BEGIN NULL; END;");
             "(VariableDeclaration name=V_NAME type=(DataType name=EMP.ENAME attribute=TYPE)) " +
             "(VariableDeclaration name=R type=(DataType name=EMP attribute=ROWTYPE)) " +
             "(ExceptionDeclaration name=E_BAD) " +
-            "(PragmaDeclaration name=EXCEPTION_INIT arguments=[E_BAD (- 20001)]) " +
+            "(PragmaDeclaration name=EXCEPTION_INIT arguments=[E_BAD (Minus 20001)]) " +
             "(CursorDeclaration name=C1 parameters=[(Parameter name=P type=(DataType name=NUMBER))] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))) " +
             "(CollectionTypeDeclaration name=T_TAB kind=Table elementType=(DataType name=NUMBER) indexBy=(DataType name=PLS_INTEGER)) " +
             "(RecordTypeDeclaration name=T_REC fields=[(VariableDeclaration name=A type=(DataType name=NUMBER)) (VariableDeclaration name=B type=(DataType name=VARCHAR2 arguments=[10]) notNull default='x')]) " +
@@ -53,12 +53,12 @@ BEGIN NULL; END;");
     public void ConditionalCompilation_InStatements()
     {
         Assert.Equal(
-            "[(ConditionalStatement condition=(= (InquiryDirective name=$$FLAG) 1) thenStatements=[(AssignmentStatement target=X value=1)] " +
-            "elsifBranches=[(ConditionalStatementBranch condition=(= (InquiryDirective name=$$FLAG) 2) statements=[(NullStatement)])] " +
+            "[(ConditionalStatement condition=(Equals (InquiryDirective name=$$FLAG) 1) thenStatements=[(AssignmentStatement target=X value=1)] " +
+            "elsifBranches=[(ConditionalStatementBranch condition=(Equals (InquiryDirective name=$$FLAG) 2) statements=[(NullStatement)])] " +
             "elseStatements=[(CompilationErrorStatement message='bad')]) (NullStatement)]",
             Stmts("$IF $$flag = 1 $THEN x := 1; $ELSIF $$flag = 2 $THEN NULL; $ELSE $ERROR 'bad' $END $END NULL;"));
         Assert.Equal(
-            "[(ConditionalStatement condition=(= (InquiryDirective name=$$FLAG) 1) thenStatements=[(NullStatement)])]",
+            "[(ConditionalStatement condition=(Equals (InquiryDirective name=$$FLAG) 1) thenStatements=[(NullStatement)])]",
             Stmts("$IF $$flag = 1 $THEN NULL; $END"));
     }
 
@@ -66,7 +66,7 @@ BEGIN NULL; END;");
     public void ConditionalCompilation_NestedInControlFlow()
     {
         Assert.Equal(
-            "[(IfStatement condition=A thenStatements=[(ConditionalStatement condition=(= (InquiryDirective name=$$FLAG) 1) thenStatements=[(NullStatement)])])]",
+            "[(IfStatement condition=A thenStatements=[(ConditionalStatement condition=(Equals (InquiryDirective name=$$FLAG) 1) thenStatements=[(NullStatement)])])]",
             Stmts("IF a THEN $IF $$flag = 1 $THEN NULL; $END END IF;"));
     }
 
@@ -75,13 +75,13 @@ BEGIN NULL; END;");
     {
         var b = FirstBlock("DECLARE $IF $$flag = 1 $THEN v NUMBER := 1; $ELSIF $$flag = 2 $THEN v NUMBER := 3; $ELSE v NUMBER := 2; $END BEGIN NULL; END;");
         Assert.Equal(
-            "[(ConditionalDeclaration condition=(= (InquiryDirective name=$$FLAG) 1) thenDeclarations=[(VariableDeclaration name=V type=(DataType name=NUMBER) default=1)] " +
-            "elsifBranches=[(ConditionalDeclarationBranch condition=(= (InquiryDirective name=$$FLAG) 2) declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER) default=3)])] " +
+            "[(ConditionalDeclaration condition=(Equals (InquiryDirective name=$$FLAG) 1) thenDeclarations=[(VariableDeclaration name=V type=(DataType name=NUMBER) default=1)] " +
+            "elsifBranches=[(ConditionalDeclarationBranch condition=(Equals (InquiryDirective name=$$FLAG) 2) declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER) default=3)])] " +
             "elseDeclarations=[(VariableDeclaration name=V type=(DataType name=NUMBER) default=2)])]",
             AstPrinter.Print(b.Declarations));
 
         var e = FirstBlock("DECLARE $IF $$flag = 1 $THEN $ERROR 'x' $END $END BEGIN NULL; END;");
-        Assert.Equal("[(ConditionalDeclaration condition=(= (InquiryDirective name=$$FLAG) 1) thenDeclarations=[(CompilationErrorDeclaration message='x')])]",
+        Assert.Equal("[(ConditionalDeclaration condition=(Equals (InquiryDirective name=$$FLAG) 1) thenDeclarations=[(CompilationErrorDeclaration message='x')])]",
             AstPrinter.Print(e.Declarations));
     }
 
@@ -113,20 +113,20 @@ BEGIN NULL; END;");
     }
 
     [Theory]
-    [InlineData("x := 1; y.z := x + 1;", "[(AssignmentStatement target=X value=1) (AssignmentStatement target=Y.Z value=(+ X 1))]")]
+    [InlineData("x := 1; y.z := x + 1;", "[(AssignmentStatement target=X value=1) (AssignmentStatement target=Y.Z value=(Add X 1))]")]
     [InlineData("arr(i) := 2; arr(i).f := 3; :new.c := 4;",
         "[(AssignmentStatement target=(FunctionCall name=[ARR] arguments=[(Argument value=I)]) value=2) " +
         "(AssignmentStatement target=(MemberAccess target=(FunctionCall name=[ARR] arguments=[(Argument value=I)]) member=F) value=3) " +
         "(AssignmentStatement target=:new.c value=4)]")]
     [InlineData("IF a > 1 THEN b := 1; ELSIF a < 0 THEN b := 2; ELSE b := 3; END IF;",
-        "[(IfStatement condition=(> A 1) thenStatements=[(AssignmentStatement target=B value=1)] elsifBranches=[(IfBranch condition=(< A 0) statements=[(AssignmentStatement target=B value=2)])] elseStatements=[(AssignmentStatement target=B value=3)])]")]
+        "[(IfStatement condition=(GreaterThan A 1) thenStatements=[(AssignmentStatement target=B value=1)] elsifBranches=[(IfBranch condition=(LessThan A 0) statements=[(AssignmentStatement target=B value=2)])] elseStatements=[(AssignmentStatement target=B value=3)])]")]
     [InlineData("CASE x WHEN 1 THEN y := 1; WHEN 2 THEN NULL; ELSE y := 3; END CASE;",
         "[(PlsqlCaseStatement operand=X whens=[(CaseStatementWhen when=1 statements=[(AssignmentStatement target=Y value=1)]) (CaseStatementWhen when=2 statements=[(NullStatement)])] elseStatements=[(AssignmentStatement target=Y value=3)])]")]
     [InlineData("CASE WHEN a THEN NULL; END CASE;", "[(PlsqlCaseStatement whens=[(CaseStatementWhen when=A statements=[(NullStatement)])])]")]
     [InlineData("LOOP EXIT WHEN x > 5; x := x + 1; END LOOP;",
-        "[(LoopStatement kind=Basic body=[(ExitStatement when=(> X 5)) (AssignmentStatement target=X value=(+ X 1))])]")]
+        "[(LoopStatement kind=Basic body=[(ExitStatement when=(GreaterThan X 5)) (AssignmentStatement target=X value=(Add X 1))])]")]
     [InlineData("<<outer>> WHILE x < 5 LOOP CONTINUE outer WHEN x = 2; EXIT outer; END LOOP outer;",
-        "[(LoopStatement kind=While condition=(< X 5) body=[(ContinueStatement label=OUTER when=(= X 2)) (ExitStatement label=OUTER)] endLabel=OUTER labels=[OUTER])]")]
+        "[(LoopStatement kind=While condition=(LessThan X 5) body=[(ContinueStatement label=OUTER when=(Equals X 2)) (ExitStatement label=OUTER)] endLabel=OUTER labels=[OUTER])]")]
     [InlineData("FOR i IN REVERSE 1..n LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl reverse lower=1 upper=N)] body=[(NullStatement)])]")]
     [InlineData("FOR r IN (SELECT 1 FROM dual) LOOP NULL; END LOOP;",
         "[(LoopStatement kind=For iterands=[(ForIterand name=R)] controls=[(CursorControl query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])))] body=[(NullStatement)])]")]
@@ -136,13 +136,13 @@ BEGIN NULL; END;");
     [InlineData("FOR i IN 1..3, 10..12, 20 LOOP NULL; END LOOP;",
         "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl lower=1 upper=3) (RangeControl lower=10 upper=12) (ExpressionControl value=20)] body=[(NullStatement)])]")]
     [InlineData("FOR i IN REPEAT i*2 WHILE i < 100 LOOP NULL; END LOOP;",
-        "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RepeatControl value=(* I 2) while=(< I 100))] body=[(NullStatement)])]")]
+        "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RepeatControl value=(Multiply I 2) while=(LessThan I 100))] body=[(NullStatement)])]")]
     [InlineData("FOR i IN VALUES OF coll LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(ValuesOfControl collection=COLL)] body=[(NullStatement)])]")]
     [InlineData("FOR i IN INDICES OF coll LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(IndicesOfControl collection=COLL)] body=[(NullStatement)])]")]
     [InlineData("FOR i, v IN PAIRS OF coll LOOP NULL; END LOOP;",
         "[(LoopStatement kind=For iterands=[(ForIterand name=I) (ForIterand name=V)] controls=[(PairsOfControl collection=COLL)] body=[(NullStatement)])]")]
     [InlineData("FOR i IN 1..10 WHEN MOD(i,2)=0 LOOP NULL; END LOOP;",
-        "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl lower=1 upper=10 when=(= (FunctionCall name=[MOD] arguments=[(Argument value=I) (Argument value=2)]) 0))] body=[(NullStatement)])]")]
+        "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl lower=1 upper=10 when=(Equals (FunctionCall name=[MOD] arguments=[(Argument value=I) (Argument value=2)]) 0))] body=[(NullStatement)])]")]
     [InlineData("FOR i NUMBER(5,1) IN 1..2 BY 0.5 LOOP NULL; END LOOP;",
         "[(LoopStatement kind=For iterands=[(ForIterand name=I type=(DataType name=NUMBER arguments=[5 1]))] controls=[(RangeControl lower=1 upper=2 by=0.5)] body=[(NullStatement)])]")]
     [InlineData("FOR i MUTABLE IN 1..2 LOOP NULL; END LOOP;",
@@ -154,7 +154,7 @@ BEGIN NULL; END;");
     [InlineData("OPEN c1; OPEN c2(1, 2); CLOSE c1;",
         "[(OpenStatement cursor=C1) (OpenStatement cursor=(FunctionCall name=[C2] arguments=[(Argument value=1) (Argument value=2)])) (CloseStatement cursor=C1)]")]
     [InlineData("OPEN rc FOR SELECT a FROM t WHERE b = :x USING y;",
-        "[(OpenStatement cursor=RC forQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(= B :x))) using=[(UsingArgument value=Y)])]")]
+        "[(OpenStatement cursor=RC forQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(Equals B :x))) using=[(UsingArgument value=Y)])]")]
     [InlineData("OPEN rc FOR 'select 1 from dual';", "[(OpenStatement cursor=RC forExpression='select 1 from dual')]")]
     [InlineData("FETCH c1 INTO a, b; FETCH c2 BULK COLLECT INTO tab LIMIT 100;",
         "[(FetchStatement cursor=C1 into=[A B]) (FetchStatement cursor=C2 bulkCollect into=[TAB] limit=100)]")]
@@ -164,17 +164,17 @@ BEGIN NULL; END;");
     [InlineData("FORALL i IN 1..tab.COUNT SAVE EXCEPTIONS INSERT INTO t VALUES (tab(i));",
         "[(ForallStatement index=I lower=1 upper=TAB.COUNT saveExceptions body=(InsertStatement target=(NamedTable name=[T]) valueRows=[[(FunctionCall name=[TAB] arguments=[(Argument value=I)])]]))]")]
     [InlineData("FORALL i IN INDICES OF tab BETWEEN 1 AND 5 DELETE FROM t WHERE id = tab(i);",
-        "[(ForallStatement index=I indicesOf=TAB betweenLow=1 betweenHigh=5 body=(DeleteStatement target=(NamedTable name=[T]) where=(= ID (FunctionCall name=[TAB] arguments=[(Argument value=I)]))))]")]
+        "[(ForallStatement index=I indicesOf=TAB betweenLow=1 betweenHigh=5 body=(DeleteStatement target=(NamedTable name=[T]) where=(Equals ID (FunctionCall name=[TAB] arguments=[(Argument value=I)]))))]")]
     [InlineData("FORALL i IN VALUES OF idx UPDATE t SET a = 1;", "[(ForallStatement index=I valuesOf=IDX body=(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)]))]")]
     [InlineData("RETURN; RETURN x + 1; RAISE; RAISE my_err; GOTO done; <<done>> NULL;",
-        "[(ReturnStatement) (ReturnStatement value=(+ X 1)) (RaiseStatement) (RaiseStatement exception=[MY_ERR]) (GotoStatement target=DONE) (NullStatement labels=[DONE])]")]
+        "[(ReturnStatement) (ReturnStatement value=(Add X 1)) (RaiseStatement) (RaiseStatement exception=[MY_ERR]) (GotoStatement target=DONE) (NullStatement labels=[DONE])]")]
     [InlineData("PIPE ROW (t_rec(1, 2));", "[(PipeRowStatement value=(FunctionCall name=[T_REC] arguments=[(Argument value=1) (Argument value=2)]))]")]
     [InlineData("pkg.proc(p_a => 1); my_proc; RAISE_APPLICATION_ERROR(-20001, 'bad');",
         "[(ProcedureCallStatement call=(FunctionCall name=[PKG PROC] arguments=[(Argument name=P_A value=1)])) (ProcedureCallStatement call=MY_PROC) " +
-        "(ProcedureCallStatement call=(FunctionCall name=[RAISE_APPLICATION_ERROR] arguments=[(Argument value=(- 20001)) (Argument value='bad')]))]")]
+        "(ProcedureCallStatement call=(FunctionCall name=[RAISE_APPLICATION_ERROR] arguments=[(Argument value=(Minus 20001)) (Argument value='bad')]))]")]
     [InlineData("COMMIT; ROLLBACK TO sp; SAVEPOINT sp;", "[(CommitStatement) (RollbackStatement toSavepoint=SP) (SavepointStatement name=SP)]")]
     [InlineData("SELECT a INTO v FROM t WHERE id = 1;",
-        "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(= ID 1) into=[V]))]")]
+        "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(Equals ID 1) into=[V]))]")]
     [InlineData("BEGIN NULL; EXCEPTION WHEN OTHERS THEN NULL; END;",
         "[(BlockStatement statements=[(NullStatement)] handlers=[(ExceptionHandler others statements=[(NullStatement)])])]")]
     [InlineData("v := SQL%ROWCOUNT; IF c1%ISOPEN THEN NULL; END IF;",
@@ -250,7 +250,7 @@ BEGIN NULL; END;");
     [Theory]
     [InlineData("CREATE OR REPLACE TRIGGER trg BEFORE INSERT OR UPDATE OF a, b ON hr.t REFERENCING NEW AS n OLD o FOR EACH ROW FOLLOWS other_trg WHEN (n.a > 0) BEGIN NULL; END;",
         "(CreateTriggerStatement orReplace name=[TRG] timing=Before events=[(TriggerEvent kind=Insert) (TriggerEvent kind=Update columns=[A B])] targetKind=Table target=[HR T] " +
-        "referencing=[(ReferencingItem kind=New alias=N) (ReferencingItem kind=Old alias=O)] forEachRow ordering=Follows orderingTriggers=[[OTHER_TRG]] when=(> N.A 0) body=(BlockStatement statements=[(NullStatement)]))")]
+        "referencing=[(ReferencingItem kind=New alias=N) (ReferencingItem kind=Old alias=O)] forEachRow ordering=Follows orderingTriggers=[[OTHER_TRG]] when=(GreaterThan N.A 0) body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg AFTER LOGON ON DATABASE BEGIN NULL; END;",
         "(CreateTriggerStatement name=[TRG] timing=After events=[(TriggerEvent kind=Database eventName=LOGON)] targetKind=Database body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg AFTER CREATE OR DROP ON hr.SCHEMA BEGIN NULL; END;",
@@ -367,10 +367,10 @@ BEGIN NULL; END;");
 
     // ** is PL/SQL-only. Inside procedural code it parses (and binds tighter than unary minus); in SQL it is an error.
     [Theory]
-    [InlineData("BEGIN x := -a ** 2; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(- (** A 2)))])")]
-    [InlineData("BEGIN x := 2 ** 3; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(** 2 3))])")]
-    [InlineData("DECLARE c CONSTANT NUMBER := 2 ** 3; BEGIN NULL; END;", "(BlockStatement hasDeclare declarations=[(VariableDeclaration name=C constant type=(DataType name=NUMBER) default=(** 2 3))] statements=[(NullStatement)])")]
-    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=[(NamedTable name=[DUAL])]) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(** 2 3))]))])")]
+    [InlineData("BEGIN x := -a ** 2; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(Minus (Power A 2)))])")]
+    [InlineData("BEGIN x := 2 ** 3; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(Power 2 3))])")]
+    [InlineData("DECLARE c CONSTANT NUMBER := 2 ** 3; BEGIN NULL; END;", "(BlockStatement hasDeclare declarations=[(VariableDeclaration name=C constant type=(DataType name=NUMBER) default=(Power 2 3))] statements=[(NullStatement)])")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=[(NamedTable name=[DUAL])]) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Power 2 3))]))])")]
     public void ExponentInPlsql(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]

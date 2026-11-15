@@ -308,7 +308,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[0]);
         var q = (QuerySpecification)((SelectStatement)s.Statements[0]).Body;
         Assert.True(q.NoCycle);
-        Assert.Contains("(= (PRIOR O.ID) O.PARENT_ID)", Str(q.ConnectBy!));
+        Assert.Contains("(Equals (Prior O.ID) O.PARENT_ID)", Str(q.ConnectBy!));
         Assert.Contains("CONNECT_BY_ROOT", Str(q.SelectList[2]));
         await VerifyAsync(sql, []);
     }
@@ -649,7 +649,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[0]);
         Assert.Equal(2, Find<CaseExpression>(s).Count());
         var where = ((QuerySpecification)((SelectStatement)s.Statements[0]).Body).Where!;
-        Assert.StartsWith("(AND ", Str(where));
+        Assert.StartsWith("(And ", Str(where));
         await VerifyAsync(sql, []);
     }
 
@@ -671,7 +671,7 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var where = ((QuerySpecification)((SelectStatement)s.Statements[0]).Body).Where!;
-        Assert.StartsWith("(OR (AND ", Str(where));
+        Assert.StartsWith("(Or (And ", Str(where));
         await VerifyAsync(sql, []);
     }
 
@@ -727,7 +727,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[0]);
         var ss = (SelectStatement)s.Statements[0];
         Assert.Single(ss.With);
-        Assert.Contains("(<= R.DR 2)", Str(((QuerySpecification)ss.Body).Where!));
+        Assert.Contains("(LessThanOrEqual R.DR 2)", Str(((QuerySpecification)ss.Body).Where!));
         await VerifyAsync(sql, []);
     }
 
@@ -781,7 +781,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[0]);
         var q = (QuerySpecification)((SelectStatement)s.Statements[0]).Body;
         Assert.Equal(2, q.GroupBy.Count);
-        Assert.StartsWith("(AND ", Str(q.Having!));
+        Assert.StartsWith("(And ", Str(q.Having!));
         await VerifyAsync(sql, []);
     }
 
@@ -807,7 +807,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[0]);
         Assert.Single(Find<ValuesTable>(s));
         var q = (QuerySpecification)((SelectStatement)s.Statements[0]).Body;
-        Assert.Contains("(> O.TOTAL 100)", Str(q.SelectList[1]));
+        Assert.Contains("(GreaterThan O.TOTAL 100)", Str(q.SelectList[1]));
         await VerifyAsync(sql, []);
     }
 
@@ -829,8 +829,8 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var where = ((QuerySpecification)((SelectStatement)s.Statements[0]).Body).Where!;
-        Assert.StartsWith("(OR ", Str(where));
-        Assert.Contains("(AND ", Str(where));
+        Assert.StartsWith("(Or ", Str(where));
+        Assert.Contains("(And ", Str(where));
         await VerifyAsync(sql, []);
     }
 
@@ -935,7 +935,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[0]);
         Assert.Equal(2, Find<QuantifiedComparison>(s).Count());
         var where = ((QuerySpecification)((SelectStatement)s.Statements[0]).Body).Where!;
-        Assert.StartsWith("(OR ", Str(where));
+        Assert.StartsWith("(Or ", Str(where));
         await VerifyAsync(sql, []);
     }
 
@@ -1069,8 +1069,8 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var outer = (QuerySpecification)((SelectStatement)s.Statements[0]).Body;
-        Assert.StartsWith("(> RN 2)", Str(outer.Where!));
-        Assert.Contains("(<= ROWNUM 6)", Str(s));
+        Assert.StartsWith("(GreaterThan RN 2)", Str(outer.Where!));
+        Assert.Contains("(LessThanOrEqual ROWNUM 6)", Str(s));
         await VerifyAsync(sql, []);
     }
 

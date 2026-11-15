@@ -283,7 +283,7 @@ public static class QueryGuard
                 {
                     Left = inline, Kind = JoinKind.Inner,
                     Right = new SubqueryTable { Query = access, Alias = Ident("A") },
-                    On = new BinaryExpression { Left = key, Operator = "=", Right = Col("A", filter.AccessIdColumn) },
+                    On = new BinaryExpression { Left = key, Operator = BinaryOperator.Equals, Right = Col("A", filter.AccessIdColumn) },
                 },
             ];
         }

@@ -20,7 +20,7 @@ public sealed partial class SqlParser
         while (IsKw("OR") && Progress(ref prog107))
         {
             Next();
-            left = Fin(new BinaryExpression { Left = left, Operator = "OR", Right = ParseAnd() }, start);
+            left = Fin(new BinaryExpression { Left = left, Operator = BinaryOperator.Or, Right = ParseAnd() }, start);
         }
         return left;
     }
@@ -33,7 +33,7 @@ public sealed partial class SqlParser
         while (IsKw("AND") && Progress(ref prog108))
         {
             Next();
-            left = Fin(new BinaryExpression { Left = left, Operator = "AND", Right = ParseNot() }, start);
+            left = Fin(new BinaryExpression { Left = left, Operator = BinaryOperator.And, Right = ParseNot() }, start);
         }
         return left;
     }
@@ -47,12 +47,36 @@ public sealed partial class SqlParser
             Enter();
             var operand = ParseNot();
             Leave();
-            return Fin(new UnaryExpression { Operator = "NOT", Operand = operand }, start);
+            return Fin(new UnaryExpression { Operator = UnaryOperator.Not, Operand = operand }, start);
         }
         return ParseComparison();
     }
 
     private static readonly HashSet<string> ComparisonOps = ["=", "<>", "!=", "^=", "~=", "<", ">", "<=", ">="];
+
+    /// <summary>The comparison operator for a comparison token; <c>!=</c>, <c>^=</c> and <c>~=</c> are all NotEquals.</summary>
+    private static BinaryOperator ComparisonOperator(string text) => text switch
+    {
+        "=" => BinaryOperator.Equals,
+        "<>" or "!=" or "^=" or "~=" => BinaryOperator.NotEquals,
+        "<" => BinaryOperator.LessThan,
+        ">" => BinaryOperator.GreaterThan,
+        "<=" => BinaryOperator.LessThanOrEqual,
+        ">=" => BinaryOperator.GreaterThanOrEqual,
+        _ => throw new InvalidOperationException("Not a comparison operator: " + text),
+    };
+
+    /// <summary>The arithmetic or concatenation operator for an operator token.</summary>
+    private static BinaryOperator ArithmeticOperator(string text) => text switch
+    {
+        "+" => BinaryOperator.Add,
+        "-" => BinaryOperator.Subtract,
+        "*" => BinaryOperator.Multiply,
+        "/" => BinaryOperator.Divide,
+        "**" => BinaryOperator.Power,
+        "||" => BinaryOperator.Concatenate,
+        _ => throw new InvalidOperationException("Not an arithmetic operator: " + text),
+    };
 
     private Expression ParseComparison()
     {
@@ -63,7 +87,7 @@ public sealed partial class SqlParser
         {
             if (Cur.Type == TokenType.Operator && ComparisonOps.Contains(Cur.Text))
             {
-                var op = Next().Text;
+                var op = ComparisonOperator(Next().Text);
                 if ((IsKw("ANY") || IsKw("SOME") || IsKw("ALL")) && IsOpAt(1, "("))
                 {
                     var q = Next().Value switch { "ANY" => ComparisonQuantifier.Any, "SOME" => ComparisonQuantifier.Some, _ => ComparisonQuantifier.All };
@@ -117,7 +141,10 @@ public sealed partial class SqlParser
                 if (negated) Next();
                 var word = Next().Value;
                 AcceptKw("OF");
-                left = Fin(new BinaryExpression { Left = left, Operator = (negated ? "NOT " : "") + word + " OF", Right = ParseAdditive() }, start);
+                var op = word == "MEMBER"
+                    ? (negated ? BinaryOperator.NotMemberOf : BinaryOperator.MemberOf)
+                    : (negated ? BinaryOperator.NotSubmultisetOf : BinaryOperator.SubmultisetOf);
+                left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseAdditive() }, start);
                 continue;
             }
             break;
@@ -174,14 +201,27 @@ public sealed partial class SqlParser
         {
             if (Cur.Type == TokenType.Operator && Cur.Text is "+" or "-" or "||")
             {
-                var op = Next().Text;
+                var op = ArithmeticOperator(Next().Text);
                 left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseMultiplicative() }, start);
             }
             else if (IsKw("MULTISET") && (IsKwAt(1, "UNION") || IsKwAt(1, "INTERSECT") || IsKwAt(1, "EXCEPT")))
             {
                 Next();
-                var op = "MULTISET " + Next().Value;
-                if (IsKw("ALL") || IsKw("DISTINCT")) op += " " + Next().Value;
+                var kind = Next().Value;
+                var quantifier = IsKw("ALL") || IsKw("DISTINCT") ? Next().Value : "";
+                var op = (kind, quantifier) switch
+                {
+                    ("UNION", "") => BinaryOperator.MultisetUnion,
+                    ("UNION", "ALL") => BinaryOperator.MultisetUnionAll,
+                    ("UNION", "DISTINCT") => BinaryOperator.MultisetUnionDistinct,
+                    ("INTERSECT", "") => BinaryOperator.MultisetIntersect,
+                    ("INTERSECT", "ALL") => BinaryOperator.MultisetIntersectAll,
+                    ("INTERSECT", "DISTINCT") => BinaryOperator.MultisetIntersectDistinct,
+                    ("EXCEPT", "") => BinaryOperator.MultisetExcept,
+                    ("EXCEPT", "ALL") => BinaryOperator.MultisetExceptAll,
+                    ("EXCEPT", "DISTINCT") => BinaryOperator.MultisetExceptDistinct,
+                    _ => throw new InvalidOperationException("Not a MULTISET operator: " + kind + " " + quantifier),
+                };
                 left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseMultiplicative() }, start);
             }
             else break;
@@ -195,7 +235,7 @@ public sealed partial class SqlParser
         var left = ParseUnary();
         while (Cur.Type == TokenType.Operator && Cur.Text is "*" or "/")
         {
-            var op = Next().Text;
+            var op = ArithmeticOperator(Next().Text);
             left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseUnary() }, start);
         }
         return left;
@@ -206,7 +246,7 @@ public sealed partial class SqlParser
         var start = Cur;
         if (Cur.Type == TokenType.Operator && Cur.Text is "+" or "-")
         {
-            var op = Next().Text;
+            var op = Next().Text == "+" ? UnaryOperator.Plus : UnaryOperator.Minus;
             Enter();
             var operand = ParseUnary();
             Leave();
@@ -214,7 +254,7 @@ public sealed partial class SqlParser
         }
         if (IsKw("PRIOR") || IsKw("CONNECT_BY_ROOT"))
         {
-            var op = Next().Value;
+            var op = Next().Value == "PRIOR" ? UnaryOperator.Prior : UnaryOperator.ConnectByRoot;
             Enter();
             var operand = ParseUnary();
             Leave();
@@ -232,7 +272,7 @@ public sealed partial class SqlParser
         {
             if (!_plsql) throw Fail("'**' is a PL/SQL operator and is not valid in SQL (use POWER)", ParseErrorCodes.InvalidCombination);
             Next();
-            left = Fin(new BinaryExpression { Left = left, Operator = "**", Right = ParsePostfix() }, start);
+            left = Fin(new BinaryExpression { Left = left, Operator = BinaryOperator.Power, Right = ParsePostfix() }, start);
         }
         return left;
     }

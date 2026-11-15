@@ -548,7 +548,7 @@ OracleSqlParser.BinaryExpression
 OracleSqlParser.BinaryExpression.BinaryExpression() -> void
 OracleSqlParser.BinaryExpression.Left.get -> OracleSqlParser.Expression!
 OracleSqlParser.BinaryExpression.Left.set -> void
-OracleSqlParser.BinaryExpression.Operator.get -> string!
+OracleSqlParser.BinaryExpression.Operator.get -> OracleSqlParser.BinaryOperator
 OracleSqlParser.BinaryExpression.Operator.set -> void
 OracleSqlParser.BinaryExpression.Right.get -> OracleSqlParser.Expression!
 OracleSqlParser.BinaryExpression.Right.set -> void
@@ -3116,7 +3116,7 @@ OracleSqlParser.QualifiedExpression.Value.set -> void
 OracleSqlParser.QuantifiedComparison
 OracleSqlParser.QuantifiedComparison.Left.get -> OracleSqlParser.Expression!
 OracleSqlParser.QuantifiedComparison.Left.set -> void
-OracleSqlParser.QuantifiedComparison.Operator.get -> string!
+OracleSqlParser.QuantifiedComparison.Operator.get -> OracleSqlParser.BinaryOperator
 OracleSqlParser.QuantifiedComparison.Operator.set -> void
 OracleSqlParser.QuantifiedComparison.QuantifiedComparison() -> void
 OracleSqlParser.QuantifiedComparison.Quantifier.get -> OracleSqlParser.ComparisonQuantifier
@@ -3831,7 +3831,7 @@ OracleSqlParser.TypeKind.Varray = 2 -> OracleSqlParser.TypeKind
 OracleSqlParser.UnaryExpression
 OracleSqlParser.UnaryExpression.Operand.get -> OracleSqlParser.Expression!
 OracleSqlParser.UnaryExpression.Operand.set -> void
-OracleSqlParser.UnaryExpression.Operator.get -> string!
+OracleSqlParser.UnaryExpression.Operator.get -> OracleSqlParser.UnaryOperator
 OracleSqlParser.UnaryExpression.Operator.set -> void
 OracleSqlParser.UnaryExpression.UnaryExpression() -> void
 OracleSqlParser.UnpivotInItem

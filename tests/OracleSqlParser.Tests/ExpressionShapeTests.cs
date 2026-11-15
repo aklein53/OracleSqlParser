@@ -5,15 +5,15 @@ namespace OracleSqlParser.Tests;
 public class ExpressionShapeTests
 {
     [Theory]
-    [InlineData("a OR b AND c", "(OR A (AND B C))")]
-    [InlineData("1 + 2 * 3", "(+ 1 (* 2 3))")]
-    [InlineData("(1 + 2) * 3", "(* (paren (+ 1 2)) 3)")]
-    [InlineData("a - -1", "(- A (- 1))")]
-    [InlineData("a || b || 'c'", "(|| (|| A B) 'c')")]
-    [InlineData("NOT a = b", "(NOT (= A B))")]
-    [InlineData("a <> 1 AND b != 2 AND c ^= 3", "(AND (AND (<> A 1) (!= B 2)) (^= C 3))")]
-    [InlineData("TRUE AND NOT FALSE", "(AND TRUE (NOT FALSE))")]
-    [InlineData("a.id = b.id(+)", "(= A.ID B.ID(+))")]
+    [InlineData("a OR b AND c", "(Or A (And B C))")]
+    [InlineData("1 + 2 * 3", "(Add 1 (Multiply 2 3))")]
+    [InlineData("(1 + 2) * 3", "(Multiply (paren (Add 1 2)) 3)")]
+    [InlineData("a - -1", "(Subtract A (Minus 1))")]
+    [InlineData("a || b || 'c'", "(Concatenate (Concatenate A B) 'c')")]
+    [InlineData("NOT a = b", "(Not (Equals A B))")]
+    [InlineData("a <> 1 AND b != 2 AND c ^= 3", "(And (And (NotEquals A 1) (NotEquals B 2)) (NotEquals C 3))")]
+    [InlineData("TRUE AND NOT FALSE", "(And TRUE (Not FALSE))")]
+    [InlineData("a.id = b.id(+)", "(Equals A.ID B.ID(+))")]
     [InlineData("s.t.c", "S.T.C")]
     [InlineData("\"MixedCase\".x", "\"MixedCase\".X")]
     [InlineData("q'[it's]'", "'it's'")]
@@ -34,7 +34,7 @@ public class ExpressionShapeTests
     public void Basics(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]
-    [InlineData("a BETWEEN 1 AND 2 AND b = 3", "(AND (BetweenExpression value=A low=1 high=2) (= B 3))")]
+    [InlineData("a BETWEEN 1 AND 2 AND b = 3", "(And (BetweenExpression value=A low=1 high=2) (Equals B 3))")]
     [InlineData("a NOT BETWEEN 1 AND 2", "(BetweenExpression value=A not low=1 high=2)")]
     [InlineData("a IN (1, 2)", "(InExpression value=A list=[1 2])")]
     [InlineData("a NOT IN (1)", "(InExpression value=A not list=[1])")]
@@ -45,19 +45,19 @@ public class ExpressionShapeTests
     [InlineData("a IS NOT NAN", "(IsExpression value=A not test=Nan)")]
     [InlineData("a IS A SET", "(IsExpression value=A test=ASet)")]
     [InlineData("a IS EMPTY", "(IsExpression value=A test=Empty)")]
-    [InlineData("(1=1) IS TRUE", "(IsExpression value=(paren (= 1 1)) test=True)")]
-    [InlineData("(1=1) IS NOT FALSE", "(IsExpression value=(paren (= 1 1)) not test=False)")]
-    [InlineData("a IS TRUE AND b IS NOT TRUE", "(AND (IsExpression value=A test=True) (IsExpression value=B not test=True))")]
+    [InlineData("(1=1) IS TRUE", "(IsExpression value=(paren (Equals 1 1)) test=True)")]
+    [InlineData("(1=1) IS NOT FALSE", "(IsExpression value=(paren (Equals 1 1)) not test=False)")]
+    [InlineData("a IS TRUE AND b IS NOT TRUE", "(And (IsExpression value=A test=True) (IsExpression value=B not test=True))")]
     [InlineData("x IS JSON STRICT WITH UNIQUE KEYS", "(IsExpression value=X test=Json jsonClauses=[(FlagClause flag=Strict) (FlagClause flag=WithUniqueKeys)])")]
     [InlineData("x IS OF (ONLY t1, t2)", "(IsExpression value=X test=OfType ofTypes=[(IsOfType only type=(DataType name=T1)) (IsOfType type=(DataType name=T2))])")]
-    [InlineData("a MEMBER OF b", "(MEMBER OF A B)")]
-    [InlineData("a NOT MEMBER OF b", "(NOT MEMBER OF A B)")]
-    [InlineData("a MULTISET UNION DISTINCT b", "(MULTISET UNION DISTINCT A B)")]
-    [InlineData("x = ALL (1, 2)", "(QuantifiedComparison left=X operator== quantifier=All right=(ExpressionList items=[1 2]))")]
+    [InlineData("a MEMBER OF b", "(MemberOf A B)")]
+    [InlineData("a NOT MEMBER OF b", "(NotMemberOf A B)")]
+    [InlineData("a MULTISET UNION DISTINCT b", "(MultisetUnionDistinct A B)")]
+    [InlineData("x = ALL (1, 2)", "(QuantifiedComparison left=X operator=Equals quantifier=All right=(ExpressionList items=[1 2]))")]
     public void Predicates(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]
-    [InlineData("CASE WHEN a > 1 THEN 'x' ELSE 'y' END", "(CaseExpression whens=[(WhenClause when=(> A 1) then='x')] else='y')")]
+    [InlineData("CASE WHEN a > 1 THEN 'x' ELSE 'y' END", "(CaseExpression whens=[(WhenClause when=(GreaterThan A 1) then='x')] else='y')")]
     [InlineData("CASE a WHEN 1 THEN 2 WHEN 3 THEN 4 END", "(CaseExpression operand=A whens=[(WhenClause when=1 then=2) (WhenClause when=3 then=4)])")]
     [InlineData("CAST(a AS NUMBER(10,2))", "(CastExpression kind=Cast value=A type=(DataType name=NUMBER arguments=[10 2]))")]
     [InlineData("CAST(a AS NUMBER(*,2))", "(CastExpression kind=Cast value=A type=(DataType name=NUMBER arguments=[* 2]))")]
@@ -84,7 +84,7 @@ public class ExpressionShapeTests
     [InlineData("COUNT(*)", "(FunctionCall name=[COUNT] arguments=[(Argument value=*)])")]
     [InlineData("SUM(DISTINCT x)", "(FunctionCall name=[SUM] quantifier=Distinct arguments=[(Argument value=X)])")]
     [InlineData("pkg.fn(a => 1, b => 2)", "(FunctionCall name=[PKG FN] arguments=[(Argument name=A value=1) (Argument name=B value=2)])")]
-    [InlineData("SYSDATE - 1", "(- SYSDATE 1)")]
+    [InlineData("SYSDATE - 1", "(Subtract SYSDATE 1)")]
     [InlineData("seq.NEXTVAL", "SEQ.NEXTVAL")]
     [InlineData("ROW_NUMBER() OVER (PARTITION BY d ORDER BY s DESC)", "(FunctionCall name=[ROW_NUMBER] over=(WindowSpec partitionBy=[D] orderBy=[(OrderByItem expression=S descending)]))")]
     [InlineData("SUM(x) OVER (ORDER BY y ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec orderBy=[(OrderByItem expression=Y)] frame=(WindowFrame unit=Rows startBound=(FrameBound kind=UnboundedPreceding) endBound=(FrameBound kind=CurrentRow))))")]
@@ -126,16 +126,16 @@ public class ExpressionShapeTests
     // 'key':value with no space: ':' right after a string key is the separator, not the start of a bind :1
     [InlineData("JSON_OBJECT('a':1)", "(FunctionCall name=[JSON_OBJECT] arguments=[(Argument value='a' mappedValue=1)])")]
     [InlineData("JSON_OBJECT('a':x)", "(FunctionCall name=[JSON_OBJECT] arguments=[(Argument value='a' mappedValue=X)])")]
-    [InlineData("JSON_OBJECT('a':1+2, 'b' : 'c')", "(FunctionCall name=[JSON_OBJECT] arguments=[(Argument value='a' mappedValue=(+ 1 2)) (Argument value='b' mappedValue='c')])")]
+    [InlineData("JSON_OBJECT('a':1+2, 'b' : 'c')", "(FunctionCall name=[JSON_OBJECT] arguments=[(Argument value='a' mappedValue=(Add 1 2)) (Argument value='b' mappedValue='c')])")]
     [InlineData("JSON_OBJECT(UPPER('a'):1)", "(FunctionCall name=[JSON_OBJECT] arguments=[(Argument value=(FunctionCall name=[UPPER] arguments=[(Argument value='a')]) mappedValue=1)])")]
     public void JsonObjectColonSeparator(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     // Real binds keep lexing as binds everywhere else, including right after a string or a ')' in a non-key position.
     [Theory]
     [InlineData(":1", ":1")]
-    [InlineData("y = :1", "(= Y :1)")]
+    [InlineData("y = :1", "(Equals Y :1)")]
     [InlineData("(:1, :2)", "(ExpressionList items=[:1 :2])")]
-    [InlineData("x = :name", "(= X :name)")]
+    [InlineData("x = :name", "(Equals X :name)")]
     public void BindsStillLexAsBinds(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     /// <summary>Token <paramref name="index"/> of the lexed input (EOF is included): ':' after a string key is an operator, elsewhere ':x' is a bind.</summary>
@@ -181,24 +181,24 @@ public class ExpressionShapeTests
     [InlineData("s['x'](2)", "(ChainedCall target=(CellReference base=S subscripts=['x']) arguments=[(Argument value=2)])")]
     [InlineData("f(x)(y).z", "(MemberAccess target=(ChainedCall target=(FunctionCall name=[F] arguments=[(Argument value=X)]) arguments=[(Argument value=Y)]) member=Z)")]
     [InlineData("f(x)(y)[1]", "(CellReference base=(ChainedCall target=(FunctionCall name=[F] arguments=[(Argument value=X)]) arguments=[(Argument value=Y)]) subscripts=[1])")]
-    [InlineData("PRIOR x", "(PRIOR X)")]
-    [InlineData("CONNECT_BY_ROOT x", "(CONNECT_BY_ROOT X)")]
+    [InlineData("PRIOR x", "(Prior X)")]
+    [InlineData("CONNECT_BY_ROOT x", "(ConnectByRoot X)")]
     [InlineData("CURSOR(SELECT 1 FROM dual)", "(CursorExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])))")]
     [InlineData("EXISTS (SELECT 1 FROM dual)", "(ExistsExpression subquery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])))")]
     public void Postfix_And_Misc(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]
-    [InlineData("(a - b) DAY TO SECOND","(IntervalExpression value=(paren (- A B)) from=Day to=Second)")]
-    [InlineData("(SYSTIMESTAMP - SYSTIMESTAMP) DAY(9) TO SECOND", "(IntervalExpression value=(paren (- SYSTIMESTAMP SYSTIMESTAMP)) from=Day fromPrecision=9 to=Second)")]
-    [InlineData("(a - b) DAY(2) TO SECOND(6)", "(IntervalExpression value=(paren (- A B)) from=Day fromPrecision=2 to=Second toPrecision=6)")]
-    [InlineData("(a - b) YEAR TO MONTH", "(IntervalExpression value=(paren (- A B)) from=Year to=Month)")]
-    [InlineData("(a - b) YEAR(4) TO MONTH", "(IntervalExpression value=(paren (- A B)) from=Year fromPrecision=4 to=Month)")]
-    [InlineData("x + (a - b) DAY TO SECOND", "(+ X (IntervalExpression value=(paren (- A B)) from=Day to=Second))")]
+    [InlineData("(a - b) DAY TO SECOND","(IntervalExpression value=(paren (Subtract A B)) from=Day to=Second)")]
+    [InlineData("(SYSTIMESTAMP - SYSTIMESTAMP) DAY(9) TO SECOND", "(IntervalExpression value=(paren (Subtract SYSTIMESTAMP SYSTIMESTAMP)) from=Day fromPrecision=9 to=Second)")]
+    [InlineData("(a - b) DAY(2) TO SECOND(6)", "(IntervalExpression value=(paren (Subtract A B)) from=Day fromPrecision=2 to=Second toPrecision=6)")]
+    [InlineData("(a - b) YEAR TO MONTH", "(IntervalExpression value=(paren (Subtract A B)) from=Year to=Month)")]
+    [InlineData("(a - b) YEAR(4) TO MONTH", "(IntervalExpression value=(paren (Subtract A B)) from=Year fromPrecision=4 to=Month)")]
+    [InlineData("x + (a - b) DAY TO SECOND", "(Add X (IntervalExpression value=(paren (Subtract A B)) from=Day to=Second))")]
     public void IntervalExpressions(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]
-    [InlineData("SELECT (a - b) day FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (- A B)) alias=DAY)] from=[(NamedTable name=[T])]))")]
-    [InlineData("SELECT (a - b) year FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (- A B)) alias=YEAR)] from=[(NamedTable name=[T])]))")]
+    [InlineData("SELECT (a - b) day FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (Subtract A B)) alias=DAY)] from=[(NamedTable name=[T])]))")]
+    [InlineData("SELECT (a - b) year FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (Subtract A B)) alias=YEAR)] from=[(NamedTable name=[T])]))")]
     public void IntervalWordsStillWorkAsAliases(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]

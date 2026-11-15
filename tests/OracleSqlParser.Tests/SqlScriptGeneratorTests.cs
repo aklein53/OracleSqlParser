@@ -285,7 +285,7 @@ public class SqlScriptGeneratorTests
     public void ProgrammaticTrees_GetParentheses()
     {
         var user = SqlParser.ParseExpression("a = 1 OR b = 2");
-        var combined = new BinaryExpression { Left = user, Operator = "AND", Right = SqlParser.ParseExpression("c = 3") };
+        var combined = new BinaryExpression { Left = user, Operator = BinaryOperator.And, Right = SqlParser.ParseExpression("c = 3") };
         Assert.Equal("(a = 1 OR b = 2) AND c = 3", new SqlScriptGenerator().Generate(combined));
     }
 

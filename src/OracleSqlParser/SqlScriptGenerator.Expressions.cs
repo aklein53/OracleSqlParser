@@ -64,14 +64,17 @@ public sealed partial class SqlScriptGenerator
         {
             BinaryExpression b => b.Operator switch
             {
-                "OR" => 1, "AND" => 2,
-                "+" or "-" or "||" => 5,
-                "*" or "/" => 6,
-                "**" => 8,
-                var o when o.StartsWith("MULTISET") => 5,
+                BinaryOperator.Or => 1,
+                BinaryOperator.And => 2,
+                BinaryOperator.Add or BinaryOperator.Subtract or BinaryOperator.Concatenate => 5,
+                BinaryOperator.Multiply or BinaryOperator.Divide => 6,
+                BinaryOperator.Power => 8,
+                BinaryOperator.MultisetUnion or BinaryOperator.MultisetUnionAll or BinaryOperator.MultisetUnionDistinct
+                    or BinaryOperator.MultisetIntersect or BinaryOperator.MultisetIntersectAll or BinaryOperator.MultisetIntersectDistinct
+                    or BinaryOperator.MultisetExcept or BinaryOperator.MultisetExceptAll or BinaryOperator.MultisetExceptDistinct => 5,
                 _ => 4,
             },
-            UnaryExpression u => u.Operator == "NOT" ? 3 : 7,
+            UnaryExpression u => u.Operator == UnaryOperator.Not ? 3 : 7,
             BetweenExpression or InExpression or LikeExpression or IsExpression or QuantifiedComparison => 4,
             AtTimeZoneExpression or CollateExpression => 9,
             _ => 100,
@@ -107,11 +110,11 @@ public sealed partial class SqlScriptGenerator
                 case BinaryExpression be: Binary(be); break;
                 case UnaryExpression ue:
                 {
-                    int op = ue.Operator == "NOT" ? 3 : 7;
-                    if (ue.Operator is "NOT" or "PRIOR" or "CONNECT_BY_ROOT") { Add(ue.Operator + " "); Child(ue.Operand, op); }
+                    int op = ue.Operator == UnaryOperator.Not ? 3 : 7;
+                    if (ue.Operator is UnaryOperator.Not or UnaryOperator.Prior or UnaryOperator.ConnectByRoot) { Add(ue.Operator.ToSql() + " "); Child(ue.Operand, op); }
                     else
                     {
-                        Add(ue.Operator);
+                        Add(ue.Operator.ToSql());
                         int pos = _sb.Length;
                         Child(ue.Operand, op);
                         if (pos < _sb.Length && _sb[pos] is '-' or '+') _sb.Insert(pos, ' ');
@@ -133,7 +136,7 @@ public sealed partial class SqlScriptGenerator
                     break;
                 case IsExpression isx: Is(isx); break;
                 case QuantifiedComparison qc:
-                    Child(qc.Left, 5); Add(" " + qc.Operator + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
+                    Child(qc.Left, 5); Add(" " + qc.Operator.ToSql() + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
                     Expr(qc.Right);
                     break;
                 case ExistsExpression ex: Add("EXISTS "); ParenQuery(ex.Subquery); break;
@@ -237,8 +240,8 @@ public sealed partial class SqlScriptGenerator
             {
                 var x = spine[i];
                 int p = Prec(x);
-                bool assoc = x.Operator is "AND" or "OR";
-                Add(" " + x.Operator + " ");
+                bool assoc = x.Operator is BinaryOperator.And or BinaryOperator.Or;
+                Add(" " + x.Operator.ToSql() + " ");
                 Child(x.Right, assoc ? p : p + 1);
             }
         }

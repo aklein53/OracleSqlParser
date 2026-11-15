@@ -794,8 +794,8 @@ public sealed partial class BinaryExpression : Expression
 {
     /// <summary>The left operand.</summary>
     public required Expression Left { get; set; }
-    /// <summary>Upper-cased operator text: + - * / ** || = &lt;&gt; &lt; &gt; &lt;= &gt;= AND OR LIKE ...</summary>
-    public string Operator { get; set; } = "";
+    /// <summary>The operator. Spellings that mean the same operator (<c>!=</c>, <c>^=</c>, <c>~=</c>) share a member; see <see cref="BinaryOperator"/>.</summary>
+    public required BinaryOperator Operator { get; set; }
     /// <summary>The right operand.</summary>
     public required Expression Right { get; set; }
 }
@@ -816,8 +816,8 @@ public sealed partial class QuantifiedComparison : Expression
 {
     /// <summary>The value on the left of the comparison.</summary>
     public required Expression Left { get; set; }
-    /// <summary>The comparison operator, such as = or &lt;&gt;.</summary>
-    public string Operator { get; set; } = "";
+    /// <summary>The comparison operator. Only the comparison members of <see cref="BinaryOperator"/> are valid here: Equals, NotEquals, LessThan, GreaterThan, LessThanOrEqual and GreaterThanOrEqual.</summary>
+    public required BinaryOperator Operator { get; set; }
     /// <summary>The quantifier: <c>ANY</c>, <c>SOME</c> or <c>ALL</c>.</summary>
     public ComparisonQuantifier Quantifier { get; set; }
     /// <summary>The subquery or list on the right.</summary>
@@ -842,8 +842,8 @@ public enum UnaryOperator
 /// <summary>A prefix operator applied to one operand, such as <c>NOT a</c>, <c>-a</c> or <c>PRIOR a</c>.</summary>
 public sealed partial class UnaryExpression : Expression
 {
-    /// <summary>Upper-cased prefix operator: + - NOT PRIOR CONNECT_BY_ROOT DISTINCT.</summary>
-    public string Operator { get; set; } = "";
+    /// <summary>The prefix operator.</summary>
+    public required UnaryOperator Operator { get; set; }
     /// <summary>The operand.</summary>
     public required Expression Operand { get; set; }
 }

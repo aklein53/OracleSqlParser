@@ -50,12 +50,12 @@ public class CompactOutputTests
         // user predicate "a = 1 OR b = 2" ANDed with another predicate must keep the OR grouped
         var user = SqlParser.ParseExpression("a = 1 OR b = 2");
         var access = SqlParser.ParseExpression("tenant_id = :t");
-        var combined = new BinaryExpression { Left = user, Operator = "AND", Right = access };
+        var combined = new BinaryExpression { Left = user, Operator = BinaryOperator.And, Right = access };
         Assert.Equal("(A = 1 OR B = 2) AND TENANT_ID = :t", Shape.Sql(combined));
 
-        var neg = new UnaryExpression { Operator = "NOT", Operand = user };
+        var neg = new UnaryExpression { Operator = UnaryOperator.Not, Operand = user };
         Assert.Equal("NOT (A = 1 OR B = 2)", Shape.Sql(neg));
-        var sub = new BinaryExpression { Left = SqlParser.ParseExpression("a"), Operator = "-", Right = SqlParser.ParseExpression("b - c") };
+        var sub = new BinaryExpression { Left = SqlParser.ParseExpression("a"), Operator = BinaryOperator.Subtract, Right = SqlParser.ParseExpression("b - c") };
         Assert.Equal("A - (B - C)", Shape.Sql(sub));
     }
 
