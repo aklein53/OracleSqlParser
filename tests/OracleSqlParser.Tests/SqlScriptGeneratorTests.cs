@@ -271,6 +271,22 @@ public class SqlScriptGeneratorTests
         Assert.Equal("CREATE JAVA SOURCE NAMED \"Hello\" AS public class Hello { }\n/\nSELECT 1 FROM dual;", script);
     }
 
+    [Theory]
+    [InlineData("a != 1", "a != 1")]
+    [InlineData("a ^= 1", "a ^= 1")]
+    [InlineData("a ~= 1", "a ~= 1")]
+    [InlineData("a <> 1", "a <> 1")]
+    [InlineData("a != ANY (1, 2)", "a != ANY (1, 2)")]
+    public void Generate_KeepsNotEqualsSpelling(string sql, string expected) =>
+        Assert.Equal(expected, new SqlScriptGenerator().Generate(SqlParser.ParseExpression(sql)));
+
+    [Fact]
+    public void Generate_NotEqualsBuiltInCode_UsesCanonicalSpelling()
+    {
+        var ne = new BinaryExpression { Left = SqlParser.ParseExpression("a"), Operator = BinaryOperator.NotEquals, Right = SqlParser.ParseExpression("1") };
+        Assert.Equal("a <> 1", new SqlScriptGenerator().Generate(ne));
+    }
+
     [Fact]
     public void Generate_ToTextWriter_MatchesString()
     {

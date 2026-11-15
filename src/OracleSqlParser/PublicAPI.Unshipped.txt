@@ -5896,3 +5896,7 @@ OracleSqlParser.UnaryOperator.Plus = 0 -> OracleSqlParser.UnaryOperator
 OracleSqlParser.UnaryOperator.Prior = 3 -> OracleSqlParser.UnaryOperator
 static OracleSqlParser.OperatorExtensions.ToSql(this OracleSqlParser.BinaryOperator op) -> string!
 static OracleSqlParser.OperatorExtensions.ToSql(this OracleSqlParser.UnaryOperator op) -> string!
+OracleSqlParser.BinaryExpression.OperatorSpelling.get -> string?
+OracleSqlParser.BinaryExpression.OperatorSpelling.set -> void
+OracleSqlParser.QuantifiedComparison.OperatorSpelling.get -> string?
+OracleSqlParser.QuantifiedComparison.OperatorSpelling.set -> void

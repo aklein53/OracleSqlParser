@@ -60,6 +60,13 @@ public sealed partial class SqlScriptGenerator
 
         // ---------- expressions ----------
 
+        /// <summary>The text of a comparison operator: the source spelling when one is recorded for NotEquals, otherwise the canonical text.</summary>
+        private static string ComparisonText(BinaryOperator op, string? spelling)
+        {
+            if (op == BinaryOperator.NotEquals && spelling is "!=" or "^=" or "~=") return spelling;
+            return op.ToSql();
+        }
+
         private static int Prec(Expression e) => e switch
         {
             BinaryExpression b => b.Operator switch
@@ -136,7 +143,7 @@ public sealed partial class SqlScriptGenerator
                     break;
                 case IsExpression isx: Is(isx); break;
                 case QuantifiedComparison qc:
-                    Child(qc.Left, 5); Add(" " + qc.Operator.ToSql() + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
+                    Child(qc.Left, 5); Add(" " + ComparisonText(qc.Operator, qc.OperatorSpelling) + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
                     Expr(qc.Right);
                     break;
                 case ExistsExpression ex: Add("EXISTS "); ParenQuery(ex.Subquery); break;
@@ -241,7 +248,7 @@ public sealed partial class SqlScriptGenerator
                 var x = spine[i];
                 int p = Prec(x);
                 bool assoc = x.Operator is BinaryOperator.And or BinaryOperator.Or;
-                Add(" " + x.Operator.ToSql() + " ");
+                Add(" " + ComparisonText(x.Operator, x.OperatorSpelling) + " ");
                 Child(x.Right, assoc ? p : p + 1);
             }
         }

@@ -2245,6 +2245,7 @@ public partial class BinaryExpression
     [
         new("Left", Left),
         new("Operator", Operator),
+        new("OperatorSpelling", OperatorSpelling, SpellingOnly: true),
         new("Right", Right),
     ];
 
@@ -2259,6 +2260,7 @@ public partial class BinaryExpression
         {
             Left = CloneChild(Left)!,
             Operator = Operator,
+            OperatorSpelling = OperatorSpelling,
             Right = CloneChild(Right)!,
         };
         CopySpan(this, c);
@@ -14301,6 +14303,7 @@ public partial class QuantifiedComparison
     [
         new("Left", Left),
         new("Operator", Operator),
+        new("OperatorSpelling", OperatorSpelling, SpellingOnly: true),
         new("Quantifier", Quantifier),
         new("Right", Right),
     ];
@@ -14316,6 +14319,7 @@ public partial class QuantifiedComparison
         {
             Left = CloneChild(Left)!,
             Operator = Operator,
+            OperatorSpelling = OperatorSpelling,
             Quantifier = Quantifier,
             Right = CloneChild(Right)!,
         };

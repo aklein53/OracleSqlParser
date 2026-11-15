@@ -796,6 +796,8 @@ public sealed partial class BinaryExpression : Expression
     public required Expression Left { get; set; }
     /// <summary>The operator. Spellings that mean the same operator (<c>!=</c>, <c>^=</c>, <c>~=</c>) share a member; see <see cref="BinaryOperator"/>.</summary>
     public required BinaryOperator Operator { get; set; }
+    /// <summary>The source spelling of <see cref="Operator"/> when it is <c>!=</c>, <c>^=</c> or <c>~=</c>; null for the canonical spelling. Records spelling only, not meaning.</summary>
+    [SpellingOnly] public string? OperatorSpelling { get; set; }
     /// <summary>The right operand.</summary>
     public required Expression Right { get; set; }
 }
@@ -818,6 +820,8 @@ public sealed partial class QuantifiedComparison : Expression
     public required Expression Left { get; set; }
     /// <summary>The comparison operator. Only the comparison members of <see cref="BinaryOperator"/> are valid here: Equals, NotEquals, LessThan, GreaterThan, LessThanOrEqual and GreaterThanOrEqual.</summary>
     public required BinaryOperator Operator { get; set; }
+    /// <summary>The source spelling of <see cref="Operator"/> when it is <c>!=</c>, <c>^=</c> or <c>~=</c>; null for the canonical spelling. Records spelling only, not meaning.</summary>
+    [SpellingOnly] public string? OperatorSpelling { get; set; }
     /// <summary>The quantifier: <c>ANY</c>, <c>SOME</c> or <c>ALL</c>.</summary>
     public ComparisonQuantifier Quantifier { get; set; }
     /// <summary>The subquery or list on the right.</summary>

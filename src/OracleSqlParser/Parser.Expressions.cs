@@ -66,6 +66,9 @@ public sealed partial class SqlParser
         _ => throw new InvalidOperationException("Not a comparison operator: " + text),
     };
 
+    /// <summary>The spelling to record for a comparison token that is not the canonical one (only <c>!=</c>, <c>^=</c> and <c>~=</c> differ from <c>&lt;&gt;</c> for NotEquals); null otherwise.</summary>
+    private static string? NonCanonicalSpelling(string text) => text is "!=" or "^=" or "~=" ? text : null;
+
     /// <summary>The arithmetic or concatenation operator for an operator token.</summary>
     private static BinaryOperator ArithmeticOperator(string text) => text switch
     {
@@ -87,13 +90,15 @@ public sealed partial class SqlParser
         {
             if (Cur.Type == TokenType.Operator && ComparisonOps.Contains(Cur.Text))
             {
-                var op = ComparisonOperator(Next().Text);
+                var text = Next().Text;
+                var op = ComparisonOperator(text);
+                var spelling = NonCanonicalSpelling(text);
                 if ((IsKw("ANY") || IsKw("SOME") || IsKw("ALL")) && IsOpAt(1, "("))
                 {
                     var q = Next().Value switch { "ANY" => ComparisonQuantifier.Any, "SOME" => ComparisonQuantifier.Some, _ => ComparisonQuantifier.All };
-                    left = Fin(new QuantifiedComparison { Left = left, Operator = op, Quantifier = q, Right = ParsePrimary() }, start);
+                    left = Fin(new QuantifiedComparison { Left = left, Operator = op, OperatorSpelling = spelling, Quantifier = q, Right = ParsePrimary() }, start);
                 }
-                else left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseAdditive() }, start);
+                else left = Fin(new BinaryExpression { Left = left, Operator = op, OperatorSpelling = spelling, Right = ParseAdditive() }, start);
                 continue;
             }
             if (IsKw("IS")) { left = ParseIs(left, start); continue; }

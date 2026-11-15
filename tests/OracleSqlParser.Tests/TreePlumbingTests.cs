@@ -267,6 +267,33 @@ public class TreePlumbingTests
     }
 
     [Fact]
+    public void StructurallyEqual_OperatorSpellingIsSpellingOnly()
+    {
+        Assert.True(SqlNodeComparer.StructurallyEqual(Shape.Parse("SELECT a FROM t WHERE a != 1"), Shape.Parse("SELECT a FROM t WHERE a <> 1")));
+        Assert.True(SqlNodeComparer.StructurallyEqual(Shape.Parse("SELECT a FROM t WHERE a ^= 1"), Shape.Parse("SELECT a FROM t WHERE a <> 1")));
+        Assert.False(SqlNodeComparer.StructurallyEqual(Shape.Parse("SELECT a FROM t WHERE a = 1"), Shape.Parse("SELECT a FROM t WHERE a <> 1")));
+    }
+
+    [Fact]
+    public void OperatorSpelling_IsSetOnlyForNonCanonicalNotEquals()
+    {
+        Assert.Equal("!=", ((BinaryExpression)SqlParser.ParseExpression("a != 1")).OperatorSpelling);
+        Assert.Equal("^=", ((BinaryExpression)SqlParser.ParseExpression("a ^= 1")).OperatorSpelling);
+        Assert.Equal("~=", ((BinaryExpression)SqlParser.ParseExpression("a ~= 1")).OperatorSpelling);
+        Assert.Null(((BinaryExpression)SqlParser.ParseExpression("a <> 1")).OperatorSpelling);
+        Assert.Null(((BinaryExpression)SqlParser.ParseExpression("a = 1")).OperatorSpelling);
+        Assert.Equal("!=", ((QuantifiedComparison)SqlParser.ParseExpression("a != ANY (1, 2)")).OperatorSpelling);
+    }
+
+    [Fact]
+    public void DeepClone_CopiesOperatorSpelling()
+    {
+        var clone = SqlParser.ParseExpression("a ^= 1").DeepClone<BinaryExpression>();
+        Assert.Equal("^=", clone.OperatorSpelling);
+        Assert.Equal(BinaryOperator.NotEquals, clone.Operator);
+    }
+
+    [Fact]
     public void StructurallyEqual_DeepChain_IsIterative()
     {
         var a = Shape.Parse(GeneratedCodeTests.AndChain(20_000));
