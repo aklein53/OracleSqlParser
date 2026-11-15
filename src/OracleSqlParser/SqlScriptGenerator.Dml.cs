@@ -8,7 +8,8 @@ public sealed partial class SqlScriptGenerator
 
         private void Statement(Statement st)
         {
-            foreach (var label in st.Labels) { Add("<<"); Raw(label); Add(">>"); PlSp(); }
+            // A statement label is kept as its value, not as typed: a quoted label such as "a b" must stay quoted.
+            foreach (var label in st.Labels) { Add("<<"); Raw(Word(label, NeedsQuotes(label), null)); Add(">>"); PlSp(); }
             switch (st)
             {
                 case SelectStatement s: Select(s); break;

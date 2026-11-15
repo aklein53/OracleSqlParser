@@ -120,6 +120,14 @@ public sealed partial class SqlScriptGenerator
             return _o.IdentifierCasing == IdentifierCasing.Preserve ? (text ?? value) : CaseText(value, _o.IdentifierCasing);
         }
 
+        /// <summary>
+        /// Whether a name must be quoted to read back as the same value: an unquoted word reads as its upper-case form and
+        /// must be a plain identifier (letters, digits, _ $ #, starting with a letter).
+        /// </summary>
+        private static bool NeedsQuotes(string value) =>
+            value.Length == 0 || !char.IsAsciiLetterUpper(value[0]) ||
+            !value.All(c => char.IsAsciiLetterUpper(c) || char.IsAsciiDigit(c) || c is '_' or '$' or '#');
+
         private void Id(Identifier i) => Raw(Word(i.Value, i.Quoted, i.Text));
         private void Name(IEnumerable<Identifier> parts) => Sep(parts, Id, ".");
         private void IdList(IEnumerable<Identifier> ids) => Sep(ids, Id);

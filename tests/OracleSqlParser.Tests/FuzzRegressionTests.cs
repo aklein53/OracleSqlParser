@@ -167,4 +167,23 @@ public class FuzzRegressionTests
         var sql = SqlWriter.ToSql(Shape.Parse("CREATE TABLE t(a R USING UNIQUE)").Statements[0]);
         Assert.Contains("A R USING UNIQUE", sql.ToUpperInvariant());
     }
+
+    // ---------- round-trip: statement labels keep their quoting ----------
+
+    [Theory]
+    [InlineData("BEGIN <<\"a b\">> NULL; END;")]
+    [InlineData("BEGIN <<\"abc\">> NULL; END;")]
+    [InlineData("BEGIN <<abc>> NULL; END;")]
+    public void StatementLabels_RoundTrip(string sql)
+    {
+        AssertContract(sql);
+    }
+
+    [Fact]
+    public void StatementLabel_QuotedName_IsPrintedQuoted()
+    {
+        // The label is kept as its value; printed bare, "a b" was not even a single name.
+        string gen = new SqlScriptGenerator().Generate(SqlParser.Parse("BEGIN <<\"a b\">> NULL; END;").Script);
+        Assert.Contains("<<\"a b\">>", gen);
+    }
 }
