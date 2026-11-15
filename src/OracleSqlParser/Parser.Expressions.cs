@@ -1005,6 +1005,12 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         var dt = new DataType();
+        // REF object_type is a reference type. REF CURSOR is not a data type (it only appears in a TYPE declaration).
+        if (IsKw("REF") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && !IsKwAt(1, "CURSOR"))
+        {
+            Next();
+            dt.Ref = true;
+        }
         var words = new List<string>();
         var first = ParseIdentifier();
         words.Add(first.Value);

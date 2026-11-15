@@ -6347,6 +6347,7 @@ public partial class DataType
         new("Arguments", Arguments),
         new("Semantics", Semantics),
         new("Attribute", Attribute),
+        new("Ref", Ref),
     ];
 
     /// <inheritdoc/>
@@ -6362,6 +6363,7 @@ public partial class DataType
             Arguments = CloneList(Arguments),
             Semantics = Semantics,
             Attribute = Attribute,
+            Ref = Ref,
         };
         CopySpan(this, c);
         return c;
@@ -6373,7 +6375,8 @@ public partial class DataType
         return Name == o.Name
             && PairList(Arguments, o.Arguments, pending)
             && Semantics == o.Semantics
-            && Attribute == o.Attribute;
+            && Attribute == o.Attribute
+            && Ref == o.Ref;
     }
 }
 

@@ -276,6 +276,7 @@ BEGIN NULL; END;");
     [InlineData("CREATE TYPE nums AS TABLE OF NUMBER", "(CreateTypeStatement name=[NUMS] kind=Table elementType=(DataType name=NUMBER))")]
     [InlineData("CREATE OR REPLACE TYPE nums AS TABLE OF NUMBER (10)\n/\nSELECT 1 FROM dual",
         "(CreateTypeStatement orReplace name=[NUMS] kind=Table elementType=(DataType name=NUMBER arguments=[10])) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))")]
+    [InlineData("CREATE TYPE t AS TABLE OF REF category_typ", "(CreateTypeStatement name=[T] kind=Table elementType=(DataType name=CATEGORY_TYP ref))")]
     [InlineData("CREATE TYPE v AS VARRAY(10) OF VARCHAR2(5)", "(CreateTypeStatement name=[V] kind=Varray elementType=(DataType name=VARCHAR2 arguments=[5]) limit=10)")]
     [InlineData("CREATE TYPE sub UNDER addr (extra NUMBER) FINAL INSTANTIABLE", "(CreateTypeStatement name=[SUB] kind=Under final=true instantiable=true attributes=[(VariableDeclaration name=EXTRA type=(DataType name=NUMBER))] superType=[ADDR])")]
     [InlineData("CREATE TYPE t FORCE OID '123' AUTHID DEFINER AS OBJECT (a NUMBER) NOT PERSISTABLE",

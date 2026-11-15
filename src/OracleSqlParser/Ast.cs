@@ -1084,6 +1084,8 @@ public sealed partial class DataType : SqlNode
     public CharSemantics? Semantics { get; set; }
     /// <summary>"TYPE" or "ROWTYPE" for anchored declarations (tbl.col%TYPE).</summary>
     public string? Attribute { get; set; }
+    /// <summary>True for <c>REF object_type</c>: a reference to a row of <see cref="Name"/>.</summary>
+    public bool Ref { get; set; }
 }
 
 /// <summary>An <c>AT TIME ZONE</c> expression, such as <c>ts AT TIME ZONE 'UTC'</c>.</summary>

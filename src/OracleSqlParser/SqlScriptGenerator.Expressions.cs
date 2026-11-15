@@ -31,6 +31,7 @@ public sealed partial class SqlScriptGenerator
 
         private void Type(DataType dt)
         {
+            if (dt.Ref) Add("REF ");
             if (dt.Attribute != null) { Add(dt.Name).Add("%").Add(dt.Attribute); return; }
             // name words: the parenthesized arguments follow the first word group that precedes WITH/TO/etc.
             var words = dt.Name.Split(' ');
