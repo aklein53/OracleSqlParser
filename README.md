@@ -208,10 +208,14 @@ number literals and optimizer hint text print back as written.
 
 Limitations:
 
-- Comments are not part of the AST and are **not printed** (trivia is planned, see the roadmap).
-- Token-tree bodies (long-tail DDL/admin syntax: `ALTER USER`, `CREATE TABLESPACE`, `ANALYZE`, SQL*Plus arguments, ...) are printed as their tokens,
-  separated by single spaces (no space around `.`, `@`, `%` and before `(`), so their original line layout is lost. Words in them follow `IdentifierCasing`, not `KeywordCasing`.
-- Data type names are stored normalised, so they print with the keyword casing, not as typed. Quoted parts of a dotted type name are not preserved.
+- Comments are not part of the AST, so the generator does **not print** them. They are kept in the token stream
+  (`ParseResult.Tokens`, `Token.LeadingTrivia`); to change a script and keep its comments and layout, use `SourceEditor`.
+- Token-tree bodies (long-tail syntax without a typed node: the generic `CreateObjectStatement`, `AlterObjectStatement` and
+  `AdminStatement`, SQL*Plus command arguments, ...) are printed as their tokens, separated by single spaces (no space
+  around `.`, `@`, `%` and before `(`), so their original line layout is lost. Words in them follow `IdentifierCasing`,
+  not `KeywordCasing`.
+- Built-in data type names (`VARCHAR2`, `TIMESTAMP WITH TIME ZONE`, ...) are stored normalised and print with the keyword
+  casing; user-defined type names keep their quoting (`DataType.NameParts`).
 - Without `IncludeSemicolons` a multi-statement script no longer parses (statements are only separated by newlines).
 - Some purely optional spellings are not stored and are normalised: `ASC`, `VIRTUAL`, `1..3` vs `1 .. 3`, `RETURN`/`RETURNING`, `JSON DUALITY VIEW` as `JSON RELATIONAL DUALITY VIEW`, `PIPELINED ROW POLYMORPHIC`.
 
