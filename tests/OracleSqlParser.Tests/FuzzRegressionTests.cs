@@ -70,4 +70,25 @@ public class FuzzRegressionTests
         // The printer, generator and clone recurse once per level, so an 8,000-term chain overflowed the default stack.
         AssertContract(AndChain(8000));
     }
+    // ---------- round-trip: chained comparison-level operators ----------
+
+    [Theory]
+    [InlineData("SELECT 1 FROM dual WHERE a IN (1) IN (2)")]
+    [InlineData("SELECT 1 FROM dual WHERE a NOT IN (1) IN (2)")]
+    [InlineData("SELECT 1 FROM dual WHERE a LIKE 'x' LIKE 'y'")]
+    [InlineData("SELECT 1 FROM dual WHERE a = 1 IN (1)")]
+    [InlineData("SELECT 1 FROM dual WHERE a BETWEEN 1 AND 2 IN (1)")]
+    [InlineData("SELECT 1 FROM dual WHERE a IS NULL IN (1)")]
+    [InlineData("SELECT 1 FROM dual WHERE (a IN (1)) IN (2)")]
+    public void ChainedComparisonOperands_RoundTripWithoutChangingTheTree(string sql)
+    {
+        AssertContract(sql);
+    }
+
+    [Fact]
+    public void ChainedIn_IsParsedLeftAssociative_AndPrintedWithoutParentheses()
+    {
+        Assert.Equal("(InExpression value=(InExpression value=A list=[1]) list=[2])", Shape.Expr("a IN (1) IN (2)"));
+        Assert.Contains("WHERE A IN (1) IN (2)", SqlWriter.ToSql(Shape.Parse("SELECT 1 FROM dual WHERE a IN (1) IN (2)").Statements[0]).ToUpperInvariant());
+    }
 }

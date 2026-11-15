@@ -118,22 +118,24 @@ public sealed partial class SqlScriptGenerator
                     }
                     break;
                 }
+                // The left operand of a comparison-level form may itself be one (the parser reads "a IN (1) IN (2)" as a
+                // left-associative chain, with no parentheses), so it is printed at comparison level, not wrapped.
                 case BetweenExpression bt:
-                    Child(bt.Value, 5); Add(bt.Not ? " NOT BETWEEN " : " BETWEEN "); Child(bt.Low, 5); Add(" AND "); Child(bt.High, 5);
+                    Child(bt.Value, 4); Add(bt.Not ? " NOT BETWEEN " : " BETWEEN "); Child(bt.Low, 5); Add(" AND "); Child(bt.High, 5);
                     break;
                 case InExpression ie:
-                    Child(ie.Value, 5); Add(ie.Not ? " NOT IN " : " IN ");
+                    Child(ie.Value, 4); Add(ie.Not ? " NOT IN " : " IN ");
                     if (ie.Subquery != null) ParenQuery(ie.Subquery); else { Add("("); Sep(ie.List, i => Expr(i)); Add(")"); }
                     break;
                 case LikeExpression lk:
-                    Child(lk.Value, 5);
+                    Child(lk.Value, 4);
                     Add((lk.Not ? " NOT " : " ") + lk.Kind.ToString().ToUpperInvariant() + " ");
                     Child(lk.Pattern, 5);
                     if (lk.Escape != null) { Add(" ESCAPE "); Child(lk.Escape, 5); }
                     break;
                 case IsExpression isx: Is(isx); break;
                 case QuantifiedComparison qc:
-                    Child(qc.Left, 5); Add(" " + qc.Operator + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
+                    Child(qc.Left, 4); Add(" " + qc.Operator + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
                     Expr(qc.Right);
                     break;
                 case ExistsExpression ex: Add("EXISTS "); ParenQuery(ex.Subquery); break;
@@ -245,7 +247,7 @@ public sealed partial class SqlScriptGenerator
 
         private void Is(IsExpression x)
         {
-            Child(x.Value, 5);
+            Child(x.Value, 4);
             Add(x.Not ? " IS NOT " : " IS ");
             switch (x.Test)
             {
