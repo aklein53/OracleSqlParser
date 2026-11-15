@@ -31,6 +31,7 @@ public class FuzzRegressionTests
         var script = SqlParser.Parse(AndChain(50)).Script;
         Assert.Contains("\n  \"type\": \"SqlScript\"", AstJson.Serialize(script));
     }
+
     // ---------- SqlAnalysis: qualified names on long join chains ----------
 
     private static string JoinChain(int n) => "SELECT t0.c FROM t0 " + string.Concat(Enumerable.Range(1, n).Select(i => $"JOIN t{i} ON t{i}.id = t{i - 1}.id "));
@@ -58,6 +59,7 @@ public class FuzzRegressionTests
         var dup = SqlAnalysis.GetColumns(SqlParser.Parse("SELECT a.c FROM t a JOIN t a ON a.c = 1").Script);
         Assert.Equal(ColumnResolution.Ambiguous, dup[0].Resolution);
     }
+
     private static void AssertContract(string sql, ParseOptions? options = null)
     {
         var f = ContractChecker.Check(sql, options);
@@ -70,6 +72,7 @@ public class FuzzRegressionTests
         // The printer, generator and clone recurse once per level, so an 8,000-term chain overflowed the default stack.
         AssertContract(AndChain(8000));
     }
+
     // ---------- round-trip: chained comparison-level operators ----------
 
     [Theory]
@@ -91,6 +94,7 @@ public class FuzzRegressionTests
         Assert.Equal("(InExpression value=(InExpression value=A list=[1]) list=[2])", Shape.Expr("a IN (1) IN (2)"));
         Assert.Contains("WHERE A IN (1) IN (2)", SqlWriter.ToSql(Shape.Parse("SELECT 1 FROM dual WHERE a IN (1) IN (2)").Statements[0]).ToUpperInvariant());
     }
+
     // ---------- round-trip: audit option words ----------
 
     [Theory]
@@ -121,5 +125,27 @@ public class FuzzRegressionTests
     {
         Assert.Contains("CREATE SESSION", Shape.Of("AUDIT CREATE SESSION"));
         AssertContract("AUDIT CREATE SESSION, ALTER SYSTEM BY SCOTT WHENEVER NOT SUCCESSFUL");
+    }
+
+    // ---------- generated SQL must print the same tree for every production (fuzz finds of earlier rounds) ----------
+
+    [Theory]
+    [InlineData("SELECT 1 FROM dual WHERE a = 1 = 1")]
+    [InlineData("SELECT -(-1) FROM dual")]
+    [InlineData("SELECT 1 FROM dual WHERE NOT a IN (1)")]
+    public void Contract_HoldsForOrdinaryStatements(string sql)
+    {
+        AssertContract(sql);
+    }
+
+    [Fact]
+    public void Contract_HoldsAtTheDepthLimitForEveryNestingConstruct()
+    {
+        const int limit = 200;
+        string Parens(int d) => "SELECT " + new string('(', d) + "1" + new string(')', d) + " FROM dual";
+        AssertContract(Parens(limit - 1));
+        AssertContract(Parens(limit));
+        AssertContract(Parens(limit + 1));
+        AssertContract("SELECT " + string.Concat(Enumerable.Repeat("CASE WHEN 1=1 THEN ", 199)) + "1" + string.Concat(Enumerable.Repeat(" END", 199)) + " FROM dual");
     }
 }
