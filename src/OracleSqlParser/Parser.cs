@@ -47,7 +47,7 @@ public sealed partial class SqlParser
     public static ParseResult Parse(string sql, ParseOptions? options)
     {
         var errors = new List<ParseError>();
-        var tokens = TokenizeLenient(sql, errors, options?.SubstitutionEnabled ?? true);
+        var tokens = TokenizeLenient(sql, errors, options?.SubstitutionEnabled ?? true, options?.SqlPlusScript ?? false);
         var parser = new SqlParser(tokens, sql, options);
         parser._lexErrors = errors.ToList();
         var script = parser.ParseScript(errors);
@@ -168,9 +168,9 @@ public sealed partial class SqlParser
         return null;
     }
 
-    private static List<Token> TokenizeLenient(string sql, List<ParseError> errors, bool substitutionEnabled)
+    private static List<Token> TokenizeLenient(string sql, List<ParseError> errors, bool substitutionEnabled, bool sqlPlusScript)
     {
-        var lx = new Lexer(sql, substitutionEnabled);
+        var lx = new Lexer(sql, substitutionEnabled, sqlPlusScript);
         var list = new List<Token>();
         while (true)
         {

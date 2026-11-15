@@ -125,6 +125,9 @@ static Report Run(List<(string Path, string Display)> files, List<(string Prefix
 
 sealed class Report
 {
+    // The inputs are SQL*Plus scripts, so the parser reads them with the client's line rules (see ParseOptions.SqlPlusScript).
+    private static readonly ParseOptions ScriptOptions = new() { SqlPlusScript = true };
+
     public readonly List<(string File, string Reason)> Excluded = [];
     private readonly List<string> _readFailures = [];
     private int _files, _cleanFiles, _fallbackDecodes, _toolFailures;
@@ -175,7 +178,7 @@ sealed class Report
         }
 
         var lines = text.Split('\n');
-        var result = SqlParser.Parse(text);
+        var result = SqlParser.Parse(text, ScriptOptions);
         int statements = result.Script.Statements.Count;
         _statements += statements;
         _attemptedStatements += statements + result.Errors.Count;
@@ -208,7 +211,7 @@ sealed class Report
             return;
         }
 
-        var reparsed = SqlParser.Parse(generated);
+        var reparsed = SqlParser.Parse(generated, ScriptOptions);
         if (reparsed.Errors.Count > 0)
         {
             var first = reparsed.Errors[0];

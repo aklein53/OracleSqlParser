@@ -33,6 +33,15 @@ public sealed class ParseOptions
     public bool SubstitutionEnabled { get; init; } = true;
 
     /// <summary>
+    /// Reads the input as a SQL*Plus script, with the client's line rules: a '-' that ends a line continues the command
+    /// onto the next line (the hyphen and the line break are removed), and a blank line ends an unterminated statement,
+    /// as SQL*Plus does by default (SET SQLBLANKLINES OFF). SET SQLBLANKLINES ON in the input turns the blank-line rule off.
+    /// SQL*Plus discards a statement that a blank line cuts short; this parser keeps it, so the tree shows what was written.
+    /// Off by default, because in plain SQL a line ending in '-' is a minus and a blank line is only whitespace.
+    /// </summary>
+    public bool SqlPlusScript { get; init; }
+
+    /// <summary>
     /// The Oracle release the input must run on. The default, Oracle23, accepts every construct the parser knows.
     /// Older targets keep the tree and add one ParseError per construct introduced after the target.
     /// </summary>

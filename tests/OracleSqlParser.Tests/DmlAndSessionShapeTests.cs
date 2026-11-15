@@ -189,6 +189,48 @@ public class DmlAndSessionShapeTests
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))",
             Shape.Of("@../packages/*.pks\n@@sub/x--y.sql\nSELECT 1 FROM dual"));
 
+    // SQL*Plus script reading (ParseOptions.SqlPlusScript): a '-' at the end of a line continues the command, and a blank
+    // line ends an unterminated statement unless SET SQLBLANKLINES ON. Plain SQL keeps both as ordinary text.
+    [Fact]
+    public void SqlPlusScript_HyphenAtLineEndContinuesTheCommand()
+    {
+        var script = new ParseOptions { SqlPlusScript = true };
+        var r = SqlParser.Parse("SELECT 1726-\n,'AR'-\n,'x' FROM dual", script);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal(1, r.Script.Statements.Count);
+        Assert.True(SqlParser.Parse("SELECT 1-\n2 FROM dual").Success);
+    }
+
+    [Fact]
+    public void SqlPlusScript_BlankLineEndsAnUnterminatedStatement()
+    {
+        var script = new ParseOptions { SqlPlusScript = true };
+        var r = SqlParser.Parse("SELECT 1 AS a1\nFROM dual\n\nBEGIN NULL; END;", script);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal(2, r.Script.Statements.Count);
+        Assert.Equal(1, SqlParser.Parse("SELECT 1\n\nFROM dual").Script.Statements.Count); // plain SQL: a blank line is just whitespace
+    }
+
+    // Blank lines inside a PL/SQL unit (anonymous block, CREATE PACKAGE/TYPE ...) do not end it: SQL*Plus runs it at its lone '/'.
+    [Theory]
+    [InlineData("CREATE OR REPLACE PACKAGE p AS\n\n  x NUMBER;\nEND;\n/\nSELECT 1 FROM dual")]
+    [InlineData("DECLARE\n  x NUMBER;\n\nBEGIN\n\n  NULL;\nEND;\n/\nSELECT 1 FROM dual")]
+    [InlineData("PROMPT start\nCREATE TYPE t AS OBJECT (\n  a NUMBER\n\n);\n/\nSELECT 1 FROM dual")]
+    public void SqlPlusScript_BlankLinesInsidePlsqlUnitsAreKept(string sql)
+    {
+        var r = SqlParser.Parse(sql, new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal(2, r.Script.Statements.Count(st => st is not SqlPlusCommand));
+    }
+
+    [Fact]
+    public void SqlPlusScript_SetSqlBlankLinesOnKeepsBlankLines()
+    {
+        var r = SqlParser.Parse("SET SQLBLANKLINES ON\nSELECT 1\n\nFROM dual", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal(2, r.Script.Statements.Count);
+    }
+
     // A '/' alone on its line ends a query or view; it is not a division (the next statement starts with SELECT).
     [Theory]
     [InlineData("CREATE VIEW v AS SELECT * FROM t WHERE a > 1\n/\nSELECT 2 FROM dual")]
