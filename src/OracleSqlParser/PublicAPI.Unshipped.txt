@@ -5859,3 +5859,40 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WordItem! node) -> 
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WrapperClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.XmlNamespace! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.XmlTable! node) -> void
+OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Add = 0 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.And = 12 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Concatenate = 5 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Divide = 3 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Equals = 6 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.GreaterThan = 9 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.GreaterThanOrEqual = 11 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.LessThan = 8 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.LessThanOrEqual = 10 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MemberOf = 14 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Multiply = 2 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetExcept = 24 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetExceptAll = 25 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetExceptDistinct = 26 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetIntersect = 21 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetIntersectAll = 22 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetIntersectDistinct = 23 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetUnion = 18 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetUnionAll = 19 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.MultisetUnionDistinct = 20 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.NotEquals = 7 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.NotMemberOf = 15 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.NotSubmultisetOf = 17 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Or = 13 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Power = 4 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.SubmultisetOf = 16 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.BinaryOperator.Subtract = 1 -> OracleSqlParser.BinaryOperator
+OracleSqlParser.OperatorExtensions
+OracleSqlParser.UnaryOperator
+OracleSqlParser.UnaryOperator.ConnectByRoot = 4 -> OracleSqlParser.UnaryOperator
+OracleSqlParser.UnaryOperator.Minus = 1 -> OracleSqlParser.UnaryOperator
+OracleSqlParser.UnaryOperator.Not = 2 -> OracleSqlParser.UnaryOperator
+OracleSqlParser.UnaryOperator.Plus = 0 -> OracleSqlParser.UnaryOperator
+OracleSqlParser.UnaryOperator.Prior = 3 -> OracleSqlParser.UnaryOperator
+static OracleSqlParser.OperatorExtensions.ToSql(this OracleSqlParser.BinaryOperator op) -> string!
+static OracleSqlParser.OperatorExtensions.ToSql(this OracleSqlParser.UnaryOperator op) -> string!

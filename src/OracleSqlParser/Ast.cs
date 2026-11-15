@@ -729,6 +729,66 @@ public sealed partial class ExpressionList : Expression
     public List<Expression> Items { get; set; } = [];
 }
 
+/// <summary>The operator of a <see cref="BinaryExpression"/> (and the comparison of a <see cref="QuantifiedComparison"/>).</summary>
+/// <remarks>Spellings that mean the same operator share a member: <c>!=</c>, <c>^=</c> and <c>~=</c> are all <see cref="NotEquals"/>. Use <see cref="OperatorExtensions.ToSql(BinaryOperator)"/> for the text.</remarks>
+public enum BinaryOperator
+{
+    /// <summary><c>+</c></summary>
+    Add,
+    /// <summary><c>-</c></summary>
+    Subtract,
+    /// <summary><c>*</c></summary>
+    Multiply,
+    /// <summary><c>/</c></summary>
+    Divide,
+    /// <summary><c>**</c>, PL/SQL only.</summary>
+    Power,
+    /// <summary><c>||</c></summary>
+    Concatenate,
+    /// <summary><c>=</c></summary>
+    Equals,
+    /// <summary><c>&lt;&gt;</c>, also written <c>!=</c>, <c>^=</c> or <c>~=</c>.</summary>
+    NotEquals,
+    /// <summary><c>&lt;</c></summary>
+    LessThan,
+    /// <summary><c>&gt;</c></summary>
+    GreaterThan,
+    /// <summary><c>&lt;=</c></summary>
+    LessThanOrEqual,
+    /// <summary><c>&gt;=</c></summary>
+    GreaterThanOrEqual,
+    /// <summary><c>AND</c></summary>
+    And,
+    /// <summary><c>OR</c></summary>
+    Or,
+    /// <summary><c>x MEMBER OF nt</c></summary>
+    MemberOf,
+    /// <summary><c>x NOT MEMBER OF nt</c></summary>
+    NotMemberOf,
+    /// <summary><c>x SUBMULTISET OF nt</c></summary>
+    SubmultisetOf,
+    /// <summary><c>x NOT SUBMULTISET OF nt</c></summary>
+    NotSubmultisetOf,
+    /// <summary><c>MULTISET UNION</c></summary>
+    MultisetUnion,
+    /// <summary><c>MULTISET UNION ALL</c></summary>
+    MultisetUnionAll,
+    /// <summary><c>MULTISET UNION DISTINCT</c></summary>
+    MultisetUnionDistinct,
+    /// <summary><c>MULTISET INTERSECT</c></summary>
+    MultisetIntersect,
+    /// <summary><c>MULTISET INTERSECT ALL</c></summary>
+    MultisetIntersectAll,
+    /// <summary><c>MULTISET INTERSECT DISTINCT</c></summary>
+    MultisetIntersectDistinct,
+    /// <summary><c>MULTISET EXCEPT</c></summary>
+    MultisetExcept,
+    /// <summary><c>MULTISET EXCEPT ALL</c></summary>
+    MultisetExceptAll,
+    /// <summary><c>MULTISET EXCEPT DISTINCT</c></summary>
+    MultisetExceptDistinct,
+}
+
 /// <summary>A binary operator application, such as <c>a + b</c> or <c>a || b</c>.</summary>
 public sealed partial class BinaryExpression : Expression
 {
@@ -762,6 +822,21 @@ public sealed partial class QuantifiedComparison : Expression
     public ComparisonQuantifier Quantifier { get; set; }
     /// <summary>The subquery or list on the right.</summary>
     public required Expression Right { get; set; }
+}
+
+/// <summary>The operator of a <see cref="UnaryExpression"/>.</summary>
+public enum UnaryOperator
+{
+    /// <summary><c>+</c></summary>
+    Plus,
+    /// <summary><c>-</c></summary>
+    Minus,
+    /// <summary><c>NOT</c></summary>
+    Not,
+    /// <summary><c>PRIOR</c></summary>
+    Prior,
+    /// <summary><c>CONNECT_BY_ROOT</c></summary>
+    ConnectByRoot,
 }
 
 /// <summary>A prefix operator applied to one operand, such as <c>NOT a</c>, <c>-a</c> or <c>PRIOR a</c>.</summary>
