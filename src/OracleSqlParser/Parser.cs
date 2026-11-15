@@ -30,6 +30,9 @@ public sealed class ParseResult
 
     /// <summary>True when there are no diagnostics at all, including version diagnostics.</summary>
     public bool Success => Errors.Count == 0;
+
+    /// <summary>Created by the parser only, so a consumer cannot fabricate a result whose token indexes do not match its source.</summary>
+    internal ParseResult() { }
 }
 
 /// <summary>Recursive-descent parser for Oracle SQL (queries and DML) producing an AST.</summary>
