@@ -58,6 +58,9 @@ public sealed class FuzzInputs
     /// <summary>The longest chain (in terms) that LongChain may generate. The unit smoke test lowers it to keep runs fast.</summary>
     public int MaxChainTerms { get; init; } = 50_000;
 
+    /// <summary>The largest nesting depth, identifier length or repeat count the deep and long families generate (default 20,000).</summary>
+    public int MaxSize { get; init; } = 20_000;
+
     /// <summary>Creates a generator. <paramref name="seeds"/> are SQL texts to mutate (their tokens are computed with the parser).</summary>
     public FuzzInputs(IEnumerable<string> seeds, Random rng)
     {
@@ -91,8 +94,8 @@ public sealed class FuzzInputs
             < 40 => Script(),
             < 48 => KeywordSoup(),
             < 60 => DeepNesting(),
-            < 68 => LongChain(),
-            < 73 => LongNames(),
+            < 63 => LongChain(),
+            < 68 => LongNames(),
             < 80 => QuoteSoup(),
             < 87 => UnicodeSoup(),
             < 93 => MutateString(DeepNesting()),
@@ -148,7 +151,7 @@ public sealed class FuzzInputs
             case 9:
                 {
                     // wrap a run of tokens in parentheses of a depth around the limit
-                    int depth = DepthChoices[_rng.Next(DepthChoices.Length)];
+                    int depth = Math.Min(MaxSize, DepthChoices[_rng.Next(DepthChoices.Length)]);
                     int end = Math.Min(toks.Count, k + 1 + _rng.Next(4));
                     var inner = toks.GetRange(k, end - k);
                     toks.RemoveRange(k, end - k);
@@ -328,7 +331,7 @@ public sealed class FuzzInputs
             < 3 => 1 + _rng.Next(20),
             < 8 => 195 + _rng.Next(12),
             < 9 => 300 + _rng.Next(200),
-            _ => _rng.Choose(1000, 5000, 20000),
+            _ => Math.Min(MaxSize, _rng.Choose(1000, 5000, 20000)),
         };
         return _rng.Next(26) switch
         {
@@ -398,7 +401,7 @@ public sealed class FuzzInputs
     /// <summary>Very long identifiers, bind names, quoted identifiers and literals, and long comments.</summary>
     public string LongNames()
     {
-        int n = _rng.Choose(100, 128, 300, 1000, 4000, 30000, 100000);
+        int n = Math.Min(MaxSize * 5, _rng.Choose(100, 128, 300, 1000, 4000, 30000, 100000));
         string id = new string(_rng.Next(2) == 0 ? 'A' : 'z', n);
         return _rng.Next(7) switch
         {

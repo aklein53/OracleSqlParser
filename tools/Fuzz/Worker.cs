@@ -17,8 +17,14 @@ public sealed record Outcome(FuzzFailure? Failure, double Milliseconds);
 /// </summary>
 public static class Worker
 {
-    /// <summary>The per-input budget inside the worker.</summary>
+    /// <summary>The budget for a small input. A hang is no answer within this (plus the size allowance below).</summary>
     public static readonly TimeSpan Budget = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// The budget for one input: 2 s plus 20 microseconds per character. A chain of 50,000 terms legitimately takes
+    /// seconds to check, so a fixed budget would report it as a hang; a real hang still exceeds any size allowance.
+    /// </summary>
+    public static TimeSpan BudgetFor(FuzzCase c) => Budget + TimeSpan.FromTicks((long)c.Sql.Length * 200);
 
     /// <summary>
     /// The stack of the thread that runs each input: an explicit 1 MB. (DOTNET_DefaultStackSize does not reach thread-pool
@@ -41,7 +47,7 @@ public static class Worker
             FuzzFailure? f = null;
             var thread = new Thread(() => f = ContractChecker.Check(c), StackBytes) { IsBackground = true };
             thread.Start();
-            if (!thread.Join(Budget))
+            if (!thread.Join(BudgetFor(c)))
             {
                 output.WriteLine("HANG");
                 return 3;
@@ -82,7 +88,7 @@ public static class Worker
             {
                 return Crashed(c, sw);
             }
-            if (!reply.Wait(Budget + TimeSpan.FromSeconds(5)))
+            if (!reply.Wait(BudgetFor(c) + TimeSpan.FromSeconds(5)))
             {
                 Kill();
                 return new Outcome(new FuzzFailure("hang", "hang", "no answer from the worker within 7 s"), sw.Elapsed.TotalMilliseconds);
@@ -92,7 +98,7 @@ public static class Worker
             if (line == "HANG")
             {
                 Kill();
-                return new Outcome(new FuzzFailure("hang", "hang", "parse exceeded " + Budget.TotalSeconds + " s"), sw.Elapsed.TotalMilliseconds);
+                return new Outcome(new FuzzFailure("hang", "hang", "check exceeded " + BudgetFor(c).TotalSeconds.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) + " s"), sw.Elapsed.TotalMilliseconds);
             }
             var parts = line.Split('\t');
             double ms = double.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);

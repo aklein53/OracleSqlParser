@@ -88,7 +88,6 @@ public static class ContractChecker
             {
                 AstPrinter.Print(script);
                 AstJson.Serialize(script, includePositions: true);
-                AstJson.ToJson(script);
             }) is { } fp) return fp;
 
         if (Attempt("SqlAnalysis", () =>

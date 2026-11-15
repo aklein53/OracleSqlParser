@@ -24,8 +24,8 @@ internal static class Program
         if (args.Length > 0 && args[0] == "--worker") return Worker.Run();
         if (args.Length > 0 && args[0] == "--probe-stack") return ProbeStack();
         var o = Options.Parse(args);
+        if (o.Stages) return Stages(o.Check);
         if (o.Check is not null) return CheckFile(o.Check);
-        if (o.Stages) return Stages();
         if (o.Slowest) return Slowest(o);
         if (o.Scaling) return Scaling(fullContract: o.FullContract);
         return FuzzRun(o);
@@ -83,7 +83,7 @@ internal static class Program
         public required string Category;
         public long Count;
         public required string File;
-        public required FuzzCase Repro;
+        public FuzzCase Repro;
     }
 
     private static int FuzzRun(Options o)
@@ -127,20 +127,26 @@ internal static class Program
 
                 Interlocked.Increment(ref failures);
                 categories.AddOrUpdate(res.Failure.Category, 1, (_, n) => n + 1);
+                Finding f;
                 lock (findingLock)
                 {
                     if (findings.TryGetValue(res.Failure.Signature, out var known)) { known.Count++; continue; }
-                    // A new bug: minimise to a repro that fails with the same signature, then save it.
-                    var min = Minimise(c, res.Failure.Signature, client);
-                    var f = new Finding
+                    // Reserve the signature first, so no other job minimises the same bug; the repro is filled in below.
+                    f = new Finding
                     {
                         Signature = res.Failure.Signature,
                         Category = res.Failure.Category,
                         Count = 1,
                         File = Path.Combine(outDir, "findings", $"{findings.Count + 1:D3}-{Safe(res.Failure.Category)}.json"),
-                        Repro = min,
+                        Repro = c,
                     };
                     findings[res.Failure.Signature] = f;
+                }
+                // Minimise outside the lock, so the other jobs keep running. Minimised to a repro with the same signature.
+                var min = Minimise(c, res.Failure.Signature, client);
+                lock (findingLock)
+                {
+                    f.Repro = min;
                     SaveRepro(f, res.Failure);
                     Console.WriteLine($"NEW {f.Category}: {res.Failure.Signature}  (minimised {c.Sql.Length} -> {min.Sql.Length} chars) -> {f.File}");
                 }
@@ -276,8 +282,13 @@ internal static class Program
 
     // ---------- per-stage timing of the contract path (for chains that scale worse than linearly) ----------
 
-    private static int Stages()
+    private static int Stages(string? file = null)
     {
+        if (file is not null)
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(file));
+            return StageTimes("file", doc.RootElement.GetProperty("sql").GetString()!);
+        }
         var families = new (string Name, Func<int, string> Make)[]
         {
             ("AND chain", n => "SELECT 1 FROM t WHERE " + string.Join(" AND ", Enumerable.Range(0, n).Select(i => "a" + i + " = 1"))),
@@ -289,9 +300,19 @@ internal static class Program
         {
             foreach (int n in new[] { 2000, 4000, 8000, 16000 })
             {
-                string sql = make(n);
+                StageTimes(name + " n=" + n, make(n));
+            }
+        }
+        return 0;
+    }
+
+    private static int StageTimes(string label, string sql)
+    {
+        {
+            {
                 var r = SqlParser.Parse(sql);
                 var script = r.Script;
+                int n = sql.Length;
                 var stages = new List<(string, double)>();
                 void T(string label, Action a)
                 {
@@ -309,7 +330,7 @@ internal static class Program
                 T("StructEq", () => SqlNodeComparer.StructurallyEqual(script, clone!));
                 T("Generate", () => gen = new SqlScriptGenerator().Generate(script));
                 T("Reparse", () => SqlParser.Parse(gen));
-                Console.WriteLine($"{name,-10} n={n,-6}" + string.Concat(stages.Select(x => $"  {x.Item1}={x.Item2:F1}")));
+                Console.WriteLine($"{label,-24} len={n,-7}" + string.Concat(stages.Select(x => $"  {x.Item1}={x.Item2:F1}")));
             }
         }
         return 0;
