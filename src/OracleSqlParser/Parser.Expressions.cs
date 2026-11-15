@@ -247,7 +247,8 @@ public sealed partial class SqlParser
         {
             if (IsOp("[")) { if (_plsql) throw Fail("Array steps are not valid in PL/SQL expressions (PLS-00103)", ParseErrorCodes.InvalidCombination); e = ParseSubscripts(e, start); }
             else if (e is CellReference or ChainedCall && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
-            else if (e is FunctionCall or CellReference or ChainedCall && IsOp("(")) e = ParseChainedCall(e, start);
+            else if (e is FunctionCall or CellReference or ChainedCall or MethodCall && IsOp("(")) e = ParseChainedCall(e, start);
+            else if (e is CastExpression { Kind: CastKind.Treat } && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
             else if (IsKw("AT") && (IsKwAt(1, "TIME") || IsKwAt(1, "LOCAL")))
             {
                 Next();
@@ -456,7 +457,7 @@ public sealed partial class SqlParser
     {
         // An attributed reference continues too: SQL%BULK_EXCEPTIONS.COUNT is a member of SQL%BULK_EXCEPTIONS.
         int prog114 = -1;
-        while ((result is FunctionCall or MethodCall or MemberAccess or CellReference or ChainedCall || result is ColumnReference { Attribute: not null }) && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog114))
+        while ((result is FunctionCall or MethodCall or MemberAccess or CellReference or ChainedCall or CastExpression { Kind: CastKind.Treat } || result is ColumnReference { Attribute: not null }) && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog114))
         {
             Next();
             var m = ParseIdentifier();

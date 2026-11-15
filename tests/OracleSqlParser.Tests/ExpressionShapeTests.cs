@@ -211,6 +211,14 @@ public class ExpressionShapeTests
 
 public class ExpertStressRegressionTests
 {
+    // TREAT(x AS t) yields a value of subtype t, so it takes attributes and methods, and a collection element can follow a method call.
+    [Theory]
+    [InlineData("SELECT TREAT (main_course AS dessert_ot).contains_chocolate FROM t", "(MemberAccess")]
+    [InlineData("SELECT treat(treat(l(1) AS u).items(1) AS u).items(1) FROM dual", "(MethodCall")]
+    [InlineData("BEGIN wb.sheets(s).rows(r)(c).value := v; END;", "(ChainedCall")]
+    public void TreatAndChainedAccessContinue(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
     // SET(nested_table) is the SET operator, a function call; SET is reserved, so it needs its own rule.
     [Theory]
     [InlineData("SELECT SET(t.nt) FROM t", "name=[SET]")]
