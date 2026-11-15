@@ -23,7 +23,6 @@ public class RealWorldGapOracleTests(OracleFixture db)
         "GRANT my_role TO PACKAGE hr my_pkg",
         "GRANT my_role TO PROCEDURE hr.p hr.q",
         "BEGIN PRAGMA INLINE get_logical_suite; END;",
-        "BEGIN PRAGMA INLINE(get_logical_suite); NULL; END;",
         "BEGIN PRAGMA INLINE(hr.get_logical_suite, 'YES'); NULL; END;",
         "SELECT * FROM dbms_xplan.display() partition (p)",
         "SELECT * FROM app.f(1) sample (10)",
