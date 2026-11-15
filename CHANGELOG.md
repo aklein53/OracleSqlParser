@@ -30,6 +30,8 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   statement, and a blank line ends an unterminated SQL statement (unless `SET SQLBLANKLINES ON`).
 - SQL*Plus host commands `$ cmd` / `! cmd`; `&name`/`&&name` substitution variables as names (`CREATE USER &u`,
   `&&owner..pkg.f`).
+- Under `ParseOptions.SqlPlusScript`, a `HOST` command continued with a line-end `-` is one `SqlPlusCommandStatement`
+  whose arguments cover both lines (SQL*Plus drops the hyphen and joins the lines; so does the parser).
 - `CREATE TYPE t;` (`TypeKind.Incomplete`), `TABLE OF REF t` (`DataType.Ref`), `APPROX_RANK(PARTITION BY ...)`
   (`FunctionCall.PartitionBy`), `(SELF AS t).m()` (`CastKind.GeneralizedInvocation`), `SET(nt)`, member access after
   `TREAT(...)` and method calls.

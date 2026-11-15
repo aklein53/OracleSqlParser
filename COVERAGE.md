@@ -68,7 +68,7 @@ Conditional blocks (``) in parameter lists are typed (`ConditionalParameter`); t
 ## Script level
 
 SQL*Plus commands (`SET`, `SPOOL`, `DEFINE`, `@script`, `PROMPT`, `REM`, `WHENEVER`, ...) → `SqlPlusCommandStatement`
-(`@file` and `@@file` take the rest of the line as one raw string, so `/*` in a path is not a comment; the script-only line rules are in `ParseOptions.SqlPlusScript`)
+(`@file` and `@@file` take the rest of the line as one raw string, so `/*` in a path is not a comment; `HOST` under `SqlPlusScript` may be continued with a line-end `-`; the script-only line rules are in `ParseOptions.SqlPlusScript`)
 (arguments are a token tree); `EXEC`/`EXECUTE` call or `target := value` → `ExecStatement` whose body is a `ProcedureCallStatement` or `AssignmentStatement` (SQL*Plus runs it as `BEGIN body; END;`); `&var`/`&&var` → `SubstitutionVariable`; `/` terminators.
 Error recovery resyncs at `;`, or for PL/SQL units at a `/` alone on its line (else the `;` after `END`).
 

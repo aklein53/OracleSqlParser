@@ -75,7 +75,11 @@ public sealed partial class SqlParser
     {
         if (command == "@" && IsOp("@")) { Next(); command = "@@"; } // "@@" on one line is lexed as "@" then "@" unless at line start
         var cmd = new SqlPlusCommandStatement { Command = command };
-        cmd.Arguments = ParseSyntaxItems(() => Cur.Line != start.Line || IsOp(";"));
+        // The arguments end at the first line break. HOST alone may run on past one: under SqlPlusScript a line-end '-'
+        // joins the next line (the lexer drops the hyphen and the break, as SQL*Plus does). Other commands keep their
+        // arguments on one line, so their existing trees do not change.
+        bool joinsLines = command == "HOST";
+        cmd.Arguments = ParseSyntaxItems(() => (joinsLines ? Cur.Line != Prev.Line && !ContinuesFromPreviousLine() : Cur.Line != start.Line) || IsOp(";"));
         return Fin(cmd, start);
     }
 

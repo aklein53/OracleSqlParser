@@ -198,6 +198,24 @@ public sealed partial class SqlParser
     /// <summary>The release the input targets (<see cref="ParseOptions.OracleVersion"/>).</summary>
     private readonly OracleVersion _version;
 
+    /// <summary>True for <see cref="ParseOptions.SqlPlusScript"/>: a '-' at a line end joins the lines (see <see cref="ContinuesFromPreviousLine"/>).</summary>
+    private readonly bool _sqlPlusScript;
+
+    /// <summary>
+    /// True when the current token continues the previous token's line through a SQL*Plus line-end '-'. The lexer drops that
+    /// hyphen and its line break, so the parser checks the source between the two tokens: the gap must hold a '-' right before
+    /// its first line break, and not the '--' of a comment.
+    /// </summary>
+    private bool ContinuesFromPreviousLine()
+    {
+        if (!_sqlPlusScript || _p == 0 || Cur.Start <= Prev.End || Cur.Start > _src.Length) return false;
+        var gap = _src.AsSpan(Prev.End, Cur.Start - Prev.End);
+        int nl = gap.IndexOf('\n');
+        if (nl < 0) return false;
+        var before = gap[..nl].TrimEnd(" \t\r");
+        return before.Length > 0 && before[^1] == '-' && (before.Length == 1 || before[^2] != '-');
+    }
+
     /// <summary>
     /// Non-fatal version diagnostics (<see cref="RequireVersion"/>). They never abort a statement, so the tree is
     /// still built; <see cref="Parse(string, ParseOptions?)"/> reports them with the syntax errors.
@@ -207,6 +225,7 @@ public sealed partial class SqlParser
     private SqlParser(List<Token> tokens, string src, ParseOptions? options = null)
     {
         _src = src;
+        _sqlPlusScript = options?.SqlPlusScript ?? false;
         _maxDepth = options?.MaxNestingDepth ?? 200;
         _version = options?.OracleVersion ?? OracleVersion.Oracle23;
         // Keep optimizer hints only where they are meaningful (right after a statement keyword).
