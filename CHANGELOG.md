@@ -49,6 +49,8 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   fuzz run is part of the unit suite.
 
 ### Fixed
+- The SQL generator printed `CHARACTER VARYING(10)` (and the `NATIONAL CHARACTER`, `NCHAR` and `CHAR` forms) as
+  `CHARACTER(10) VARYING`, which Oracle rejects.
 - Found by parsing 915 files from open-source PL/SQL projects (utPLSQL, Logger, Oracle sample schemas and examples, and
   others; 97% of files now parse cleanly and all of them round-trip): a `/` line after `CREATE TYPE`, `DROP` and other
   statements without `;` now ends them instead of being read as division or swallowing the next statement; `/*` in an

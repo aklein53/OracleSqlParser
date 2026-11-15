@@ -283,6 +283,14 @@ public class SqlScriptGeneratorTests
     public void Generate_KeepsNotEqualsSpelling(string sql, string expected) =>
         Assert.Equal(expected, new SqlScriptGenerator().Generate(SqlParser.ParseExpression(sql)));
 
+    [Theory]
+    [InlineData("CREATE TABLE t (a CHARACTER VARYING(10))", "CREATE TABLE t (a CHARACTER VARYING(10));")]
+    [InlineData("CREATE TABLE t (a NATIONAL CHARACTER VARYING(5))", "CREATE TABLE t (a NATIONAL CHARACTER VARYING(5));")]
+    [InlineData("CREATE TABLE t (a NCHAR VARYING(3), b CHAR VARYING(2 CHAR))", "CREATE TABLE t (a NCHAR VARYING(3), b CHAR VARYING(2 CHAR));")]
+    [InlineData("CREATE TABLE t (a DOUBLE PRECISION, b TIMESTAMP(3) WITH LOCAL TIME ZONE, c INTERVAL DAY(2) TO SECOND(6))", "CREATE TABLE t (a DOUBLE PRECISION, b TIMESTAMP(3) WITH LOCAL TIME ZONE, c INTERVAL DAY(2) TO SECOND(6));")]
+    public void Generate_MultiWordTypes_PutArgumentsWhereOracleExpectsThem(string sql, string expected) =>
+        Assert.Equal(expected, new SqlScriptGenerator().Generate(SqlParser.Parse(sql).Script).Trim());
+
     [Fact]
     public void Generate_NotEqualsBuiltInCode_UsesCanonicalSpelling()
     {

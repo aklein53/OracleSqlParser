@@ -45,7 +45,7 @@ public sealed partial class SqlScriptGenerator
             var words = dt.Name.Split(' ');
             int argAt = words.Length;
             for (int i = 1; i < words.Length; i++)
-                if (words[i] is "WITH" or "WITHOUT" or "TO" or "PRECISION" or "VARYING") { argAt = i; break; }
+                if (words[i] is "WITH" or "WITHOUT" or "TO") { argAt = i; break; }
             if (dt.Name.StartsWith("INTERVAL")) argAt = 2; // INTERVAL DAY(2) TO SECOND(6)
             Add(string.Join(" ", words.Take(argAt)));
             if (dt.Arguments.Count > 0)
