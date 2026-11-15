@@ -5916,3 +5916,15 @@ OracleSqlParser.GranteeProgramKind
 OracleSqlParser.GranteeProgramKind.Function = 1 -> OracleSqlParser.GranteeProgramKind
 OracleSqlParser.GranteeProgramKind.Package = 0 -> OracleSqlParser.GranteeProgramKind
 OracleSqlParser.GranteeProgramKind.Procedure = 2 -> OracleSqlParser.GranteeProgramKind
+OracleSqlParser.InlinePragmaStatement
+OracleSqlParser.InlinePragmaStatement.Enabled.get -> bool
+OracleSqlParser.InlinePragmaStatement.Enabled.set -> void
+OracleSqlParser.InlinePragmaStatement.InlinePragmaStatement() -> void
+OracleSqlParser.InlinePragmaStatement.Subprogram.get -> OracleSqlParser.Identifier!
+OracleSqlParser.InlinePragmaStatement.Subprogram.set -> void
+override OracleSqlParser.InlinePragmaStatement.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.InlinePragmaStatement.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.InlinePragmaStatement.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.InlinePragmaStatement! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.InlinePragmaStatement! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.InlinePragmaStatement! node) -> void

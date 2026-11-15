@@ -109,6 +109,9 @@ public sealed partial class SqlParser
             list.Add(ParsePlsqlStatement());
             if (!directive) ExpectOp(";");
         }
+        // Oracle counts a PRAGMA INLINE as no statement: a statement list of only pragmas is an error (checked on Oracle 23).
+        if (list.Count > 0 && list.TrueForAll(s => s is InlinePragmaStatement))
+            throw Fail("Expected a statement after PRAGMA INLINE");
         return list;
     }
 
@@ -837,6 +840,7 @@ public sealed partial class SqlParser
                     ExpectOp(")");
                     return Fin(pr, start);
                 }
+                case "PRAGMA" when IsKwAt(1, "INLINE"): return ParseInlinePragmaStatement();
                 case "DECLARE": case "BEGIN": return ParseBlock();
                 case "SELECT": case "WITH": case "INSERT": case "UPDATE": case "DELETE": case "MERGE":
                 case "COMMIT": case "ROLLBACK": case "SAVEPOINT": case "LOCK": case "CALL":
@@ -850,6 +854,21 @@ public sealed partial class SqlParser
         var target = ParsePostfix();
         if (AcceptOp(":=")) return Fin(new AssignmentStatement { Target = target, Value = ParseExpr() }, start);
         return Fin(new ProcedureCallStatement { Call = target }, start);
+    }
+
+    /// <summary>PRAGMA INLINE (subprogram, 'YES'|'NO'). Oracle takes a simple name and a string of YES or NO (any case).</summary>
+    private Statement ParseInlinePragmaStatement()
+    {
+        var start = Next(); // PRAGMA
+        Next(); // INLINE
+        ExpectOp("(");
+        var st = new InlinePragmaStatement { Subprogram = ParseIdentifier() };
+        ExpectOp(",");
+        if (Cur.Type != TokenType.String || Cur.Value.ToUpperInvariant() is not ("YES" or "NO"))
+            throw FailExpected($"Expected 'YES' or 'NO' but found {Describe(Cur)}", "'YES'", "'NO'");
+        st.Enabled = Next().Value.Equals("YES", StringComparison.OrdinalIgnoreCase);
+        ExpectOp(")");
+        return Fin(st, start);
     }
 
     private Statement ParseIf()

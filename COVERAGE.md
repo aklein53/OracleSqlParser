@@ -50,7 +50,7 @@ clauses as a nested token tree (`WordItem`/`LiteralItem`/`SymbolItem`/`GroupItem
 
 Typed: anonymous/nested blocks, labels, all declarations (variable, constant, exception, pragma, cursor, record,
 collection, ref cursor, subtype, nested subprograms), IF/CASE/LOOP/WHILE/FOR/FORALL/EXIT/CONTINUE/GOTO/RETURN/RAISE/
-NULL, OPEN/FETCH/CLOSE, EXECUTE IMMEDIATE, PIPE ROW, assignments, calls, exception handlers, SQL inside PL/SQL
+NULL, OPEN/FETCH/CLOSE, EXECUTE IMMEDIATE, PIPE ROW, PRAGMA INLINE (`InlinePragmaStatement`), assignments, calls, exception handlers, SQL inside PL/SQL
 (`SELECT INTO`, DML with `RETURNING BULK COLLECT`), qualified expressions (`arr(1 => v, OTHERS => v, FOR i IN 1..3 => v)`;
 `rec(a => v)` stays a `FunctionCall` named argument), chained calls (`f(x)(y)`, `arr(1)(2)`), program options (AUTHID, DETERMINISTIC, PIPELINED, PARALLEL_ENABLE,
 RESULT_CACHE, AGGREGATE, SQL_MACRO, ACCESSIBLE BY, DEPRECATE, DEFAULT COLLATION, SHARING), external call specs

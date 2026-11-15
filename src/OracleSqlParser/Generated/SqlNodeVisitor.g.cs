@@ -1578,6 +1578,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="InlinePragmaStatement"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(InlinePragmaStatement node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="InlinePragmaStatement"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(InlinePragmaStatement node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="InquiryDirective"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(InquiryDirective node) => Visit((SqlNode)node);
 

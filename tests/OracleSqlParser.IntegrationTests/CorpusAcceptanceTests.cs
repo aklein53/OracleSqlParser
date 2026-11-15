@@ -18,10 +18,14 @@ public class CorpusAcceptanceTests(OracleFixture db, ITestOutputHelper output)
 {
     public static IEnumerable<string> Corpus()
     {
-        var attrs = typeof(SmokeCorpusTests).GetMethod("Parses")!.GetCustomAttributes<InlineDataAttribute>();
-        foreach (var a in attrs)
-            foreach (var sql in a.GetData(null!).Select(d => (string)d[0]))
-                yield return sql;
+        // The smoke corpus, then the real-world gap forms (kept apart so the fuzz seeds do not change; see RealWorldGapCorpusTests).
+        foreach (var owner in new[] { typeof(SmokeCorpusTests), typeof(RealWorldGapCorpusTests) })
+        {
+            var attrs = owner.GetMethod("Parses")!.GetCustomAttributes<InlineDataAttribute>();
+            foreach (var a in attrs)
+                foreach (var sql in a.GetData(null!).Select(d => (string)d[0]))
+                    yield return sql;
+        }
     }
 
     public static IEnumerable<object[]> Statements() => Corpus().Select((s, i) => new object[] { i, s });

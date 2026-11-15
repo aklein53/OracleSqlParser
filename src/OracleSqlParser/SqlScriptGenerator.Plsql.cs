@@ -483,6 +483,7 @@ public sealed partial class SqlScriptGenerator
                     PlLine(); Add("$END");
                     break;
                 case CompilationErrorStatement ce: Add("$ERROR "); Expr(ce.Message); Add(" $END"); break;
+                case InlinePragmaStatement ip: Add("PRAGMA INLINE ("); Id(ip.Subprogram); Add(ip.Enabled ? ", 'YES')" : ", 'NO')"); break;
                 case IfStatement i:
                     Add("IF "); Expr(i.Condition); Add(" THEN");
                     StatementList(i.ThenStatements);

@@ -10033,6 +10033,58 @@ public partial class IndicesOfControl
     }
 }
 
+public partial class InlinePragmaStatement
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Subprogram is not null) yield return Subprogram;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Subprogram?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Subprogram = SqlNodeRewriter.RewriteRequired(rewriter, Subprogram, "InlinePragmaStatement.Subprogram");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Subprogram", Subprogram),
+        new("Enabled", Enabled),
+        new("Labels", Labels),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new InlinePragmaStatement
+        {
+            Subprogram = CloneChild(Subprogram)!,
+            Enabled = Enabled,
+            Labels = CloneStrings(Labels),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (InlinePragmaStatement)other;
+        return Pair(Subprogram, o.Subprogram, pending)
+            && Enabled == o.Enabled
+            && SameStrings(Labels, o.Labels);
+    }
+}
+
 public partial class InquiryDirective
 {
     /// <inheritdoc/>

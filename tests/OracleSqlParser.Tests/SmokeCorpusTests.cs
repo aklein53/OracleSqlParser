@@ -280,12 +280,6 @@ public class SmokeCorpusTests
     [InlineData("ALTER MATERIALIZED VIEW mv NOCACHE NOLOGGING PARALLEL 4")]
     [InlineData("CREATE MATERIALIZED VIEW mv REFRESH FAST ON STATEMENT AS SELECT 1 FROM dual")]
     [InlineData("CREATE TYPE BODY addr AS MEMBER FUNCTION full RETURN VARCHAR2 IS BEGIN RETURN street; END; CONSTRUCTOR FUNCTION addr(SELF IN OUT addr) RETURN SELF AS RESULT IS BEGIN RETURN; END; END;")]
-    [InlineData("GRANT my_role TO PACKAGE hr.my_pkg")]
-    [InlineData("GRANT my_role TO FUNCTION hr.f")]
-    [InlineData("GRANT my_role TO PROCEDURE hr.p")]
-    [InlineData("REVOKE my_role FROM PACKAGE hr.my_pkg")]
-    [InlineData("REVOKE my_role FROM FUNCTION hr.f")]
-    [InlineData("REVOKE my_role FROM PROCEDURE hr.p")]
     public void Parses(string sql)
     {
         var r = SqlParser.Parse(sql);

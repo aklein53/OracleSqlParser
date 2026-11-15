@@ -1089,6 +1089,18 @@ public sealed partial class PipeRowStatement : Statement
     public required Expression Value { get; set; }
 }
 
+/// <summary>
+/// A statement-level <c>PRAGMA INLINE (subprogram, 'YES'|'NO')</c> in an executable section, which asks the compiler to inline
+/// (or not inline) the calls to that subprogram. The declaration form is <see cref="PragmaDeclaration"/>.
+/// </summary>
+public sealed partial class InlinePragmaStatement : Statement
+{
+    /// <summary>The subprogram whose calls the pragma governs (a simple name, not qualified).</summary>
+    public required Identifier Subprogram { get; set; }
+    /// <summary>True for <c>'YES'</c> (inline the calls), false for <c>'NO'</c>.</summary>
+    public bool Enabled { get; set; }
+}
+
 /// <summary>The kind of a <c>CREATE JAVA</c> object.</summary>
 public enum JavaObjectKind
 {
