@@ -373,6 +373,8 @@ public sealed partial class SqlParser
                     var lit = Next();
                     return Fin(new Literal { Kind = start.Value == "DATE" ? LiteralKind.Date : LiteralKind.Timestamp, Value = lit.Value }, start);
                 }
+                case "SET" when IsOpAt(1, "("): // the SET(nested_table) operator: a function call, although SET is reserved
+                    return ParseNameOrFunction();
                 case "INTERVAL" when PeekTok().Type is TokenType.String or TokenType.Bind:
                     return ParseInterval();
                 case "NEW" when PeekTok().Type == TokenType.Identifier && (IsOpAt(2, "(") || IsOpAt(2, ".")):

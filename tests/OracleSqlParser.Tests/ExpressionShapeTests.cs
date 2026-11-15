@@ -211,6 +211,13 @@ public class ExpressionShapeTests
 
 public class ExpertStressRegressionTests
 {
+    // SET(nested_table) is the SET operator, a function call; SET is reserved, so it needs its own rule.
+    [Theory]
+    [InlineData("SELECT SET(t.nt) FROM t", "name=[SET]")]
+    [InlineData("BEGIN a_list := ut_utils.filter_list(SET(l_tags_list), 'x'); END;", "name=[SET]")]
+    public void SetOperatorIsAFunctionCall(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
     [Theory]
     [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY x) FROM t", "fromLast=true")]
     [InlineData("SELECT NTH_VALUE(x, 2) FROM FIRST RESPECT NULLS OVER (ORDER BY x) FROM t", "fromLast=false respectNulls")]
