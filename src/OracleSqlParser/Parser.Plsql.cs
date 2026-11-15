@@ -350,7 +350,7 @@ public sealed partial class SqlParser
             if (IsKw("SELF") && IsKwAt(1, "AS") && IsKwAt(2, "RESULT")) { Next(); Next(); Next(); sp.ReturnSelfAsResult = true; }
             else sp.ReturnType = ParseDataType();
         }
-        sp.Options = ParseProgramOptions(() => IsKw("IS") || IsKw("AS") || IsKw("LANGUAGE") || IsKw("EXTERNAL") || IsKw("MLE") || IsOp(";") || IsOp(","));
+        sp.Options = ParseProgramOptions(() => IsKw("IS") || IsKw("AS") || IsKw("LANGUAGE") || IsKw("EXTERNAL") || IsKw("MLE") || IsOp(";") || IsOp(","), allowConditional: true);
         if (IsKw("LANGUAGE") || IsKw("EXTERNAL") || IsKw("MLE")) sp.External = ParseExternalCall();
         else if (IsKw("IS") || IsKw("AS"))
         {
@@ -361,7 +361,9 @@ public sealed partial class SqlParser
         return Fin(sp, start);
     }
 
-    private ProgramOptions? ParseProgramOptions(Func<bool> stop)
+    /// <param name="stop">Ends the clause list (the token that follows the clauses).</param>
+    /// <param name="allowConditional">True in a subprogram heading, where a $IF group may wrap clauses (see <see cref="ConditionalProgramOptions"/>).</param>
+    private ProgramOptions? ParseProgramOptions(Func<bool> stop, bool allowConditional = false)
     {
         var s = Cur;
         var po = new ProgramOptions();
@@ -371,6 +373,9 @@ public sealed partial class SqlParser
         {
             switch (Cur.Value)
             {
+                case "$IF" when allowConditional:
+                    po.Conditionals.Add(ParseConditionalProgramOptions());
+                    break;
                 case "AUTHID":
                     Next();
                     po.Authid = AcceptKw("CURRENT_USER") ? AuthidKind.CurrentUser : (AcceptKw("DEFINER") ? AuthidKind.Definer : throw FailExpected("Expected CURRENT_USER or DEFINER", "CURRENT_USER", "DEFINER"));
@@ -437,6 +442,27 @@ public sealed partial class SqlParser
             any = true;
         }
         return any ? Fin(po, s) : null;
+    }
+
+    /// <summary>$IF cond $THEN clauses [$ELSIF cond $THEN clauses] [$ELSE clauses] $END in a subprogram heading.</summary>
+    private ConditionalProgramOptions ParseConditionalProgramOptions()
+    {
+        var start = Next(); // $IF
+        var c = new ConditionalProgramOptions { Condition = ParseExpr() };
+        ExpectKw("$THEN");
+        c.ThenOptions = ParseProgramOptions(AtDirectiveEnd, allowConditional: true);
+        int prog = -1;
+        while (IsKw("$ELSIF") && Progress(ref prog))
+        {
+            var bs = Next();
+            var br = new ConditionalProgramOptionsBranch { Condition = ParseExpr() };
+            ExpectKw("$THEN");
+            br.Options = ParseProgramOptions(AtDirectiveEnd, allowConditional: true);
+            c.ElsifBranches.Add(Fin(br, bs));
+        }
+        if (AcceptKw("$ELSE")) c.ElseOptions = ParseProgramOptions(AtDirectiveEnd, allowConditional: true);
+        ExpectKw("$END");
+        return Fin(c, start);
     }
 
     private ParallelEnableClause ParseParallelEnable()

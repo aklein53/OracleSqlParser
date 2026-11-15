@@ -39,6 +39,9 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 - A table function named in a query's FROM clause without `TABLE(...)` (Oracle 18c+): `FROM dbms_xplan.display()`,
   `FROM hr.pkg.f(1, 2) t`, `FROM (pkg.f(a)) m`. It is a `TableFunction` with the new `WithoutTableKeyword` flag set;
   `TABLE(...)` trees are unchanged.
+- Conditional compilation around the clauses of a subprogram heading, between the RETURN type and IS/AS or `;` (for
+  example `$IF $$rac_lt_11_2 $THEN $IF ... $THEN RESULT_CACHE RELIES_ON (...) $END $END`): `ProgramOptions.Conditionals`
+  of `ConditionalProgramOptions`, with `$ELSIF`/`$ELSE` branches. Empty branches are accepted, as Oracle accepts them.
 - `CREATE TYPE t;` (`TypeKind.Incomplete`), `TABLE OF REF t` (`DataType.Ref`), `APPROX_RANK(PARTITION BY ...)`
   (`FunctionCall.PartitionBy`), `(SELF AS t).m()` (`CastKind.GeneralizedInvocation`), `SET(nt)`, member access after
   `TREAT(...)` and method calls.

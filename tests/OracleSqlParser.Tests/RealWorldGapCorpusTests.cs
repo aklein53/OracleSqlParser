@@ -22,6 +22,8 @@ public class RealWorldGapCorpusTests
     [InlineData("SELECT * FROM dbms_xplan.display()")]
     [InlineData("SELECT * FROM hr.pkg.f(1, 2) t")]
     [InlineData("SELECT * FROM (pkg.match_paths(a, b)) m")]
+    [InlineData("create or replace package body p as\n  function get_level_number\n    return number\n    $if $$rac_lt_11_2 $then\n      $if not dbms_db_version.ver_le_10_2 $then\n        result_cache relies_on (logger_prefs, logger_prefs_by_client_id)\n      $end\n    $end\n  is\n    l_level number;\n  begin\n    return 1;\n  end;\nend;")]
+    [InlineData("create or replace package p as\n  function get_pref(p_pref_name in varchar2) return varchar2\n    $if not dbms_db_version.ver_le_10_2  $then\n      result_cache\n    $end;\nend;")]
     public void Parses(string sql)
     {
         var r = SqlParser.Parse(sql);

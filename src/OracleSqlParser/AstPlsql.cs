@@ -137,6 +137,31 @@ public sealed partial class ConditionalParameterBranch : SqlNode
     public List<ParameterItem> Parameters { get; set; } = [];
 }
 
+/// <summary>
+/// $IF cond $THEN ... [$ELSIF cond $THEN ...] [$ELSE ...] $END around clauses of a subprogram heading, between its RETURN type
+/// and IS/AS (such as <c>RESULT_CACHE</c> or <c>DETERMINISTIC</c>). Each branch holds clauses in a <see cref="ProgramOptions"/>.
+/// </summary>
+public sealed partial class ConditionalProgramOptions : SqlNode
+{
+    /// <summary>The compile-time condition after <c>$IF</c>.</summary>
+    public required Expression Condition { get; set; }
+    /// <summary>The clauses of the <c>$THEN</c> part, or null when the part is empty.</summary>
+    public ProgramOptions? ThenOptions { get; set; }
+    /// <summary>The <c>$ELSIF</c> branches, in source order; empty when absent.</summary>
+    public List<ConditionalProgramOptionsBranch> ElsifBranches { get; set; } = [];
+    /// <summary>The clauses of the <c>$ELSE</c> part, or null when absent or empty.</summary>
+    public ProgramOptions? ElseOptions { get; set; }
+}
+
+/// <summary>One <c>$ELSIF</c> branch of a conditional compilation group of program clauses.</summary>
+public sealed partial class ConditionalProgramOptionsBranch : SqlNode
+{
+    /// <summary>The compile-time condition of the branch.</summary>
+    public required Expression Condition { get; set; }
+    /// <summary>The clauses of the branch, or null when the branch is empty.</summary>
+    public ProgramOptions? Options { get; set; }
+}
+
 /// <summary>A user-defined exception declaration, such as <c>e_limit EXCEPTION;</c>.</summary>
 public sealed partial class ExceptionDeclaration : Declaration
 {
@@ -404,6 +429,8 @@ public sealed partial class ProgramOptions : SqlNode
     public Expression? DeprecateMessage { get; set; }
     /// <summary>The collation after <c>DEFAULT COLLATION</c>, or null when absent.</summary>
     public Identifier? DefaultCollation { get; set; }
+    /// <summary>The conditional-compilation groups (<c>$IF</c> ... <c>$END</c>) among the clauses, in source order; empty when absent.</summary>
+    public List<ConditionalProgramOptions> Conditionals { get; set; } = [];
 }
 
 /// <summary>The language of an external routine.</summary>

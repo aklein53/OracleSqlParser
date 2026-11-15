@@ -226,8 +226,22 @@ public sealed partial class SqlScriptGenerator
                 });
             if (po.AggregateUsing.Count > 0) parts.Add(() => { Add("AGGREGATE USING "); Name(po.AggregateUsing); });
             if (po.SqlMacro != null) parts.Add(() => Add(po.SqlMacro == MacroKind.Table ? "SQL_TABLE_MACRO" : "SQL_MACRO"));
+            foreach (var c in po.Conditionals) parts.Add(() => ConditionalProgramOpts(c));
             bool first = true;
             foreach (var p in parts) { if (!first) Sp(); first = false; p(); }
+        }
+
+        private void ConditionalProgramOpts(ConditionalProgramOptions c)
+        {
+            Add("$IF "); Expr(c.Condition); Add(" $THEN");
+            if (c.ThenOptions != null) { Sp(); ProgramOpts(c.ThenOptions); }
+            foreach (var b in c.ElsifBranches)
+            {
+                Add(" $ELSIF "); Expr(b.Condition); Add(" $THEN");
+                if (b.Options != null) { Sp(); ProgramOpts(b.Options); }
+            }
+            if (c.ElseOptions != null) { Add(" $ELSE "); ProgramOpts(c.ElseOptions); }
+            Add(" $END");
         }
 
         private void ParallelEnable(ParallelEnableClause pe)

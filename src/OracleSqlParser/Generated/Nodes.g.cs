@@ -3740,6 +3740,122 @@ public partial class ConditionalParameterBranch
     }
 }
 
+public partial class ConditionalProgramOptions
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Condition is not null) yield return Condition;
+        if (ThenOptions is not null) yield return ThenOptions;
+        if (ElsifBranches is not null) foreach (var x in ElsifBranches) yield return x;
+        if (ElseOptions is not null) yield return ElseOptions;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Condition?.Accept(visitor);
+        ThenOptions?.Accept(visitor);
+        if (ElsifBranches is not null) foreach (var x in ElsifBranches) x.Accept(visitor);
+        ElseOptions?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Condition = SqlNodeRewriter.RewriteRequired(rewriter, Condition, "ConditionalProgramOptions.Condition");
+        ThenOptions = SqlNodeRewriter.RewriteOptional(rewriter, ThenOptions, "ConditionalProgramOptions.ThenOptions");
+        SqlNodeRewriter.RewriteList(rewriter, ElsifBranches, "ConditionalProgramOptions.ElsifBranches");
+        ElseOptions = SqlNodeRewriter.RewriteOptional(rewriter, ElseOptions, "ConditionalProgramOptions.ElseOptions");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Condition", Condition),
+        new("ThenOptions", ThenOptions),
+        new("ElsifBranches", ElsifBranches),
+        new("ElseOptions", ElseOptions),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ConditionalProgramOptions
+        {
+            Condition = CloneChild(Condition)!,
+            ThenOptions = CloneChild(ThenOptions),
+            ElsifBranches = CloneList(ElsifBranches),
+            ElseOptions = CloneChild(ElseOptions),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ConditionalProgramOptions)other;
+        return Pair(Condition, o.Condition, pending)
+            && Pair(ThenOptions, o.ThenOptions, pending)
+            && PairList(ElsifBranches, o.ElsifBranches, pending)
+            && Pair(ElseOptions, o.ElseOptions, pending);
+    }
+}
+
+public partial class ConditionalProgramOptionsBranch
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Condition is not null) yield return Condition;
+        if (Options is not null) yield return Options;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Condition?.Accept(visitor);
+        Options?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Condition = SqlNodeRewriter.RewriteRequired(rewriter, Condition, "ConditionalProgramOptionsBranch.Condition");
+        Options = SqlNodeRewriter.RewriteOptional(rewriter, Options, "ConditionalProgramOptionsBranch.Options");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Condition", Condition),
+        new("Options", Options),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ConditionalProgramOptionsBranch
+        {
+            Condition = CloneChild(Condition)!,
+            Options = CloneChild(Options),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ConditionalProgramOptionsBranch)other;
+        return Pair(Condition, o.Condition, pending)
+            && Pair(Options, o.Options, pending);
+    }
+}
+
 public partial class ConditionalStatement
 {
     /// <inheritdoc/>
@@ -14137,6 +14253,7 @@ public partial class ProgramOptions
         if (AccessibleBy is not null) foreach (var x in AccessibleBy) yield return x;
         if (DeprecateMessage is not null) yield return DeprecateMessage;
         if (DefaultCollation is not null) yield return DefaultCollation;
+        if (Conditionals is not null) foreach (var x in Conditionals) yield return x;
     }
 
     /// <inheritdoc/>
@@ -14149,6 +14266,7 @@ public partial class ProgramOptions
         if (AccessibleBy is not null) foreach (var x in AccessibleBy) x.Accept(visitor);
         DeprecateMessage?.Accept(visitor);
         DefaultCollation?.Accept(visitor);
+        if (Conditionals is not null) foreach (var x in Conditionals) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -14160,6 +14278,7 @@ public partial class ProgramOptions
         SqlNodeRewriter.RewriteList(rewriter, AccessibleBy, "ProgramOptions.AccessibleBy");
         DeprecateMessage = SqlNodeRewriter.RewriteOptional(rewriter, DeprecateMessage, "ProgramOptions.DeprecateMessage");
         DefaultCollation = SqlNodeRewriter.RewriteOptional(rewriter, DefaultCollation, "ProgramOptions.DefaultCollation");
+        SqlNodeRewriter.RewriteList(rewriter, Conditionals, "ProgramOptions.Conditionals");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -14178,6 +14297,7 @@ public partial class ProgramOptions
         new("Deprecate", Deprecate),
         new("DeprecateMessage", DeprecateMessage),
         new("DefaultCollation", DefaultCollation),
+        new("Conditionals", Conditionals),
     ];
 
     /// <inheritdoc/>
@@ -14203,6 +14323,7 @@ public partial class ProgramOptions
             Deprecate = Deprecate,
             DeprecateMessage = CloneChild(DeprecateMessage),
             DefaultCollation = CloneChild(DefaultCollation),
+            Conditionals = CloneList(Conditionals),
         };
         CopySpan(this, c);
         return c;
@@ -14224,7 +14345,8 @@ public partial class ProgramOptions
             && PairList(AccessibleBy, o.AccessibleBy, pending)
             && Deprecate == o.Deprecate
             && Pair(DeprecateMessage, o.DeprecateMessage, pending)
-            && Pair(DefaultCollation, o.DefaultCollation, pending);
+            && Pair(DefaultCollation, o.DefaultCollation, pending)
+            && PairList(Conditionals, o.Conditionals, pending);
     }
 }
 

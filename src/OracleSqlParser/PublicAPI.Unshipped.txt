@@ -5930,3 +5930,33 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.InlinePragm
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.InlinePragmaStatement! node) -> void
 OracleSqlParser.TableFunction.WithoutTableKeyword.get -> bool
 OracleSqlParser.TableFunction.WithoutTableKeyword.set -> void
+OracleSqlParser.ConditionalProgramOptions
+OracleSqlParser.ConditionalProgramOptions.Condition.get -> OracleSqlParser.Expression!
+OracleSqlParser.ConditionalProgramOptions.Condition.set -> void
+OracleSqlParser.ConditionalProgramOptions.ConditionalProgramOptions() -> void
+OracleSqlParser.ConditionalProgramOptions.ElseOptions.get -> OracleSqlParser.ProgramOptions?
+OracleSqlParser.ConditionalProgramOptions.ElseOptions.set -> void
+OracleSqlParser.ConditionalProgramOptions.ElsifBranches.get -> System.Collections.Generic.List<OracleSqlParser.ConditionalProgramOptionsBranch!>!
+OracleSqlParser.ConditionalProgramOptions.ElsifBranches.set -> void
+OracleSqlParser.ConditionalProgramOptions.ThenOptions.get -> OracleSqlParser.ProgramOptions?
+OracleSqlParser.ConditionalProgramOptions.ThenOptions.set -> void
+OracleSqlParser.ConditionalProgramOptionsBranch
+OracleSqlParser.ConditionalProgramOptionsBranch.Condition.get -> OracleSqlParser.Expression!
+OracleSqlParser.ConditionalProgramOptionsBranch.Condition.set -> void
+OracleSqlParser.ConditionalProgramOptionsBranch.ConditionalProgramOptionsBranch() -> void
+OracleSqlParser.ConditionalProgramOptionsBranch.Options.get -> OracleSqlParser.ProgramOptions?
+OracleSqlParser.ConditionalProgramOptionsBranch.Options.set -> void
+OracleSqlParser.ProgramOptions.Conditionals.get -> System.Collections.Generic.List<OracleSqlParser.ConditionalProgramOptions!>!
+OracleSqlParser.ProgramOptions.Conditionals.set -> void
+override OracleSqlParser.ConditionalProgramOptions.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ConditionalProgramOptions.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ConditionalProgramOptions.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+override OracleSqlParser.ConditionalProgramOptionsBranch.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ConditionalProgramOptionsBranch.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ConditionalProgramOptionsBranch.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ConditionalProgramOptions! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ConditionalProgramOptions! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptions! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
