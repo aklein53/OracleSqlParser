@@ -882,13 +882,16 @@ public sealed partial class SqlParser
         return Fin(st, start);
     }
 
-    /// <summary>The words of one traditional option, up to a comma or ON / BY / WHENEVER.</summary>
+    /// <summary>
+    /// The words of one traditional option, up to a comma or ON / BY / WHENEVER. Option names are unquoted keywords, so only
+    /// bare words are taken: a quoted identifier or a literal would not survive the join with spaces and printing back.
+    /// </summary>
     private AuditOption ParseAuditOption()
     {
         var s = Cur;
         var words = new List<string>();
         int prog = -1;
-        while (!AtStatementEnd() && !IsOp(",") && !IsKw("ON") && !IsKw("BY") && !IsKw("WHENEVER") && Progress(ref prog))
+        while (!AtStatementEnd() && Cur.Type == TokenType.Identifier && !IsOp(",") && !IsKw("ON") && !IsKw("BY") && !IsKw("WHENEVER") && Progress(ref prog))
             words.Add(Next().Value);
         if (words.Count == 0) throw FailExpected($"Expected an audit option but found {Describe(Cur)}", "an audit option");
         return Fin(new AuditOption { Name = string.Join(" ", words) }, s);
@@ -1008,7 +1011,8 @@ public sealed partial class SqlParser
         if (IsKw("COMPONENT") && IsOpAt(1, "=")) { Next(); Next(); it.Component = ParseIdentifier(); }
         var words = new List<string>();
         int prog = -1;
-        while (!AtAuditPolicyItemEnd() && Progress(ref prog)) words.Add(Next().Value);
+        // Privileges and actions are unquoted keywords; a quoted name or literal would not survive the join and printing.
+        while (!AtAuditPolicyItemEnd() && Cur.Type == TokenType.Identifier && Progress(ref prog)) words.Add(Next().Value);
         if (words.Count == 0 && it.Component == null) throw FailExpected($"Expected a privilege or action but found {Describe(Cur)}", "a privilege", "action");
         it.Name = string.Join(" ", words);
         if (AcceptKw("ON")) it.On = ParseAuditObject();

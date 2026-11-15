@@ -91,4 +91,35 @@ public class FuzzRegressionTests
         Assert.Equal("(InExpression value=(InExpression value=A list=[1]) list=[2])", Shape.Expr("a IN (1) IN (2)"));
         Assert.Contains("WHERE A IN (1) IN (2)", SqlWriter.ToSql(Shape.Parse("SELECT 1 FROM dual WHERE a IN (1) IN (2)").Statements[0]).ToUpperInvariant());
     }
+    // ---------- round-trip: audit option words ----------
+
+    [Theory]
+    [InlineData("AUDIT t\"\"''R")]
+    [InlineData("AUDIT 'x' ON t")]
+    [InlineData("AUDIT \"CREATE SESSION\"")]
+    [InlineData("AUDIT CREATE SESSION, 1")]
+    public void AuditOptions_AreBareWordsOnly(string sql)
+    {
+        // A quoted name or a literal used to be joined into an option name that did not survive printing (T   R became T R).
+        var r = SqlParser.Parse(sql);
+        Assert.False(r.Success);
+        AssertContract(sql);
+    }
+
+    [Theory]
+    [InlineData("CREATE AUDIT POLICY p ACTIONS 'x'")]
+    [InlineData("CREATE AUDIT POLICY p ACTIONS \"x\" ON hr.emp")]
+    public void AuditPolicyActions_AreBareWordsOnly(string sql)
+    {
+        // The literal 'x' was printed as the identifier x, which reparses as X.
+        Assert.False(SqlParser.Parse(sql).Success);
+        AssertContract(sql);
+    }
+
+    [Fact]
+    public void AuditOptions_KeywordsStillParse()
+    {
+        Assert.Contains("CREATE SESSION", Shape.Of("AUDIT CREATE SESSION"));
+        AssertContract("AUDIT CREATE SESSION, ALTER SYSTEM BY SCOTT WHENEVER NOT SUCCESSFUL");
+    }
 }
