@@ -8,6 +8,15 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+### Changed (breaking)
+- Public API reviewed and frozen with PublicApiAnalyzers (`PublicAPI.*.txt`); any public surface change now fails the build
+  until the baseline is updated.
+- Removed `SqlWriter` (use `SqlScriptGenerator`), the untyped `SqlVisitor` (use `SqlNodeVisitor`) and
+  `SqlNode.Children()` (use `GetChildren()`).
+- `Lexer` and `AstPrinter` are internal; `ParseResult` can no longer be constructed or mutated by callers.
+- Renamed `Block` → `BlockStatement`, `SqlPlusCommand` → `SqlPlusCommandStatement`, `TablespaceType` →
+  `TablespaceKind`, `DualityAnnotation` → `DualityAnnotationKind` (also changes the JSON `type` values).
+
 ### Changed
 - `OracleSqlParser.Guard` is versioned independently of the core library and stays 0.x while experimental.
 - Unit and Guard tests run on both net8.0 and net10.0 in CI.
