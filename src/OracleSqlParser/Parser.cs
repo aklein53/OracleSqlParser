@@ -867,8 +867,9 @@ public sealed partial class SqlParser
     /// </summary>
     private bool IsTableFunctionCallAhead()
     {
+        // The schema may be a substitution variable (&&owner..pkg.f(1): the lexer ends the variable at its dot).
         int k = 0;
-        if (!IsNameAt(k)) return false;
+        if (!(IsNameAt(k) || PeekTok(k).Type == TokenType.Substitution)) return false;
         for (k = 1; IsOpAt(k, ".") && IsNameAt(k + 1); k += 2) { }
         return IsOpAt(k, "(");
     }

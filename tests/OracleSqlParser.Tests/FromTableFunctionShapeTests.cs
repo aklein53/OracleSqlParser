@@ -18,6 +18,8 @@ public class FromTableFunctionShapeTests
     [InlineData("SELECT * FROM hr.pkg.f(1, 2) t", "SELECT * FROM hr.pkg.f(1, 2) t")]
     [InlineData("SELECT * FROM (pkg.match_paths(a, b)) m", "SELECT * FROM (pkg.match_paths(a, b)) m")]
     [InlineData("SELECT * FROM t a JOIN pkg.f(1) b ON a.id = b.id", "SELECT * FROM t a JOIN pkg.f(1) b ON a.id = b.id")]
+    [InlineData("SELECT * FROM (&&ut3_owner..ut_suite_cache_macros.match_paths(schema_items, path_items)) m",
+        "SELECT * FROM (&&ut3_owner..ut_suite_cache_macros.match_paths(schema_items, path_items)) m")]
     public void TableFunctionWithoutTableRoundTrips(string sql, string generated)
     {
         var r = SqlParser.Parse(sql);
