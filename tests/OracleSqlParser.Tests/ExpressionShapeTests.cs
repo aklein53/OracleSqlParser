@@ -211,6 +211,20 @@ public class ExpressionShapeTests
 
 public class ExpertStressRegressionTests
 {
+    // XMLSERIALIZE's AS type is optional; the trailing [NO] INDENT is a flag clause.
+    [Theory]
+    [InlineData("SELECT XMLSERIALIZE(CONTENT x NO INDENT) FROM dual", "flag=NoIndent")]
+    [InlineData("SELECT XMLSERIALIZE(CONTENT x AS CLOB INDENT) FROM dual", "flag=Indent")]
+    public void XmlSerializeWithoutAsType(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
+    // NTH_VALUE(x, n FROM LAST) puts the direction inside the parentheses; Oracle accepts it there (checked on Oracle 23).
+    [Theory]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM LAST) OVER (ORDER BY x) FROM t", "fromLast=true")]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY x) FROM t", "fromLast=false")]
+    public void NthValue_FromInsideParentheses(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
     // APPROX_RANK(PARTITION BY ... ORDER BY ...) is a hypothetical rank: the partition list comes before the ORDER BY.
     [Fact]
     public void ApproxRankTakesPartitionByBeforeOrderBy()

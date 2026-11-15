@@ -513,6 +513,13 @@ public sealed partial class SqlParser
                 } while (AcceptOp(","));
             }
 
+            // NTH_VALUE(x, n FROM LAST): the direction written inside the parentheses (printed after the call)
+            if (fc.FromLast == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST")) && IsOpAt(2, ")")
+                && fc.Name.Count > 0 && fc.Name[^1].Value == "NTH_VALUE" && !fc.Name[^1].Quoted)
+            {
+                Next();
+                fc.FromLast = Next().Value == "LAST";
+            }
             ParseNullTreatment(fc);
             if (IsKw("ORDER") && IsKwAt(1, "BY"))
             {
@@ -935,12 +942,18 @@ public sealed partial class SqlParser
         Expression value;
         if (IsKw("MULTISET") && IsOpAt(1, "(")) { Next(); multiset = true; value = ParsePostfix(); }
         else value = ParseExpr();
-        ExpectKw("AS");
-        bool isRef = kind == CastKind.Treat && AcceptKw("REF");
-        int versionMark = _versionErrors.Count;
-        var dataType = ParseDataType();
-        // TREAT(... AS JSON) is not gated: its release is not confirmed, so a 19c target must not see a false error.
-        if (kind == CastKind.Treat) _versionErrors.RemoveRange(versionMark, _versionErrors.Count - versionMark);
+        // XMLSERIALIZE(... [AS type] ...): the type is optional there, and a trailing INDENT or NO INDENT follows it.
+        bool isRef = false;
+        DataType? dataType = null;
+        if (kind != CastKind.XmlSerialize || IsKw("AS"))
+        {
+            ExpectKw("AS");
+            isRef = kind == CastKind.Treat && AcceptKw("REF");
+            int versionMark = _versionErrors.Count;
+            dataType = ParseDataType();
+            // TREAT(... AS JSON) is not gated: its release is not confirmed, so a 19c target must not see a false error.
+            if (kind == CastKind.Treat) _versionErrors.RemoveRange(versionMark, _versionErrors.Count - versionMark);
+        }
         var cast = new CastExpression { Kind = kind, Multiset = multiset, Value = value, Ref = isRef, Type = dataType, Clauses = clauses };
         int prog119 = -1;
         while (!IsOp(")") && Cur.Type != TokenType.EOF && Progress(ref prog119))

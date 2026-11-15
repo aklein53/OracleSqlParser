@@ -2626,7 +2626,7 @@ public partial class CastExpression
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "CastExpression.Value");
-        Type = SqlNodeRewriter.RewriteRequired(rewriter, Type, "CastExpression.Type");
+        Type = SqlNodeRewriter.RewriteOptional(rewriter, Type, "CastExpression.Type");
         OnConversionError = SqlNodeRewriter.RewriteOptional(rewriter, OnConversionError, "CastExpression.OnConversionError");
         Format = SqlNodeRewriter.RewriteOptional(rewriter, Format, "CastExpression.Format");
         NlsParam = SqlNodeRewriter.RewriteOptional(rewriter, NlsParam, "CastExpression.NlsParam");
@@ -2659,7 +2659,7 @@ public partial class CastExpression
             Multiset = Multiset,
             Value = CloneChild(Value)!,
             Ref = Ref,
-            Type = CloneChild(Type)!,
+            Type = CloneChild(Type),
             OnConversionError = CloneChild(OnConversionError),
             Format = CloneChild(Format),
             NlsParam = CloneChild(NlsParam),

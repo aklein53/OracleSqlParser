@@ -956,7 +956,7 @@ public sealed partial class CastExpression : Expression
     /// <summary>TREAT(x AS REF type).</summary>
     public bool Ref { get; set; }
     /// <summary>The target type.</summary>
-    public required DataType Type { get; set; }
+    public DataType? Type { get; set; }
     /// <summary>DEFAULT x ON CONVERSION ERROR.</summary>
     public OnBehaviorClause? OnConversionError { get; set; }
     /// <summary>The format model written after a comma in the trailing options, or null when absent.</summary>

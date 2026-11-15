@@ -287,9 +287,7 @@ public sealed partial class SqlScriptGenerator
                 foreach (var f in c.Clauses.OfType<FlagClause>().Where(f => f.Flag is FunctionFlag.Document or FunctionFlag.Content)) { Clause(f); Add(" "); }
             if (c.Multiset) Add("MULTISET");
             Expr(c.Value);
-            Add(" AS ");
-            if (c.Ref) Add("REF ");
-            Type(c.Type);
+            if (c.Type != null) { Add(" AS "); if (c.Ref) Add("REF "); Type(c.Type); }
             if (c.OnConversionError != null) { Add(" "); Clause(c.OnConversionError); }
             if (c.Format != null) { Add(", "); Expr(c.Format); if (c.NlsParam != null) { Add(", "); Expr(c.NlsParam); } }
             foreach (var cl in c.Clauses.Where(x => !(x is FlagClause f && f.Flag is FunctionFlag.Document or FunctionFlag.Content)))
