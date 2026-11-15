@@ -285,6 +285,11 @@ BEGIN NULL; END;");
         "(CreateTypeStatement orReplace editionable=NonEditionable name=[T] kind=Object members=[(SubprogramDeclaration isFunction modifiers=Member, Map name=[M] returnType=(DataType name=NUMBER))])")]
     public void ObjectTypes(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
+    // FILE is not reserved in Oracle (a PL/SQL variable can be called file): found in a real-world package.
+    [Fact]
+    public void FileIsAnOrdinaryIdentifier() =>
+        Assert.True(SqlParser.Parse("DECLARE file NUMBER := 1; BEGIN file := file + 1; END;").Success);
+
     [Fact]
     public void TypeBody() =>
         Assert.Equal(
