@@ -704,8 +704,18 @@ public sealed partial class SqlScriptGenerator
                 if (c.Encrypt.NoSalt) Add(" NO SALT"); else if (c.Encrypt.Salt) Add(" SALT");
             }
             if (c.Sort) Add(" SORT");
-            foreach (var k in c.Constraints) { Sp(); Constraint(k); }
-            if (c.OtherProperties.Count > 0) { Sp(); SyntaxList(c.OtherProperties); }
+            // Constraints and other properties are printed in the order they were written. A constraint can absorb the word
+            // that follows it (UNIQUE USING INDEX), so "a R USING UNIQUE" must not be printed as "a R UNIQUE USING".
+            // Parsed nodes carry their source offsets; built trees keep constraints first, as before.
+            var items = c.Constraints.Cast<SqlNode>().Concat(c.OtherProperties).OrderBy(n => n.Start).ToList();
+            for (int i = 0; i < items.Count;)
+            {
+                Sp();
+                if (items[i] is TableConstraint k) { Constraint(k); i++; continue; }
+                var run = new List<SyntaxItem>();
+                while (i < items.Count && items[i] is SyntaxItem word) { run.Add(word); i++; }
+                SyntaxList(run);
+            }
             if (c.Annotations != null) { Add(" ANNOTATIONS "); Annotations(c.Annotations); }
         }
 

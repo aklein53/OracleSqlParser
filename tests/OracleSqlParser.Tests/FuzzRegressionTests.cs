@@ -148,4 +148,23 @@ public class FuzzRegressionTests
         AssertContract(Parens(limit + 1));
         AssertContract("SELECT " + string.Concat(Enumerable.Repeat("CASE WHEN 1=1 THEN ", 199)) + "1" + string.Concat(Enumerable.Repeat(" END", 199)) + " FROM dual");
     }
+
+    // ---------- round-trip: column constraints and other properties keep their order ----------
+
+    [Theory]
+    [InlineData("CREATE TABLE t(a R USING UNIQUE)")]
+    [InlineData("CREATE TABLE t(a NUMBER UNIQUE FOO BAR)")]
+    [InlineData("CREATE TABLE t(a NUMBER FOO UNIQUE)")]
+    public void ColumnProperties_RoundTripInTheirSourceOrder(string sql)
+    {
+        AssertContract(sql);
+    }
+
+    [Fact]
+    public void ColumnProperties_PrintedInTheirSourceOrder()
+    {
+        // The word before UNIQUE was printed after it, where the constraint absorbed it as USING INDEX.
+        var sql = SqlWriter.ToSql(Shape.Parse("CREATE TABLE t(a R USING UNIQUE)").Statements[0]);
+        Assert.Contains("A R USING UNIQUE", sql.ToUpperInvariant());
+    }
 }
