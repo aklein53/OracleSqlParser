@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using OracleSqlParser;
 using Xunit;
 
@@ -28,5 +29,32 @@ public class FuzzRegressionTests
     {
         var script = SqlParser.Parse(AndChain(50)).Script;
         Assert.Contains("\n  \"type\": \"SqlScript\"", AstJson.Serialize(script));
+    }
+    // ---------- SqlAnalysis: qualified names on long join chains ----------
+
+    private static string JoinChain(int n) => "SELECT t0.c FROM t0 " + string.Concat(Enumerable.Range(1, n).Select(i => $"JOIN t{i} ON t{i}.id = t{i - 1}.id "));
+
+    [Fact]
+    public void Analysis_QualifiedColumnsOnLongJoinChain_ResolveAndStayFast()
+    {
+        // Column resolution scanned every FROM item for every qualified column: quadratic in the number of joins (12 s at 16,000).
+        var script = SqlParser.Parse(JoinChain(10_000)).Script;
+        var sw = Stopwatch.StartNew();
+        var columns = SqlAnalysis.GetColumns(script);
+        sw.Stop();
+        Assert.Equal(20_001, columns.Count); // t0.c, then two columns in each of the 10,000 ON clauses
+        Assert.All(columns, c => Assert.Equal(ColumnResolution.Resolved, c.Resolution));
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"GetColumns took {sw.Elapsed}");
+    }
+
+    [Fact]
+    public void Analysis_QualifiedNames_MatchAliasOrTrailingNamePartsAsBefore()
+    {
+        // s.t.c and t.c reach the unaliased table through its name parts; x.c through its alias.
+        var cols = SqlAnalysis.GetColumns(SqlParser.Parse("SELECT s.t.c, x.c, t.c FROM s.t JOIN u x ON x.c = t.c").Script);
+        Assert.Equal(5, cols.Count);
+        Assert.All(cols, c => Assert.Equal(ColumnResolution.Resolved, c.Resolution));
+        var dup = SqlAnalysis.GetColumns(SqlParser.Parse("SELECT a.c FROM t a JOIN t a ON a.c = 1").Script);
+        Assert.Equal(ColumnResolution.Ambiguous, dup[0].Resolution);
     }
 }
