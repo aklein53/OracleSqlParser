@@ -28,9 +28,12 @@ public sealed partial class SqlScriptGenerator
     public string Generate(SqlNode node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        var p = new Printer(_options);
-        p.Node(node);
-        return p.ToString();
+        return TreeShape.RunForDepth(node, () =>
+        {
+            var p = new Printer(_options);
+            p.Node(node);
+            return p.ToString();
+        });
     }
 
     /// <summary>Generates SQL for <paramref name="node"/> into <paramref name="writer"/>.</summary>

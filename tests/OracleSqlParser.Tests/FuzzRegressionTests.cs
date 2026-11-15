@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using OracleSqlParser.Fuzzing;
 using OracleSqlParser;
 using Xunit;
 
@@ -56,5 +57,17 @@ public class FuzzRegressionTests
         Assert.All(cols, c => Assert.Equal(ColumnResolution.Resolved, c.Resolution));
         var dup = SqlAnalysis.GetColumns(SqlParser.Parse("SELECT a.c FROM t a JOIN t a ON a.c = 1").Script);
         Assert.Equal(ColumnResolution.Ambiguous, dup[0].Resolution);
+    }
+    private static void AssertContract(string sql, ParseOptions? options = null)
+    {
+        var f = ContractChecker.Check(sql, options);
+        Assert.True(f is null, f is null ? "" : $"{f.Category} {f.Signature}\n{f.Detail}");
+    }
+
+    [Fact]
+    public void Printer_DeepChain_IsGeneratedAndRoundTrips()
+    {
+        // The printer, generator and clone recurse once per level, so an 8,000-term chain overflowed the default stack.
+        AssertContract(AndChain(8000));
     }
 }

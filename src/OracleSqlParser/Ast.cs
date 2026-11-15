@@ -59,11 +59,11 @@ public abstract partial class SqlNode
 
     internal virtual bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending) => true;
 
-    /// <summary>Deep copy of this node and everything below it (scalars, spelling-only text, spans and children). Recursive: do not use on chains deeper than a few thousand links.</summary>
-    public SqlNode DeepClone() => CloneCore();
+    /// <summary>Deep copy of this node and everything below it (scalars, spelling-only text, spans and children). A deep tree is copied on a thread with a stack sized for its depth.</summary>
+    public SqlNode DeepClone() => TreeShape.RunForDepth(this, CloneCore);
 
     /// <summary>Deep copy typed as <typeparamref name="TNode"/>. Throws <see cref="InvalidCastException"/> if this node is not a <typeparamref name="TNode"/>.</summary>
-    public TNode DeepClone<TNode>() where TNode : SqlNode => (TNode)CloneCore();
+    public TNode DeepClone<TNode>() where TNode : SqlNode => (TNode)DeepClone();
 
     /// <summary>This node and all descendants, depth-first pre-order. Uses an explicit stack (safe on very deep trees).</summary>
     public IEnumerable<SqlNode> Descendants()
