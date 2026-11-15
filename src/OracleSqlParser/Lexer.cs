@@ -98,19 +98,30 @@ internal sealed class Lexer
     private readonly List<Trivia> _trivia = [];
     // Substitution variables: '&' (or the character set by SQL*Plus "SET DEFINE <char>") starts one while _define is on.
     private bool _define;
+    private readonly bool _sqlPlusScript; // ParseOptions.SqlPlusScript: '-' at a line end continues; a blank line can end a statement
+    private bool _blankLineEnds;          // SET SQLBLANKLINES OFF (the default in a script) makes a blank line end an unterminated statement
+    // SQL*Plus keeps blank lines inside a PL/SQL unit (DECLARE/BEGIN block, CREATE PACKAGE/PROCEDURE/FUNCTION/TRIGGER/TYPE)
+    // until its lone '/' line. _headWords holds the first identifiers of the current statement, to recognise those units.
+    private bool _plsqlUnit;
+    private readonly List<string> _headWords = [];
     private char _prefix = '&';
     private int _setState; // SQL*Plus SET DEFINE detection: 1 = saw SET at line start, 2 = saw SET DEFINE
     private Token _prev; // the previous token returned by Next(), for context-sensitive ':'
+    private Token _lineHead; // the first token of the line holding _prev (SQL*Plus commands are recognised by their first word)
+    private int _lineHeadLine = -1;
 
     /// <summary>Lexical errors recorded so far (the lexer recovers and keeps going).</summary>
     public List<ParseError> Errors { get; } = [];
 
     /// <param name="sql">The text to tokenise.</param>
     /// <param name="substitutionEnabled">False when substitution variables are off from the start (<see cref="ParseOptions.SubstitutionEnabled"/>).</param>
-    public Lexer(string sql, bool substitutionEnabled = true)
+    /// <param name="sqlPlusScript">True to apply the SQL*Plus line rules (<see cref="ParseOptions.SqlPlusScript"/>).</param>
+    public Lexer(string sql, bool substitutionEnabled = true, bool sqlPlusScript = false)
     {
         _s = sql;
         _define = substitutionEnabled;
+        _sqlPlusScript = sqlPlusScript;
+        _blankLineEnds = sqlPlusScript;
     }
 
     /// <summary>Tokenises the whole input; throws <see cref="ParseException"/> for the first lexical error.</summary>
@@ -155,6 +166,9 @@ internal sealed class Lexer
             t = t with { LeadingTrivia = _trivia.ToArray() };
             _trivia.Clear();
         }
+        // The first real token of a line is its head. A synthesized ';' (zero width) takes the line of the text after it, so it is skipped here.
+        if (t.End > t.Start && t.Line != _lineHeadLine) { _lineHead = t; _lineHeadLine = t.Line; }
+        if (_sqlPlusScript) TrackStatement(t);
         _prev = t;
         return t;
     }
@@ -193,11 +207,37 @@ internal sealed class Lexer
         }
         SkipTrivia(out var hint);
         if (_pendingSemi) { _pendingSemi = false; return new Token(TokenType.Operator, ";", _i, _i, _line, _i - _lineStart + 1); }
+        // SQL*Plus: a blank line after a statement that has no terminator ends it (the ';' is synthesized here).
+        if (_blankLineEnds && !_plsqlUnit && _prev.Text is not null && _prev is not { Type: TokenType.Operator, Text: ";" or "/" } && BlankLineBetween(_prev.End, _i))
+            return new Token(TokenType.Operator, ";", _i, _i, _line, _i - _lineStart + 1);
         if (hint is { } h) return h;
         int start = _i, line = _line, col = _i - _lineStart + 1;
         if (_i >= _s.Length) return new Token(TokenType.EOF, "", _i, _i, line, col);
         char c = Cur;
 
+        // SQL*Plus host command: '$ cmd' (Windows) or '! cmd' (Unix) at the start of a command line runs the rest of the line.
+        if ((c == '!' && Peek() != '=' || c == '$' && Peek() is ' ' or '\t')
+            && _s.AsSpan(_lineStart, _i - _lineStart).Trim().IsEmpty
+            && (_prev.Text is null || _prev.Type == TokenType.String || _prev is { Type: TokenType.Operator, Text: ";" or "/" }
+                || (_lineHead.Text is not null && SqlParser.SqlPlusCommands.Contains(_lineHead.Value))))
+        {
+            Advance();
+            _pendingRest = true;
+            return Make(TokenType.Operator, start, line, col);
+        }
+        // SQL*Plus '@file' / '@@file' at the start of a line: the rest of the line is the file name, taken verbatim.
+        // Read it as one raw string (like PROMPT) so that '/*' or '--' in a path is not lexed as a comment. Only where a
+        // command can start: after ';', '/', a raw string, or a SQL*Plus command line. After an SQL line, '@' starts a
+        // database link (FROM emp <newline> @remote), which stays SQL.
+        if (c == '@' && _s.AsSpan(_lineStart, _i - _lineStart).Trim().IsEmpty
+            && (_prev.Text is null || _prev.Type == TokenType.String || _prev is { Type: TokenType.Operator, Text: ";" or "/" }
+                || (_lineHead.Text is not null && SqlParser.SqlPlusCommands.Contains(_lineHead.Value))))
+        {
+            Advance();
+            if (Cur == '@') Advance();
+            _pendingRest = true;
+            return Make(TokenType.Operator, start, line, col);
+        }
         // q'[...]' / nq'[...]' alternative quoting, n'...' national strings
         if ((c is 'q' or 'Q') && Peek() == '\'' ) return QuoteString(start, line, col, 1);
         if ((c is 'n' or 'N') && (Peek() is 'q' or 'Q') && Peek(2) == '\'') return QuoteString(start, line, col, 2);
@@ -275,6 +315,19 @@ internal sealed class Lexer
             }
         }
 
+        // SQL*Plus: a '.' alone on its line ends the statement in the buffer (it is read as a ';' here).
+        if (_sqlPlusScript && c == '.' && IsAtLineStart(start) && LineEndsAt(_i + 1))
+        {
+            Advance();
+            return new Token(TokenType.Operator, ";", start, _i, line, col);
+        }
+        // SQL*Plus line continuation: a '-' that ends its line joins the next line (both the hyphen and the line break go).
+        if (c == '-' && _sqlPlusScript && !_plsqlUnit && LineEndsAt(_i + 1))
+        {
+            Advance();
+            return NextCore();
+        }
+
         string[] two = ["||", "**", "<>", "!=", "^=", "~=", "<=", ">=", "=>", "..", "->", "<<", ">>"];
         foreach (var op in two)
             if (c == op[0] && Peek() == op[1]) { Advance(); Advance(); return Make(TokenType.Operator, start, line, col); }
@@ -310,6 +363,15 @@ internal sealed class Lexer
             case 1 when t.Type == TokenType.Identifier && t.Value is "DEFINE" or "DEF":
                 _setState = 2;
                 return;
+            case 1 when t.Type == TokenType.Identifier && t.Value == "SQLBLANKLINES":
+                _setState = 3;
+                return;
+            case 3:
+                _setState = 0;
+                if (!IsRestOfLineBlank(t.End)) return;
+                if (t.Type == TokenType.Identifier && t.Value == "ON") _blankLineEnds = false;
+                else if (t.Type == TokenType.Identifier && t.Value == "OFF") _blankLineEnds = _sqlPlusScript;
+                return;
             case 2:
                 _setState = 0;
                 if (!IsRestOfLineBlank(t.End)) return;
@@ -326,6 +388,65 @@ internal sealed class Lexer
         int i = start;
         while (i > 0 && _s[i - 1] is ' ' or '\t') i--;
         return i == 0 || _s[i - 1] == '\n';
+    }
+
+    /// <summary>Notes a returned token for the PL/SQL-unit rule: which statement it starts, and where a unit ends.</summary>
+    private void TrackStatement(Token t)
+    {
+        if (t.Type == TokenType.EOF) return;
+        // A SQL*Plus command line has no ';': the next line starts a new statement.
+        if (_headWords.Count > 0 && SqlParser.SqlPlusCommands.Contains(_headWords[0]) && t.Line > _prev.Line) EndStatement();
+        bool stmtStart = _headWords.Count == 0;
+        if (t is { Type: TokenType.Operator, Text: ";" })
+        {
+            EndStatement();
+            return;
+        }
+        if (t is { Type: TokenType.Operator, Text: "/" } && IsAtLineStart(t.Start) && LineEndsAt(t.End))
+        {
+            _plsqlUnit = false; // the lone '/' line runs the unit
+            EndStatement();
+            return;
+        }
+        if (stmtStart && t is { Type: TokenType.Operator, Text: "<<" }) _plsqlUnit = true; // a labelled PL/SQL block
+        if (t.Type == TokenType.Identifier)
+        {
+            if (stmtStart && t.Value is "DECLARE" or "BEGIN") _plsqlUnit = true;
+            // CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] [FORCE] PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE|JAVA ...
+            if (_headWords.Count > 0 && _headWords[0] == "CREATE" && _headWords.TrueForAll(IsCreateModifierOrHead)
+                && t.Value is "PACKAGE" or "PROCEDURE" or "FUNCTION" or "TRIGGER" or "TYPE" or "JAVA")
+                _plsqlUnit = true;
+            if (_headWords.Count < 8) _headWords.Add(t.Value);
+        }
+    }
+
+    private static bool IsCreateModifierOrHead(string word) =>
+        word is "CREATE" or "OR" or "REPLACE" or "EDITIONABLE" or "NONEDITIONABLE" or "FORCE" or "NOFORCE" or "EDITIONING";
+
+    private void EndStatement() => _headWords.Clear();
+
+    /// <summary>True when only blanks follow <paramref name="i"/> before the line break (or the end of input).</summary>
+    private bool LineEndsAt(int i)
+    {
+        while (i < _s.Length && _s[i] is ' ' or '\t' or '\r') i++;
+        return i >= _s.Length || _s[i] == '\n';
+    }
+
+    /// <summary>True when the text from <paramref name="from"/> to <paramref name="to"/> has a line with nothing but blanks in it.</summary>
+    private bool BlankLineBetween(int from, int to)
+    {
+        bool afterNewline = false;
+        for (int k = from; k < to; k++)
+        {
+            char ch = _s[k];
+            if (ch == '\n')
+            {
+                if (afterNewline) return true;
+                afterNewline = true;
+            }
+            else if (ch is not (' ' or '\t' or '\r')) afterNewline = false;
+        }
+        return false;
     }
 
     private bool IsRestOfLineBlank(int end)

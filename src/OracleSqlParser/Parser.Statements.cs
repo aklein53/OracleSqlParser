@@ -2,7 +2,7 @@ namespace OracleSqlParser;
 
 public sealed partial class SqlParser
 {
-    private static readonly HashSet<string> SqlPlusCommands = new(StringComparer.Ordinal)
+    internal static readonly HashSet<string> SqlPlusCommands = new(StringComparer.Ordinal)
     {
         "SET","SPOOL","DEFINE","UNDEFINE","VARIABLE","VAR","PRINT","PROMPT","REM","REMARK","WHENEVER","CONNECT","CONN",
         "DISCONNECT","DISC","EXIT","QUIT","ACCEPT","COLUMN","COL","BREAK","COMPUTE","CLEAR","DESCRIBE","DESC","SHOW",
@@ -14,7 +14,7 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         if (IsOp("<<") || IsKw("DECLARE") || IsKw("BEGIN")) return ParseBlock();
-        if (IsOp("@")) return ParseSqlPlusCommand(start, "@");
+        if (IsOp("@") || IsOp("@@") || IsOp("!") || IsOp("$")) return ParseSqlPlusCommand(start, Next().Value);
         if (Cur.Type != TokenType.Identifier) throw Fail($"Unsupported or unexpected statement start {Describe(Cur)}");
 
         switch (Cur.Value)
@@ -67,7 +67,7 @@ public sealed partial class SqlParser
 
     private Statement ParseSqlPlusCommand(Token start, string command)
     {
-        if (command == "@") { Next(); if (IsOp("@")) { Next(); command = "@@"; } }
+        if (command == "@" && IsOp("@")) { Next(); command = "@@"; } // "@@" on one line is lexed as "@" then "@" unless at line start
         var cmd = new SqlPlusCommandStatement { Command = command };
         cmd.Arguments = ParseSyntaxItems(() => Cur.Line != start.Line || IsOp(";"));
         return Fin(cmd, start);
@@ -316,8 +316,10 @@ public sealed partial class SqlParser
                 var gp = new GrantPrivilege();
                 var words = new List<string>();
                 int prog17 = -1;
-                while (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier && !IsKw("ON") && !IsKw("TO") && !IsKw("FROM") && Progress(ref prog17))
-                    words.Add(Cur.Type == TokenType.QuotedIdentifier ? "\"" + Next().Value.Replace("\"", "\"\"") + "\"" : Next().Value);
+                // A substitution variable can name a role (GRANT &&owner._role TO ...).
+                while ((Cur.Type == TokenType.Substitution || Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier && !IsKw("ON") && !IsKw("TO") && !IsKw("FROM")) && Progress(ref prog17))
+                    words.Add(Cur.Type == TokenType.Substitution ? ParseIdentifier().Text!
+                        : Cur.Type == TokenType.QuotedIdentifier ? "\"" + Next().Value.Replace("\"", "\"\"") + "\"" : Next().Value);
                 gp.Name = string.Join(" ", words);
                 if (IsOp("(")) { Next(); gp.Columns = ParseIdentifierList(); ExpectOp(")"); }
                 st.Privileges.Add(Fin(gp, ps));
@@ -1255,9 +1257,9 @@ public sealed partial class SqlParser
             ExpectOp(")");
         }
         ParseOnCommit(st);
-        st.Attributes = ParsePhysicalAttributes(() => AtAsQuery() || (IsKw("ON") && IsKwAt(1, "COMMIT")));
+        st.Attributes = ParsePhysicalAttributes(() => AtAsQuery() || (IsKw("ON") && IsKwAt(1, "COMMIT")) || AtStatementEnd());
         ParseOnCommit(st);
-        if (!AtAsQuery() && IsKw("ON")) st.Attributes.AddRange(ParsePhysicalAttributes(AtAsQuery));
+        if (!AtAsQuery() && IsKw("ON")) st.Attributes.AddRange(ParsePhysicalAttributes(() => AtAsQuery() || AtStatementEnd()));
         if (AtAsQuery()) { Next(); st.AsQuery = ParseSelectStatement(); }
         return Fin(st, start);
     }

@@ -238,7 +238,8 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         var left = ParseUnary();
-        while (Cur.Type == TokenType.Operator && Cur.Text is "*" or "/")
+        // A '/' alone on its line is the SQL*Plus terminator, not a division (see AtStatementEnd).
+        while (Cur.Type == TokenType.Operator && Cur.Text is "*" or "/" && !IsLoneSlash(_p))
         {
             var op = ArithmeticOperator(Next().Text);
             left = Fin(new BinaryExpression { Left = left, Operator = op, Right = ParseUnary() }, start);
@@ -291,7 +292,8 @@ public sealed partial class SqlParser
         {
             if (IsOp("[")) { if (_plsql) throw Fail("Array steps are not valid in PL/SQL expressions (PLS-00103)", ParseErrorCodes.InvalidCombination); e = ParseSubscripts(e, start); }
             else if (e is CellReference or ChainedCall && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
-            else if (e is FunctionCall or CellReference or ChainedCall && IsOp("(")) e = ParseChainedCall(e, start);
+            else if (e is FunctionCall or CellReference or ChainedCall or MethodCall && IsOp("(")) e = ParseChainedCall(e, start);
+            else if (e is CastExpression { Kind: CastKind.Treat or CastKind.GeneralizedInvocation } && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
             else if (IsKw("AT") && (IsKwAt(1, "TIME") || IsKwAt(1, "LOCAL")))
             {
                 Next();
@@ -334,6 +336,9 @@ public sealed partial class SqlParser
             case TokenType.String:
                 Next();
                 return Fin(new Literal { Kind = LiteralKind.String, Value = start.Value, National = start.Text[0] is 'n' or 'N', QuoteDelimiter = QuoteDelimiterOf(start.Text) }, start);
+            case TokenType.Substitution when PeekTok() is { Type: TokenType.Operator, Text: "." } || PeekTok() is { Type: TokenType.Identifier or TokenType.QuotedIdentifier } && PeekTok().Start == start.End:
+                // &&owner..pkg.name or &&owner.pkg.name: the variable starts a qualified name (the lexer ends it at its dot)
+                return ParseNameOrFunction();
             case TokenType.Substitution:
                 Next();
                 return Fin(new SubstitutionVariable { Name = start.Value.TrimStart('&'), Persistent = start.Value.StartsWith('&'), Prefix = start.Text[0] }, start);
@@ -361,6 +366,14 @@ public sealed partial class SqlParser
                     }
                     if (AcceptOp(")")) return Fin(new ExpressionList(), start);
                     var first = ParseExpr();
+                    // (expr AS type) in parentheses is generalized invocation, as in (SELF AS parent_t).method() (not TREAT: no dynamic dispatch)
+                    if (IsKw("AS"))
+                    {
+                        Next();
+                        var named = ParseDataType();
+                        ExpectOp(")");
+                        return Fin(new CastExpression { Kind = CastKind.GeneralizedInvocation, Value = first, Type = named }, start);
+                    }
                     if (IsOp(","))
                     {
                         var list = new ExpressionList { Items = [first] };
@@ -418,6 +431,8 @@ public sealed partial class SqlParser
                     var lit = Next();
                     return Fin(new Literal { Kind = start.Value == "DATE" ? LiteralKind.Date : LiteralKind.Timestamp, Value = lit.Value }, start);
                 }
+                case "SET" when IsOpAt(1, "("): // the SET(nested_table) operator: a function call, although SET is reserved
+                    return ParseNameOrFunction();
                 case "INTERVAL" when PeekTok().Type is TokenType.String or TokenType.Bind:
                     return ParseInterval();
                 case "NEW" when PeekTok().Type == TokenType.Identifier && (IsOpAt(2, "(") || IsOpAt(2, ".")):
@@ -428,7 +443,7 @@ public sealed partial class SqlParser
                     throw FailExpected("Expected constructor call after NEW", "constructor call");
                 }
             }
-            if (Reserved.Contains(Cur.Value) && !ExpressionKeywords.Contains(Cur.Value))
+            if (IsReservedHere(Cur.Value) && !ExpressionKeywords.Contains(Cur.Value))
                 throw Fail($"Unexpected keyword {Cur.Text}");
         }
         return ParseNameOrFunction();
@@ -498,7 +513,7 @@ public sealed partial class SqlParser
     {
         // An attributed reference continues too: SQL%BULK_EXCEPTIONS.COUNT is a member of SQL%BULK_EXCEPTIONS.
         int prog114 = -1;
-        while ((result is FunctionCall or MethodCall or MemberAccess or CellReference or ChainedCall || result is ColumnReference { Attribute: not null }) && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog114))
+        while ((result is FunctionCall or MethodCall or MemberAccess or CellReference or ChainedCall or CastExpression { Kind: CastKind.Treat or CastKind.GeneralizedInvocation } || result is ColumnReference { Attribute: not null }) && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog114))
         {
             Next();
             var m = ParseIdentifier();
@@ -531,6 +546,12 @@ public sealed partial class SqlParser
             else if (IsKw("ALL") && !IsOpAt(1, ",") && !IsOpAt(1, ")")) { Next(); fc.Quantifier = QuantifierKind.All; }
 
             if (simple == "JSON_TRANSFORM") ParseJsonTransformArgs(fc);
+            else if (IsKw("PARTITION") && IsKwAt(1, "BY"))
+            {
+                // APPROX_RANK(PARTITION BY expr_list ORDER BY ...): no argument list, the ORDER BY follows below
+                Next(); Next();
+                do fc.PartitionBy.Add(ParseExpr()); while (AcceptOp(","));
+            }
             else
             {
                 do
@@ -548,6 +569,13 @@ public sealed partial class SqlParser
                 } while (AcceptOp(","));
             }
 
+            // NTH_VALUE(x, n FROM LAST): the direction written inside the parentheses (printed after the call)
+            if (fc.FromLast == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST")) && IsOpAt(2, ")")
+                && fc.Name.Count > 0 && fc.Name[^1].Value == "NTH_VALUE" && !fc.Name[^1].Quoted)
+            {
+                Next();
+                fc.FromLast = Next().Value == "LAST";
+            }
             ParseNullTreatment(fc);
             if (IsKw("ORDER") && IsKwAt(1, "BY"))
             {
@@ -970,12 +998,18 @@ public sealed partial class SqlParser
         Expression value;
         if (IsKw("MULTISET") && IsOpAt(1, "(")) { Next(); multiset = true; value = ParsePostfix(); }
         else value = ParseExpr();
-        ExpectKw("AS");
-        bool isRef = kind == CastKind.Treat && AcceptKw("REF");
-        int versionMark = _versionErrors.Count;
-        var dataType = ParseDataType();
-        // TREAT(... AS JSON) is not gated: its release is not confirmed, so a 19c target must not see a false error.
-        if (kind == CastKind.Treat) _versionErrors.RemoveRange(versionMark, _versionErrors.Count - versionMark);
+        // XMLSERIALIZE(... [AS type] ...): the type is optional there, and a trailing INDENT or NO INDENT follows it.
+        bool isRef = false;
+        DataType? dataType = null;
+        if (kind != CastKind.XmlSerialize || IsKw("AS"))
+        {
+            ExpectKw("AS");
+            isRef = kind == CastKind.Treat && AcceptKw("REF");
+            int versionMark = _versionErrors.Count;
+            dataType = ParseDataType();
+            // TREAT(... AS JSON) is not gated: its release is not confirmed, so a 19c target must not see a false error.
+            if (kind == CastKind.Treat) _versionErrors.RemoveRange(versionMark, _versionErrors.Count - versionMark);
+        }
         var cast = new CastExpression { Kind = kind, Multiset = multiset, Value = value, Ref = isRef, Type = dataType, Clauses = clauses };
         int prog119 = -1;
         while (!IsOp(")") && Cur.Type != TokenType.EOF && Progress(ref prog119))
@@ -1048,6 +1082,12 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         var dt = new DataType();
+        // REF object_type is a reference type. REF CURSOR is not a data type (it only appears in a TYPE declaration).
+        if (IsKw("REF") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && !IsKwAt(1, "CURSOR"))
+        {
+            Next();
+            dt.Ref = true;
+        }
         var words = new List<string>();
         var first = ParseIdentifier();
         words.Add(first.Value);

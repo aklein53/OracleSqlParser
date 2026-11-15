@@ -188,7 +188,7 @@ public sealed partial class SqlScriptGenerator
                 else
                 {
                     Add("INSERT");
-                    if (c.InsertColumns.Count > 0) { Add(" ("); IdList(c.InsertColumns); Add(")"); }
+                    if (c.InsertColumns.Count > 0) { Add(" ("); Sep(c.InsertColumns, col => Expr(col)); Add(")"); }
                     Add(" VALUES ("); Sep(c.InsertValues, e => Expr(e)); Add(")");
                     if (c.InsertWhere != null) { Add(" WHERE "); Expr(c.InsertWhere); }
                 }

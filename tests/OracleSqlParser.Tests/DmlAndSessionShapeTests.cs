@@ -173,12 +173,137 @@ public class DmlAndSessionShapeTests
             "(SqlPlusCommandStatement command=SPOOL arguments=[(WordItem value=OUT) (SymbolItem symbol=.) (WordItem value=LOG)])",
             "(SqlPlusCommandStatement command=PROMPT arguments=[(LiteralItem kind=String value=it's fine)])",
             "(SqlPlusCommandStatement command=DEFINE arguments=[(WordItem value=X) (SymbolItem symbol==) (LiteralItem kind=Number value=5)])",
-            "(SqlPlusCommandStatement command=@ arguments=[(WordItem value=CHILD) (SymbolItem symbol=.) (WordItem value=SQL)])",
+            "(SqlPlusCommandStatement command=@ arguments=[(LiteralItem kind=String value=child.sql)])",
             "(SqlPlusCommandStatement command=WHENEVER arguments=[(WordItem value=SQLERROR) (WordItem value=EXIT) (WordItem value=FAILURE) (WordItem value=ROLLBACK)])",
             "(ExecStatement body=(ProcedureCallStatement call=(FunctionCall name=[DBMS_OUTPUT PUT_LINE] arguments=[(Argument value='x')])))",
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(SubstitutionVariable name=x))] from=[(NamedTable name=[DUAL])]))",
         ], printed);
     }
+
+    // '@file' and '@@file' at the start of a line take the rest of the line as the file name, verbatim: '/*' in a path is not a comment.
+    [Fact]
+    public void SqlPlus_FileRun_TakesRestOfLine() =>
+        Assert.Equal(
+            "(SqlPlusCommandStatement command=@ arguments=[(LiteralItem kind=String value=../packages/*.pks)]) ; " +
+            "(SqlPlusCommandStatement command=@@ arguments=[(LiteralItem kind=String value=sub/x--y.sql)]) ; " +
+            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))",
+            Shape.Of("@../packages/*.pks\n@@sub/x--y.sql\nSELECT 1 FROM dual"));
+
+    // A substitution variable can stand for a name (CREATE USER &owner ...), and it keeps the text that continues it.
+    [Fact]
+    public void SubstitutionVariable_CanBeAName()
+    {
+        var sql = "CREATE USER &LOGGER_USER IDENTIFIED BY &PASSWD;\nGRANT SELECT ON &&ut3_owner._cbac_role TO &&ut3_owner;";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+        var printed = new SqlScriptGenerator().Generate(r.Script);
+        Assert.Contains("CREATE USER &LOGGER_USER IDENTIFIED BY &PASSWD", printed);
+        Assert.Contains("&&ut3_owner._cbac_role", printed);
+    }
+
+    // In SQL*Plus a '.' alone on its line ends the statement in the buffer, like a blank line does.
+    [Fact]
+    public void SqlPlusScript_LoneDotEndsAStatement()
+    {
+        var r = SqlParser.Parse("COMMENT ON TABLE t IS 'x'\n.\nSELECT 2 FROM dual", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+    }
+
+    // A synthesized ';' after a blank line must not become the head of the next line: '@&d' after a DEFINE line is still a command.
+    [Fact]
+    public void SqlPlusScript_FileRunAfterBlankLineAndDefine()
+    {
+        var r = SqlParser.Parse("@a.sql\n\nDEFINE d = 1\n@&d\n", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("(SqlPlusCommandStatement command=@ arguments=[(LiteralItem kind=String value=&d)])",
+            r.Script.Statements.Select(st => AstPrinter.Print(st)));
+    }
+
+    // The MERGE insert column list may be qualified by the target alias (Oracle accepts INSERT (p.a, p.b)).
+    [Fact]
+    public void MergeInsertColumnsMayBeQualified()
+    {
+        var sql = "MERGE INTO t p USING s d ON (p.a = d.a) WHEN NOT MATCHED THEN INSERT (p.a, p.b) VALUES (d.a, d.b)";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("INSERT (p.a, p.b)", new SqlScriptGenerator().Generate(r.Script));
+    }
+
+    // SQL*Plus script reading (ParseOptions.SqlPlusScript): a '-' at the end of a line continues the command, and a blank
+    // line ends an unterminated statement unless SET SQLBLANKLINES ON. Plain SQL keeps both as ordinary text.
+    [Fact]
+    public void SqlPlusScript_HyphenAtLineEndContinuesTheCommand()
+    {
+        var script = new ParseOptions { SqlPlusScript = true };
+        var r = SqlParser.Parse("SELECT 1726-\n,'AR'-\n,'x' FROM dual", script);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Single(r.Script.Statements);
+        Assert.True(SqlParser.Parse("SELECT 1-\n2 FROM dual").Success);
+    }
+
+    // A '$' or '!' that starts a command line is the SQL*Plus host command (the rest of the line is an operating-system command);
+    // '!=' and '$name' are not.
+    [Fact]
+    public void SqlPlus_HostShellEscapeTakesRestOfLine()
+    {
+        var r = SqlParser.Parse("$ del params.sql.tmp\nSELECT 1 FROM dual WHERE 1\n!= 2", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal("(SqlPlusCommandStatement command=$ arguments=[(LiteralItem kind=String value=del params.sql.tmp)])", AstPrinter.Print(r.Script.Statements[0]));
+        Assert.Equal(2, r.Script.Statements.Count);
+    }
+
+    // In PL/SQL a '-' at a line end is still a minus (checked on Oracle 23: v := 5 - newline 3 gives 2).
+    [Fact]
+    public void SqlPlusScript_HyphenInsidePlsqlIsAMinus()
+    {
+        var r = SqlParser.Parse("DECLARE\n  v NUMBER;\nBEGIN\n  v := 5 -\n3;\nEND;\n/", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("5 - 3", new SqlScriptGenerator().Generate(r.Script));
+    }
+
+    [Fact]
+    public void SqlPlusScript_BlankLineEndsAnUnterminatedStatement()
+    {
+        var script = new ParseOptions { SqlPlusScript = true };
+        var r = SqlParser.Parse("SELECT 1 AS a1\nFROM dual\n\nBEGIN NULL; END;", script);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+        Assert.True(SqlParser.Parse("SELECT 1\n\nFROM dual").Script.Statements.Count == 1); // plain SQL: a blank line is just whitespace
+    }
+
+    // Blank lines inside a PL/SQL unit (anonymous block, CREATE PACKAGE/TYPE ...) do not end it: SQL*Plus runs it at its lone '/'.
+    [Theory]
+    [InlineData("CREATE OR REPLACE PACKAGE p AS\n\n  x NUMBER;\nEND;\n/\nSELECT 1 FROM dual")]
+    [InlineData("DECLARE\n  x NUMBER;\n\nBEGIN\n\n  NULL;\nEND;\n/\nSELECT 1 FROM dual")]
+    [InlineData("PROMPT start\nCREATE TYPE t AS OBJECT (\n  a NUMBER\n\n);\n/\nSELECT 1 FROM dual")]
+    public void SqlPlusScript_BlankLinesInsidePlsqlUnitsAreKept(string sql)
+    {
+        var r = SqlParser.Parse(sql, new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal(2, r.Script.Statements.Count(st => st is not SqlPlusCommandStatement));
+    }
+
+    [Fact]
+    public void SqlPlusScript_SetSqlBlankLinesOnKeepsBlankLines()
+    {
+        var r = SqlParser.Parse("SET SQLBLANKLINES ON\nSELECT 1\n\nFROM dual", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+    }
+
+    // A '/' alone on its line ends a query or view; it is not a division (the next statement starts with SELECT).
+    [Theory]
+    [InlineData("CREATE VIEW v AS SELECT * FROM t WHERE a > 1\n/\nSELECT 2 FROM dual")]
+    [InlineData("SELECT * FROM t WHERE a > (5\n/1440)\n/\nSELECT 2 FROM dual")]
+    public void LoneSlashEndsAQueryStatement(string sql) => Assert.Equal(2, Shape.Parse(sql).Statements.Count);
+
+    // A line starting with '@' after a table name is a database link, not a SQL*Plus file run.
+    [Fact]
+    public void Line_Starting_With_At_After_Table_Is_DbLink() =>
+        Assert.Equal("(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[EMP] dbLink=[REMOTE])]))",
+            Shape.Of("SELECT * FROM emp\n@remote"));
 
     [Theory]
     [InlineData("EXEC :x := 1;", "(ExecStatement body=(AssignmentStatement target=:x value=1))")]

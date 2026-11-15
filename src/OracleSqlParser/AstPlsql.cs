@@ -733,6 +733,8 @@ public enum TypeKind
     Varray,
     /// <summary>A subtype under an object type (<c>UNDER</c>).</summary>
     Under,
+    /// <summary>An incomplete type declaration with no body yet (<c>CREATE TYPE t;</c>), as used for forward references.</summary>
+    Incomplete,
 }
 
 /// <summary><c>CREATE [OR REPLACE] TYPE</c>: an object, collection or subtype definition.</summary>

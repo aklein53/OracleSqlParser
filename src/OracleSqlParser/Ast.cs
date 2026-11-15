@@ -489,8 +489,8 @@ public sealed partial class MergeClause : SqlNode
     /// <summary>The <c>WHERE</c> condition of the <c>DELETE</c> part, or null when absent.</summary>
     public Expression? DeleteWhere { get; set; }
     // WHEN NOT MATCHED THEN INSERT
-    /// <summary>The column list of the insert; empty when absent.</summary>
-    public List<Identifier> InsertColumns { get; set; } = [];
+    /// <summary>The column list of the insert, each optionally qualified by the target alias (<c>INSERT (p.a, p.b)</c>); empty when absent.</summary>
+    public List<ColumnReference> InsertColumns { get; set; } = [];
     /// <summary>The values of the insert, in source order; empty for the update and delete forms.</summary>
     public List<Expression> InsertValues { get; set; } = [];
     /// <summary>The <c>WHERE</c> condition of the insert, or null when absent.</summary>
@@ -1004,6 +1004,9 @@ public enum CastKind
     ValidateConversion,
     /// <summary><c>XMLSERIALIZE</c>.</summary>
     XmlSerialize,
+    /// <summary>The parenthesized downcast <c>(expr AS type)</c>, as in <c>(SELF AS parent_t).method()</c>: generalized invocation
+    /// calls the named supertype's method without dynamic dispatch, which <c>TREAT</c> does not do.</summary>
+    GeneralizedInvocation,
 }
 
 /// <summary>CAST / XMLCAST / TREAT / VALIDATE_CONVERSION (all of the form f(expr AS type ...)).</summary>
@@ -1018,7 +1021,7 @@ public sealed partial class CastExpression : Expression
     /// <summary>TREAT(x AS REF type).</summary>
     public bool Ref { get; set; }
     /// <summary>The target type.</summary>
-    public required DataType Type { get; set; }
+    public DataType? Type { get; set; }
     /// <summary>DEFAULT x ON CONVERSION ERROR.</summary>
     public OnBehaviorClause? OnConversionError { get; set; }
     /// <summary>The format model written after a comma in the trailing options, or null when absent.</summary>
@@ -1146,6 +1149,8 @@ public sealed partial class DataType : SqlNode
     public CharSemantics? Semantics { get; set; }
     /// <summary>"TYPE" or "ROWTYPE" for anchored declarations (tbl.col%TYPE).</summary>
     public string? Attribute { get; set; }
+    /// <summary>True for <c>REF object_type</c>: a reference to a row of <see cref="Name"/>.</summary>
+    public bool Ref { get; set; }
 }
 
 /// <summary>An <c>AT TIME ZONE</c> expression, such as <c>ts AT TIME ZONE 'UTC'</c>.</summary>
@@ -1190,6 +1195,8 @@ public sealed partial class FunctionCall : Expression
     public WindowSpec? Over { get; set; }
     /// <summary>The <c>ORDER BY</c> items written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; empty when absent.</summary>
     public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>PARTITION BY</c> expressions of a hypothetical-rank call, <c>APPROX_RANK(PARTITION BY owner ORDER BY n)</c>; empty when absent.</summary>
+    public List<Expression> PartitionBy { get; set; } = [];
 }
 
 /// <summary>The keyword that introduces a special argument of an XML or JSON function.</summary>

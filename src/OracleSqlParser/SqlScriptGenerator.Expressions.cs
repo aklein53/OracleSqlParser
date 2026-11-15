@@ -31,6 +31,7 @@ public sealed partial class SqlScriptGenerator
 
         private void Type(DataType dt)
         {
+            if (dt.Ref) Add("REF ");
             if (dt.Attribute != null) { Add(dt.Name).Add("%").Add(dt.Attribute); return; }
             // name words: the parenthesized arguments follow the first word group that precedes WITH/TO/etc.
             var words = dt.Name.Split(' ');
@@ -290,15 +291,18 @@ public sealed partial class SqlScriptGenerator
 
         private void Cast(CastExpression c)
         {
+            if (c.Kind == CastKind.GeneralizedInvocation)
+            {
+                Add("("); Expr(c.Value); Add(" AS "); Type(c.Type!); Add(")");
+                return;
+            }
             string fn = c.Kind switch { CastKind.XmlCast => "XMLCAST", CastKind.Treat => "TREAT", CastKind.ValidateConversion => "VALIDATE_CONVERSION", CastKind.XmlSerialize => "XMLSERIALIZE", _ => "CAST" };
             Add(fn + "(");
             if (c.Kind == CastKind.XmlSerialize)
                 foreach (var f in c.Clauses.OfType<FlagClause>().Where(f => f.Flag is FunctionFlag.Document or FunctionFlag.Content)) { Clause(f); Add(" "); }
             if (c.Multiset) Add("MULTISET");
             Expr(c.Value);
-            Add(" AS ");
-            if (c.Ref) Add("REF ");
-            Type(c.Type);
+            if (c.Type != null) { Add(" AS "); if (c.Ref) Add("REF "); Type(c.Type); }
             if (c.OnConversionError != null) { Add(" "); Clause(c.OnConversionError); }
             if (c.Format != null) { Add(", "); Expr(c.Format); if (c.NlsParam != null) { Add(", "); Expr(c.NlsParam); } }
             foreach (var cl in c.Clauses.Where(x => !(x is FlagClause f && f.Flag is FunctionFlag.Document or FunctionFlag.Content)))
@@ -336,6 +340,7 @@ public sealed partial class SqlScriptGenerator
             {
                 foreach (var op in fc.Operations) { Add(", "); JsonOp(op); }
             }
+            if (fc.PartitionBy.Count > 0) { Add("PARTITION BY "); Sep(fc.PartitionBy, e => Expr(e)); }
             if (fc.OrderBy.Count > 0) { Add(" ORDER BY "); Sep(fc.OrderBy, OrderItem); }
             foreach (var c in fc.Clauses) { Add(" "); Clause(c); }
             Add(")");

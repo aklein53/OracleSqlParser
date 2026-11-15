@@ -626,7 +626,6 @@ OracleSqlParser.CastExpression.OnConversionError.get -> OracleSqlParser.OnBehavi
 OracleSqlParser.CastExpression.OnConversionError.set -> void
 OracleSqlParser.CastExpression.Ref.get -> bool
 OracleSqlParser.CastExpression.Ref.set -> void
-OracleSqlParser.CastExpression.Type.get -> OracleSqlParser.DataType!
 OracleSqlParser.CastExpression.Type.set -> void
 OracleSqlParser.CastExpression.Value.get -> OracleSqlParser.Expression!
 OracleSqlParser.CastExpression.Value.set -> void
@@ -2520,7 +2519,6 @@ OracleSqlParser.MergeClause.AndCondition.get -> OracleSqlParser.Expression?
 OracleSqlParser.MergeClause.AndCondition.set -> void
 OracleSqlParser.MergeClause.DeleteWhere.get -> OracleSqlParser.Expression?
 OracleSqlParser.MergeClause.DeleteWhere.set -> void
-OracleSqlParser.MergeClause.InsertColumns.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 OracleSqlParser.MergeClause.InsertColumns.set -> void
 OracleSqlParser.MergeClause.InsertValues.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.MergeClause.InsertValues.set -> void
@@ -5900,3 +5898,13 @@ OracleSqlParser.BinaryExpression.OperatorSpelling.get -> string?
 OracleSqlParser.BinaryExpression.OperatorSpelling.set -> void
 OracleSqlParser.QuantifiedComparison.OperatorSpelling.get -> string?
 OracleSqlParser.QuantifiedComparison.OperatorSpelling.set -> void
+OracleSqlParser.CastExpression.Type.get -> OracleSqlParser.DataType?
+OracleSqlParser.CastKind.GeneralizedInvocation = 5 -> OracleSqlParser.CastKind
+OracleSqlParser.DataType.Ref.get -> bool
+OracleSqlParser.DataType.Ref.set -> void
+OracleSqlParser.FunctionCall.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
+OracleSqlParser.FunctionCall.PartitionBy.set -> void
+OracleSqlParser.MergeClause.InsertColumns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
+OracleSqlParser.ParseOptions.SqlPlusScript.get -> bool
+OracleSqlParser.ParseOptions.SqlPlusScript.init -> void
+OracleSqlParser.TypeKind.Incomplete = 4 -> OracleSqlParser.TypeKind

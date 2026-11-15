@@ -2628,7 +2628,7 @@ public partial class CastExpression
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "CastExpression.Value");
-        Type = SqlNodeRewriter.RewriteRequired(rewriter, Type, "CastExpression.Type");
+        Type = SqlNodeRewriter.RewriteOptional(rewriter, Type, "CastExpression.Type");
         OnConversionError = SqlNodeRewriter.RewriteOptional(rewriter, OnConversionError, "CastExpression.OnConversionError");
         Format = SqlNodeRewriter.RewriteOptional(rewriter, Format, "CastExpression.Format");
         NlsParam = SqlNodeRewriter.RewriteOptional(rewriter, NlsParam, "CastExpression.NlsParam");
@@ -2661,7 +2661,7 @@ public partial class CastExpression
             Multiset = Multiset,
             Value = CloneChild(Value)!,
             Ref = Ref,
-            Type = CloneChild(Type)!,
+            Type = CloneChild(Type),
             OnConversionError = CloneChild(OnConversionError),
             Format = CloneChild(Format),
             NlsParam = CloneChild(NlsParam),
@@ -6349,6 +6349,7 @@ public partial class DataType
         new("Arguments", Arguments),
         new("Semantics", Semantics),
         new("Attribute", Attribute),
+        new("Ref", Ref),
     ];
 
     /// <inheritdoc/>
@@ -6364,6 +6365,7 @@ public partial class DataType
             Arguments = CloneList(Arguments),
             Semantics = Semantics,
             Attribute = Attribute,
+            Ref = Ref,
         };
         CopySpan(this, c);
         return c;
@@ -6375,7 +6377,8 @@ public partial class DataType
         return Name == o.Name
             && PairList(Arguments, o.Arguments, pending)
             && Semantics == o.Semantics
-            && Attribute == o.Attribute;
+            && Attribute == o.Attribute
+            && Ref == o.Ref;
     }
 }
 
@@ -8285,6 +8288,7 @@ public partial class FunctionCall
         if (Keep is not null) yield return Keep;
         if (Over is not null) yield return Over;
         if (OrderBy is not null) foreach (var x in OrderBy) yield return x;
+        if (PartitionBy is not null) foreach (var x in PartitionBy) yield return x;
     }
 
     /// <inheritdoc/>
@@ -8298,6 +8302,7 @@ public partial class FunctionCall
         Keep?.Accept(visitor);
         Over?.Accept(visitor);
         if (OrderBy is not null) foreach (var x in OrderBy) x.Accept(visitor);
+        if (PartitionBy is not null) foreach (var x in PartitionBy) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8310,6 +8315,7 @@ public partial class FunctionCall
         Keep = SqlNodeRewriter.RewriteOptional(rewriter, Keep, "FunctionCall.Keep");
         Over = SqlNodeRewriter.RewriteOptional(rewriter, Over, "FunctionCall.Over");
         SqlNodeRewriter.RewriteList(rewriter, OrderBy, "FunctionCall.OrderBy");
+        SqlNodeRewriter.RewriteList(rewriter, PartitionBy, "FunctionCall.PartitionBy");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8328,6 +8334,7 @@ public partial class FunctionCall
         new("Keep", Keep),
         new("Over", Over),
         new("OrderBy", OrderBy),
+        new("PartitionBy", PartitionBy),
     ];
 
     /// <inheritdoc/>
@@ -8353,6 +8360,7 @@ public partial class FunctionCall
             Keep = CloneChild(Keep),
             Over = CloneChild(Over),
             OrderBy = CloneList(OrderBy),
+            PartitionBy = CloneList(PartitionBy),
         };
         CopySpan(this, c);
         return c;
@@ -8374,7 +8382,8 @@ public partial class FunctionCall
             && PairList(WithinGroup, o.WithinGroup, pending)
             && Pair(Keep, o.Keep, pending)
             && Pair(Over, o.Over, pending)
-            && PairList(OrderBy, o.OrderBy, pending);
+            && PairList(OrderBy, o.OrderBy, pending)
+            && PairList(PartitionBy, o.PartitionBy, pending);
     }
 }
 

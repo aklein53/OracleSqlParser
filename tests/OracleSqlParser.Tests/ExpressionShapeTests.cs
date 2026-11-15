@@ -211,6 +211,69 @@ public class ExpressionShapeTests
 
 public class ExpertStressRegressionTests
 {
+    // A substitution variable can start a qualified name: &&owner..seq.nextval (the lexer ends the variable at its dot).
+    [Fact]
+    public void SubstitutionVariableStartsAQualifiedName()
+    {
+        var sql = "BEGIN INSERT INTO t VALUES (&&ut3_owner..ut_seq.nextval, &&ut3_owner.ut_pkg.f(1)); END;";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        var printed = new SqlScriptGenerator().Generate(r.Script);
+        Assert.Contains("&&ut3_owner..ut_seq.nextval", printed);
+        Assert.Contains("&&ut3_owner.ut_pkg.f(1)", printed);
+    }
+
+    // (expr AS type) is generalized invocation: it calls the supertype's method, so it is NOT TREAT (which dispatches dynamically).
+    [Fact]
+    public void ParenthesizedDowncastIsGeneralizedInvocation()
+    {
+        var shape = Shape.Of("BEGIN l_result := (self as ut_matcher).run_matcher(a_actual); END;");
+        Assert.Contains("kind=GeneralizedInvocation", shape);
+        Assert.Contains("(MethodCall", shape);
+        Assert.DoesNotContain("kind=Treat", shape);
+        var r = SqlParser.Parse("BEGIN l_result := (self as ut_matcher).run_matcher(a_actual); END;");
+        Assert.Contains("(self AS UT_MATCHER).run_matcher(", new SqlScriptGenerator().Generate(r.Script));
+    }
+
+    // XMLSERIALIZE's AS type is optional; the trailing [NO] INDENT is a flag clause.
+    [Theory]
+    [InlineData("SELECT XMLSERIALIZE(CONTENT x NO INDENT) FROM dual", "flag=NoIndent")]
+    [InlineData("SELECT XMLSERIALIZE(CONTENT x AS CLOB INDENT) FROM dual", "flag=Indent")]
+    public void XmlSerializeWithoutAsType(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
+    // NTH_VALUE(x, n FROM LAST) puts the direction inside the parentheses; Oracle accepts it there (checked on Oracle 23).
+    [Theory]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM LAST) OVER (ORDER BY x) FROM t", "fromLast=true")]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY x) FROM t", "fromLast=false")]
+    public void NthValue_FromInsideParentheses(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
+    // APPROX_RANK(PARTITION BY ... ORDER BY ...) is a hypothetical rank: the partition list comes before the ORDER BY.
+    [Fact]
+    public void ApproxRankTakesPartitionByBeforeOrderBy()
+    {
+        var sql = "select owner, approx_rank(partition by owner order by approx_count(*) desc) from all_objects";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("PARTITION BY owner ORDER BY", new SqlScriptGenerator().Generate(r.Script));
+    }
+
+    // TREAT(x AS t) yields a value of subtype t, so it takes attributes and methods, and a collection element can follow a method call.
+    [Theory]
+    [InlineData("SELECT TREAT (main_course AS dessert_ot).contains_chocolate FROM t", "(MemberAccess")]
+    [InlineData("SELECT treat(treat(l(1) AS u).items(1) AS u).items(1) FROM dual", "(MethodCall")]
+    [InlineData("BEGIN wb.sheets(s).rows(r)(c).value := v; END;", "(ChainedCall")]
+    public void TreatAndChainedAccessContinue(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
+    // SET(nested_table) is the SET operator, a function call; SET is reserved, so it needs its own rule.
+    [Theory]
+    [InlineData("SELECT SET(t.nt) FROM t", "name=[SET]")]
+    [InlineData("BEGIN a_list := ut_utils.filter_list(SET(l_tags_list), 'x'); END;", "name=[SET]")]
+    public void SetOperatorIsAFunctionCall(string sql, string fragment) =>
+        Assert.Contains(fragment, Shape.Of(sql));
+
     [Theory]
     [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY x) FROM t", "fromLast=true")]
     [InlineData("SELECT NTH_VALUE(x, 2) FROM FIRST RESPECT NULLS OVER (ORDER BY x) FROM t", "fromLast=false respectNulls")]

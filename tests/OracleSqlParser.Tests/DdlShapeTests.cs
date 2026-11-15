@@ -125,6 +125,10 @@ public class DdlShapeTests
     [Theory]
     [InlineData("DROP TABLE IF EXISTS t CASCADE CONSTRAINTS PURGE", "(DropStatement kind=Table ifExists name=[T] cascadeConstraints purge)")]
     [InlineData("DROP PUBLIC SYNONYM s", "(DropStatement kind=Synonym public name=[S])")]
+    // CREATE TABLE without ';' followed by a SQL*Plus '/' line: the '/' ends the table, it is not a trailing attribute.
+    [InlineData("CREATE TABLE t1 (a NUMBER)\n/\nSELECT 1 FROM dual;", "(CreateTableStatement name=[T1] columns=[(ColumnDefinition name=A type=(DataType name=NUMBER))]) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))")]
+    [InlineData("GRANT &&owner._role TO &&owner", "(GrantStatement privileges=[(GrantPrivilege name=&&owner._role)] grantees=[(Grantee name=&&OWNER)])")]
+    [InlineData("DROP SEQUENCE s\n/\nBEGIN NULL; END;", "(DropStatement kind=Sequence name=[S]) ; (BlockStatement statements=[(NullStatement)])")]
     [InlineData("DROP MATERIALIZED VIEW LOG ON t", "(DropStatement kind=MaterializedViewLog onTable=[T])")]
     [InlineData("DROP PACKAGE BODY pkg", "(DropStatement kind=PackageBody name=[PKG])")]
     [InlineData("DROP TABLESPACE ts INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS", "(DropStatement kind=Tablespace name=[TS] cascadeConstraints includingContents andDatafiles)")]

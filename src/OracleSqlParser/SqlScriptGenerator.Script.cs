@@ -153,7 +153,7 @@ public sealed partial class SqlScriptGenerator
                     {
                         if (sp2.Command is not ("@" or "@@")) Sp();
                         // PROMPT / REM: the lexer keeps the rest of the line as one string token that is verbatim text, not a literal
-                        if (sp2.Command is "PROMPT" or "REM" or "REMARK" && sp2.Arguments is [LiteralItem { Kind: LiteralKind.String } rest]) Raw(rest.Value);
+                        if (sp2.Command is "PROMPT" or "REM" or "REMARK" or "@" or "@@" or "!" or "$" && sp2.Arguments is [LiteralItem { Kind: LiteralKind.String } rest]) Raw(rest.Value);
                         else SyntaxList(sp2.Arguments);
                     }
                     break;

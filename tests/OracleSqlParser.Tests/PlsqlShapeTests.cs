@@ -274,6 +274,10 @@ BEGIN NULL; END;");
         "members=[(SubprogramDeclaration isFunction modifiers=Member name=[FULL] returnType=(DataType name=VARCHAR2)) (SubprogramDeclaration modifiers=Static name=[SP]) " +
         "(SubprogramDeclaration isFunction modifiers=Constructor name=[ADDR] parameters=[(Parameter name=SELF mode=InOut type=(DataType name=ADDR))] returnSelfAsResult)])")]
     [InlineData("CREATE TYPE nums AS TABLE OF NUMBER", "(CreateTypeStatement name=[NUMS] kind=Table elementType=(DataType name=NUMBER))")]
+    [InlineData("CREATE OR REPLACE TYPE nums AS TABLE OF NUMBER (10)\n/\nSELECT 1 FROM dual",
+        "(CreateTypeStatement orReplace name=[NUMS] kind=Table elementType=(DataType name=NUMBER arguments=[10])) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))")]
+    [InlineData("CREATE TYPE fwd; CREATE TYPE fwd2 OID '82A4AF6A4CD9656DE034080020E0EE3D';", "(CreateTypeStatement name=[FWD] kind=Incomplete) ; (CreateTypeStatement name=[FWD2] kind=Incomplete oid='82A4AF6A4CD9656DE034080020E0EE3D')")]
+    [InlineData("CREATE TYPE t AS TABLE OF REF category_typ", "(CreateTypeStatement name=[T] kind=Table elementType=(DataType name=CATEGORY_TYP ref))")]
     [InlineData("CREATE TYPE v AS VARRAY(10) OF VARCHAR2(5)", "(CreateTypeStatement name=[V] kind=Varray elementType=(DataType name=VARCHAR2 arguments=[5]) limit=10)")]
     [InlineData("CREATE TYPE sub UNDER addr (extra NUMBER) FINAL INSTANTIABLE", "(CreateTypeStatement name=[SUB] kind=Under final=true instantiable=true attributes=[(VariableDeclaration name=EXTRA type=(DataType name=NUMBER))] superType=[ADDR])")]
     [InlineData("CREATE TYPE t FORCE OID '123' AUTHID DEFINER AS OBJECT (a NUMBER) NOT PERSISTABLE",
@@ -281,6 +285,16 @@ BEGIN NULL; END;");
     [InlineData("CREATE OR REPLACE NONEDITIONABLE TYPE t AS OBJECT (MAP MEMBER FUNCTION m RETURN NUMBER)",
         "(CreateTypeStatement orReplace editionable=NonEditionable name=[T] kind=Object members=[(SubprogramDeclaration isFunction modifiers=Member, Map name=[M] returnType=(DataType name=NUMBER))])")]
     public void ObjectTypes(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
+
+    // FILE is not reserved in Oracle (a PL/SQL variable can be called file): found in a real-world package.
+    [Fact]
+    public void FileIsAnOrdinaryIdentifier() =>
+        Assert.True(SqlParser.Parse("DECLARE file NUMBER := 1; BEGIN file := file + 1; END;").Success);
+
+    // ... but in SQL it stays reserved: Oracle 23 rejects SELECT 1 file FROM dual and CREATE TABLE file (ORA-00923 / ORA-00903).
+    [Fact]
+    public void FileIsReservedInSql() =>
+        Assert.False(SqlParser.Parse("SELECT 1 file FROM dual").Success);
 
     [Fact]
     public void TypeBody() =>

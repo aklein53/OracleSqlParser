@@ -5,7 +5,8 @@ public sealed partial class SqlParser
     // ---- helpers ----
 
     /// <summary>End of a statement-level clause list: EOF, ';' or an unbalanced ')' (closing an enclosing group).</summary>
-    private bool AtStatementEnd() => Cur.Type == TokenType.EOF || IsOp(";") || IsOp(")");
+    // A SQL*Plus '/' alone on its line ends the statement even without a ';' (the clause loops must stop there too).
+    private bool AtStatementEnd() => Cur.Type == TokenType.EOF || IsOp(";") || IsOp(")") || IsLoneSlash(_p);
 
     private List<ColumnReference> ParseColumnRefList(bool parenthesized)
     {

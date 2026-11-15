@@ -50,7 +50,7 @@ public sealed partial class SqlParser
     public static ParseResult Parse(string sql, ParseOptions? options)
     {
         var errors = new List<ParseError>();
-        var tokens = TokenizeLenient(sql, errors, options?.SubstitutionEnabled ?? true);
+        var tokens = TokenizeLenient(sql, errors, options?.SubstitutionEnabled ?? true, options?.SqlPlusScript ?? false);
         var parser = new SqlParser(tokens, sql, options);
         parser._lexErrors = errors.ToList();
         var script = parser.ParseScript(errors);
@@ -171,9 +171,9 @@ public sealed partial class SqlParser
         return null;
     }
 
-    private static List<Token> TokenizeLenient(string sql, List<ParseError> errors, bool substitutionEnabled)
+    private static List<Token> TokenizeLenient(string sql, List<ParseError> errors, bool substitutionEnabled, bool sqlPlusScript)
     {
-        var lx = new Lexer(sql, substitutionEnabled);
+        var lx = new Lexer(sql, substitutionEnabled, sqlPlusScript);
         var list = new List<Token>();
         while (true)
         {
@@ -352,7 +352,7 @@ public sealed partial class SqlParser
     {
         "ACCESS","ADD","ALL","ALTER","AND","ANY","AS","ASC","AUDIT","BETWEEN","BY","CHAR","CHECK","CLUSTER","COLUMN",
         "COLUMN_VALUE","COMMENT","COMPRESS","CONNECT","CREATE","CURRENT","DATE","DECIMAL","DEFAULT","DELETE","DESC",
-        "DISTINCT","DROP","ELSE","EXCLUSIVE","EXISTS","FILE","FLOAT","FOR","FROM","GRANT","GROUP","HAVING","IDENTIFIED",
+        "DISTINCT","DROP","ELSE","EXCLUSIVE","EXISTS","FLOAT","FOR","FROM","GRANT","GROUP","HAVING","IDENTIFIED",
         "IMMEDIATE","IN","INCREMENT","INDEX","INITIAL","INSERT","INTEGER","INTERSECT","INTO","IS","LEVEL","LIKE","LOCK",
         "LONG","MAXEXTENTS","MINUS","MLSLABEL","MODE","MODIFY","NESTED_TABLE_ID","NOAUDIT","NOCOMPRESS","NOT","NOWAIT",
         "NULL","NUMBER","OF","OFFLINE","ON","ONLINE","OPTION","OR","ORDER","PCTFREE","PRIOR","PUBLIC","RAW","RENAME",
@@ -360,6 +360,12 @@ public sealed partial class SqlParser
         "SUCCESSFUL","SYNONYM","SYSDATE","TABLE","THEN","TO","TRIGGER","UID","UNION","UNIQUE","UPDATE","USER","VALIDATE",
         "VALUES","VARCHAR","VARCHAR2","VIEW","WHENEVER","WHERE","WITH",
     };
+
+    /// <summary>Reserved in SQL but an ordinary name in PL/SQL (checked on Oracle 23: a PL/SQL variable may be called file).</summary>
+    private static readonly HashSet<string> SqlOnlyReserved = new(StringComparer.Ordinal) { "FILE" };
+
+    /// <summary>True when the word is reserved in the current context: <see cref="Reserved"/>, plus the SQL-only words outside PL/SQL.</summary>
+    private bool IsReservedHere(string word) => Reserved.Contains(word) || (!_plsql && SqlOnlyReserved.Contains(word));
 
     /// <summary>Reserved words that nevertheless act as value expressions.</summary>
     private static readonly HashSet<string> ExpressionKeywords = new(StringComparer.Ordinal)
@@ -377,7 +383,7 @@ public sealed partial class SqlParser
 
     private bool CanBeImplicitAlias(Token t) =>
         t.Type == TokenType.QuotedIdentifier ||
-        (t.Type == TokenType.Identifier && !Reserved.Contains(t.Value) && !ClauseWords.Contains(t.Value));
+        (t.Type == TokenType.Identifier && !IsReservedHere(t.Value) && !ClauseWords.Contains(t.Value));
 
     // ---- script & statements ----
 
@@ -1031,7 +1037,7 @@ public sealed partial class SqlParser
         var s = Cur;
         ReturningImage? image = null;
         var next = PeekTok();
-        bool nextStartsItem = next.Type == TokenType.QuotedIdentifier || (next.Type == TokenType.Identifier && !Reserved.Contains(next.Value));
+        bool nextStartsItem = next.Type == TokenType.QuotedIdentifier || (next.Type == TokenType.Identifier && !IsReservedHere(next.Value));
         if ((IsKw("OLD") || IsKw("NEW")) && nextStartsItem)
         {
             RequireVersion(OracleVersion.Oracle23, "RETURNING OLD/NEW", Cur);
@@ -1088,7 +1094,7 @@ public sealed partial class SqlParser
             else if (AcceptKw("DELETE")) { if (AcceptKw("WHERE")) mc.DeleteWhere = ParseExpr(); }
             else if (AcceptKw("INSERT"))
             {
-                if (AcceptOp("(")) { mc.InsertColumns = ParseIdentifierList(); ExpectOp(")"); }
+                if (IsOp("(")) mc.InsertColumns = ParseColumnRefList(true); // the parenthesized column list, consumed to its ')'
                 ExpectKw("VALUES");
                 ExpectOp("(");
                 do mc.InsertValues.Add(ParseExpr()); while (AcceptOp(","));
@@ -1108,6 +1114,16 @@ public sealed partial class SqlParser
     private Identifier ParseIdentifier()
     {
         var t = Cur;
+        // A SQL*Plus substitution variable can stand for a name (CREATE USER &owner ...), kept as typed. The lexer ends the
+        // variable at its dot, so an identifier written right after it continues the name (&&owner._suffix).
+        if (t.Type == TokenType.Substitution)
+        {
+            Next();
+            string text = t.Text;
+            if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier && Cur.Start == t.End)
+                text += Next().Text;
+            return Fin(new Identifier { Value = text.ToUpperInvariant(), Text = text }, t);
+        }
         if (t.Type is not (TokenType.Identifier or TokenType.QuotedIdentifier))
             throw FailExpected($"Expected identifier but found {Describe(t)}", "identifier");
         Next();
