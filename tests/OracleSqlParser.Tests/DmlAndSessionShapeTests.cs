@@ -202,6 +202,15 @@ public class DmlAndSessionShapeTests
         Assert.Contains("&&ut3_owner._cbac_role", printed);
     }
 
+    // In SQL*Plus a '.' alone on its line ends the statement in the buffer, like a blank line does.
+    [Fact]
+    public void SqlPlusScript_LoneDotEndsAStatement()
+    {
+        var r = SqlParser.Parse("COMMENT ON TABLE t IS 'x'\n.\nSELECT 2 FROM dual", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.True(r.Script.Statements.Count == 2, "two statements");
+    }
+
     // A synthesized ';' after a blank line must not become the head of the next line: '@&d' after a DEFINE line is still a command.
     [Fact]
     public void SqlPlusScript_FileRunAfterBlankLineAndDefine()

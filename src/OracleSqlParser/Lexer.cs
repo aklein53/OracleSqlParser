@@ -305,6 +305,12 @@ public sealed class Lexer
             }
         }
 
+        // SQL*Plus: a '.' alone on its line ends the statement in the buffer (it is read as a ';' here).
+        if (_sqlPlusScript && c == '.' && IsAtLineStart(start) && LineEndsAt(_i + 1))
+        {
+            Advance();
+            return new Token(TokenType.Operator, ";", start, _i, line, col);
+        }
         // SQL*Plus line continuation: a '-' that ends its line joins the next line (both the hyphen and the line break go).
         if (c == '-' && _sqlPlusScript && LineEndsAt(_i + 1))
         {
