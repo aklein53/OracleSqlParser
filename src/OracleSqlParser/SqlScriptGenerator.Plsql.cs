@@ -441,6 +441,7 @@ public sealed partial class SqlScriptGenerator
             }
             switch (ty.Kind)
             {
+                case TypeKind.Incomplete: break;
                 case TypeKind.Under: Add(" UNDER "); Name(ty.SuperType); Members(); break;
                 case TypeKind.Object: Add(" AS OBJECT"); Members(); break;
                 case TypeKind.Table: Add(" AS TABLE OF "); Type(ty.ElementType!); break;

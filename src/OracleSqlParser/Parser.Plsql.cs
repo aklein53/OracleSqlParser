@@ -730,7 +730,8 @@ public sealed partial class SqlParser
         }
         ts.Options = ParseProgramOptions(() => IsKw("IS") || IsKw("AS") || IsKw("UNDER") || IsKw("OID") || IsKw("FORCE"));
         if (AcceptKw("OID")) ts.Oid = ParsePrimary();
-        if (AcceptKw("UNDER"))
+        if (AtStatementEnd() || IsOp("/")) ts.Kind = TypeKind.Incomplete; // CREATE TYPE t; declares the name with no body
+        else if (AcceptKw("UNDER"))
         {
             ts.Kind = TypeKind.Under;
             ts.SuperType = ParseDottedName();
