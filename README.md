@@ -28,7 +28,8 @@ Every public member must be listed in the `PublicAPI.Shipped.txt` or `PublicAPI.
 fails the build with `RS0016` (a public member that is not declared in the file), so the build with `-warnaserror` is the gate.
 
 - `PublicAPI.Unshipped.txt` lists the API of the next release. Changing the API means updating this file in the same commit.
-  Populate it with `dotnet format analyzers --diagnostics RS0016 <project>`, then check the diff for accidental members
+  Populate it from the analyzer's own output: the `RS0016` messages of a build (or the code fix in an IDE). Do not rely on
+  `dotnet format analyzers` alone, which skips generated `override` members. Then check the diff for accidental members
   (helpers, implicit constructors, record-generated members) before committing.
 - `PublicAPI.Shipped.txt` lists the API of released versions. It is empty until 1.0.0 (the preview versions are not frozen).
 - At the 1.0.0 release, move every line of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` and leave the
