@@ -211,6 +211,27 @@ public class ExpressionShapeTests
 
 public class ExpertStressRegressionTests
 {
+    // A substitution variable can start a qualified name: &&owner..seq.nextval (the lexer ends the variable at its dot).
+    [Fact]
+    public void SubstitutionVariableStartsAQualifiedName()
+    {
+        var sql = "BEGIN INSERT INTO t VALUES (&&ut3_owner..ut_seq.nextval, &&ut3_owner.ut_pkg.f(1)); END;";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        var printed = new SqlScriptGenerator().Generate(r.Script);
+        Assert.Contains("&&ut3_owner..ut_seq.nextval", printed);
+        Assert.Contains("&&ut3_owner.ut_pkg.f(1)", printed);
+    }
+
+    // (expr AS type) is a downcast written in parentheses, as in (SELF AS sub_t).method(); it is TREAT(expr AS type).
+    [Fact]
+    public void ParenthesizedDowncastIsTreat()
+    {
+        var shape = Shape.Of("BEGIN l_result := (self as ut_matcher).run_matcher(a_actual); END;");
+        Assert.Contains("kind=Treat", shape);
+        Assert.Contains("(MethodCall", shape);
+    }
+
     // XMLSERIALIZE's AS type is optional; the trailing [NO] INDENT is a flag clause.
     [Theory]
     [InlineData("SELECT XMLSERIALIZE(CONTENT x NO INDENT) FROM dual", "flag=NoIndent")]

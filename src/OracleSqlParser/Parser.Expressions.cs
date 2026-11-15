@@ -291,6 +291,9 @@ public sealed partial class SqlParser
             case TokenType.String:
                 Next();
                 return Fin(new Literal { Kind = LiteralKind.String, Value = start.Value, National = start.Text[0] is 'n' or 'N', QuoteDelimiter = QuoteDelimiterOf(start.Text) }, start);
+            case TokenType.Substitution when PeekTok() is { Type: TokenType.Operator, Text: "." } || PeekTok() is { Type: TokenType.Identifier or TokenType.QuotedIdentifier } && PeekTok().Start == start.End:
+                // &&owner..pkg.name or &&owner.pkg.name: the variable starts a qualified name (the lexer ends it at its dot)
+                return ParseNameOrFunction();
             case TokenType.Substitution:
                 Next();
                 return Fin(new SubstitutionVariable { Name = start.Value.TrimStart('&'), Persistent = start.Value.StartsWith('&'), Prefix = start.Text[0] }, start);
@@ -318,6 +321,14 @@ public sealed partial class SqlParser
                     }
                     if (AcceptOp(")")) return Fin(new ExpressionList(), start);
                     var first = ParseExpr();
+                    // (expr AS type) is a downcast written in parentheses, as in (SELF AS sub_t).method(): the same as TREAT(expr AS type)
+                    if (IsKw("AS"))
+                    {
+                        Next();
+                        var downcast = ParseDataType();
+                        ExpectOp(")");
+                        return Fin(new CastExpression { Kind = CastKind.Treat, Value = first, Type = downcast }, start);
+                    }
                     if (IsOp(","))
                     {
                         var list = new ExpressionList { Items = [first] };
