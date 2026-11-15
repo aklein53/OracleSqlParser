@@ -16,6 +16,11 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 - `Lexer` and `AstPrinter` are internal; `ParseResult` can no longer be constructed or mutated by callers.
 - Renamed `Block` → `BlockStatement`, `SqlPlusCommand` → `SqlPlusCommandStatement`, `TablespaceType` →
   `TablespaceKind`, `DualityAnnotation` → `DualityAnnotationKind` (also changes the JSON `type` values).
+- The `Operator` of `BinaryExpression`, `UnaryExpression` and `QuantifiedComparison` is an enum instead of a string:
+  `BinaryOperator` (for example `Equals`, `NotEquals`, `And`, `MultisetUnionAll`) and `UnaryOperator` (`Plus`, `Minus`,
+  `Not`, `Prior`, `ConnectByRoot`). `!=`, `^=` and `~=` are all `NotEquals`; the spelling written is kept in the new
+  `OperatorSpelling` property, and `OperatorExtensions.ToSql()` gives the canonical SQL text. Shapes and JSON show the
+  member name (for example `(Equals a 1)` and `"operator": "Equals"`).
 
 ### Changed
 - `OracleSqlParser.Guard` is versioned independently of the core library and stays 0.x while experimental.
