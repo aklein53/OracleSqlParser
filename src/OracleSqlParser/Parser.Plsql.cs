@@ -761,7 +761,8 @@ public sealed partial class SqlParser
             else throw FailExpected($"Expected OBJECT, TABLE or VARRAY but found {Describe(Cur)}", "OBJECT", "TABLE", "VARRAY");
         }
         int prog37 = -1;
-        while (!AtStatementEnd() && Progress(ref prog37))
+        // A '/' line ends the statement too: CREATE TYPE is often written without a trailing ';'.
+        while (!AtStatementEnd() && !IsOp("/") && Progress(ref prog37))
         {
             bool not = AcceptKw("NOT");
             if (AcceptKw("FINAL")) ts.Final = !not;
