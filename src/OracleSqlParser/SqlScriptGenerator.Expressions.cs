@@ -22,11 +22,11 @@ public sealed partial class SqlScriptGenerator
             Add("]");
         }
 
-        private void DualityWordDef(DualityAnnotation a) => Add(a switch
+        private void DualityWordDef(DualityAnnotationKind a) => Add(a switch
         {
-            DualityAnnotation.Insert => "INSERT", DualityAnnotation.Update => "UPDATE", DualityAnnotation.Delete => "DELETE",
-            DualityAnnotation.NoInsert => "NOINSERT", DualityAnnotation.NoUpdate => "NOUPDATE", DualityAnnotation.NoDelete => "NODELETE",
-            DualityAnnotation.NoCheck => "NOCHECK", DualityAnnotation.Etag => "ETAG", _ => "NO ETAG",
+            DualityAnnotationKind.Insert => "INSERT", DualityAnnotationKind.Update => "UPDATE", DualityAnnotationKind.Delete => "DELETE",
+            DualityAnnotationKind.NoInsert => "NOINSERT", DualityAnnotationKind.NoUpdate => "NOUPDATE", DualityAnnotationKind.NoDelete => "NODELETE",
+            DualityAnnotationKind.NoCheck => "NOCHECK", DualityAnnotationKind.Etag => "ETAG", _ => "NO ETAG",
         });
 
         private void Type(DataType dt)

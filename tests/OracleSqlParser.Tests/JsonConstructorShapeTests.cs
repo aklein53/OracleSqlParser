@@ -50,7 +50,7 @@ public class JsonConstructorShapeTests
     {
         var dv = Shape.Parse("CREATE JSON RELATIONAL DUALITY VIEW dv AS SELECT JSON {'_id' : p.id} FROM person p WITH NOINSERT NOUPDATE WITH ETAG")
             .Descendants().OfType<NamedTable>().Single();
-        Assert.Equal(new[] { DualityAnnotation.NoInsert, DualityAnnotation.NoUpdate, DualityAnnotation.Etag },
+        Assert.Equal(new[] { DualityAnnotationKind.NoInsert, DualityAnnotationKind.NoUpdate, DualityAnnotationKind.Etag },
             dv.DualityAnnotations.Select(a => a.Kind).ToArray());
         Assert.Equal(new[] { "CREATE JSON RELATIONAL DUALITY VIEW dv AS SELECT JSON {'_id' : p.id} FROM person p WITH NOINSERT NOUPDATE ETAG" },
             new[] { new SqlScriptGenerator(new SqlScriptGeneratorOptions()).Generate(Shape.Parse("CREATE JSON RELATIONAL DUALITY VIEW dv AS SELECT JSON {'_id' : p.id} FROM person p WITH NOINSERT NOUPDATE WITH ETAG").Statements[0]) });

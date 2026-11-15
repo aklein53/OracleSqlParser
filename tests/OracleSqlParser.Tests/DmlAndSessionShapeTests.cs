@@ -169,12 +169,12 @@ public class DmlAndSessionShapeTests
         var printed = script.Statements.Select(s => AstPrinter.Print(s)).ToList();
         Assert.Equal(
         [
-            "(SqlPlusCommand command=SET arguments=[(WordItem value=SERVEROUTPUT) (WordItem value=ON) (WordItem value=SIZE) (LiteralItem kind=Number value=1000000)])",
-            "(SqlPlusCommand command=SPOOL arguments=[(WordItem value=OUT) (SymbolItem symbol=.) (WordItem value=LOG)])",
-            "(SqlPlusCommand command=PROMPT arguments=[(LiteralItem kind=String value=it's fine)])",
-            "(SqlPlusCommand command=DEFINE arguments=[(WordItem value=X) (SymbolItem symbol==) (LiteralItem kind=Number value=5)])",
-            "(SqlPlusCommand command=@ arguments=[(WordItem value=CHILD) (SymbolItem symbol=.) (WordItem value=SQL)])",
-            "(SqlPlusCommand command=WHENEVER arguments=[(WordItem value=SQLERROR) (WordItem value=EXIT) (WordItem value=FAILURE) (WordItem value=ROLLBACK)])",
+            "(SqlPlusCommandStatement command=SET arguments=[(WordItem value=SERVEROUTPUT) (WordItem value=ON) (WordItem value=SIZE) (LiteralItem kind=Number value=1000000)])",
+            "(SqlPlusCommandStatement command=SPOOL arguments=[(WordItem value=OUT) (SymbolItem symbol=.) (WordItem value=LOG)])",
+            "(SqlPlusCommandStatement command=PROMPT arguments=[(LiteralItem kind=String value=it's fine)])",
+            "(SqlPlusCommandStatement command=DEFINE arguments=[(WordItem value=X) (SymbolItem symbol==) (LiteralItem kind=Number value=5)])",
+            "(SqlPlusCommandStatement command=@ arguments=[(WordItem value=CHILD) (SymbolItem symbol=.) (WordItem value=SQL)])",
+            "(SqlPlusCommandStatement command=WHENEVER arguments=[(WordItem value=SQLERROR) (WordItem value=EXIT) (WordItem value=FAILURE) (WordItem value=ROLLBACK)])",
             "(ExecStatement body=(ProcedureCallStatement call=(FunctionCall name=[DBMS_OUTPUT PUT_LINE] arguments=[(Argument value='x')])))",
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(SubstitutionVariable name=x))] from=[(NamedTable name=[DUAL])]))",
         ], printed);

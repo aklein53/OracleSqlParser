@@ -141,7 +141,7 @@ public class QueryShapeTests
     {
         Assert.Equal(
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(FunctionCall name=[F] arguments=[(Argument value=1)]))] from=[(NamedTable name=[DUAL])]) " +
-            "withDeclarations=[(SubprogramDeclaration isFunction name=[F] parameters=[(Parameter name=X type=(DataType name=NUMBER))] returnType=(DataType name=NUMBER) body=(Block statements=[(ReturnStatement value=(* X 2))]))])",
+            "withDeclarations=[(SubprogramDeclaration isFunction name=[F] parameters=[(Parameter name=X type=(DataType name=NUMBER))] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(* X 2))]))])",
             Shape.Of<SelectStatement>("WITH FUNCTION f(x NUMBER) RETURN NUMBER IS BEGIN RETURN x * 2; END; SELECT f(1) FROM dual"));
     }
 

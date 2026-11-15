@@ -19,6 +19,24 @@ The packages were renamed to match the namespace: `PlsqlParser` is now `OracleSq
 
 Versions are published as pre-releases (`0.1.0-preview.N`) until the API stabilises.
 
+## Public API changes
+
+The public API of `OracleSqlParser` and `OracleSqlParser.Guard` is checked by
+[Microsoft.CodeAnalysis.PublicApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/tree/main/src/PublicApiAnalyzers).
+Every public member must be listed in the `PublicAPI.Shipped.txt` or `PublicAPI.Unshipped.txt` file of its project
+(one line per member, the analyzer's own signature format). A change that adds, removes or changes a public member
+fails the build with `RS0016` (a public member that is not declared in the file), so the build with `-warnaserror` is the gate.
+
+- `PublicAPI.Unshipped.txt` lists the API of the next release. Changing the API means updating this file in the same commit.
+  Populate it from the analyzer's own output: the `RS0016` messages of a build (or the code fix in an IDE). Do not rely on
+  `dotnet format analyzers` alone, which skips generated `override` members. Then check the diff for accidental members
+  (helpers, implicit constructors, record-generated members) before committing.
+- `PublicAPI.Shipped.txt` lists the API of released versions. It is empty until 1.0.0 (the preview versions are not frozen).
+- At the 1.0.0 release, move every line of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` and leave the
+  unshipped file with only its `#nullable enable` header. From then on the public API is frozen until 2.0: a breaking
+  change needs a new major version, and additions are added to the unshipped file.
+- Internal types and members are not checked. Tests see them through `InternalsVisibleTo`.
+
 ## Releasing
 
 Publishing uses nuget.org Trusted Publishing (GitHub OIDC) bound to `.github/workflows/build.yml`; no API key
@@ -45,7 +63,7 @@ string json = AstJson.Serialize(result.Script, includePositions: true);
 
 - `SqlParser.Parse` handles multi-statement scripts (`;` or `/`), collects errors and resyncs at the next `;`.
 - `SqlParser.ParseStatement`, `ParseExpression` and `ParseSelect` throw `ParseException` instead; the others in the table below never throw.
-- Every `SqlNode` has `Start`/`End`/`Line`/`Column`, `Children()` and `Descendants()`; subclass `SqlNodeVisitor` to walk (see below; `SqlVisitor` is the legacy untyped visitor). Spans are set by the parser; nodes you build in code have zero spans.
+- Every `SqlNode` has `Start`/`End`/`Line`/`Column`, `GetChildren()` and `Descendants()`; subclass `SqlNodeVisitor` to walk (see below). Spans are set by the parser; nodes you build in code have zero spans.
 - Unquoted identifiers are upper-cased in `Identifier.Value`; quoted ones keep case (`Quoted = true`).
 
 SQL*Plus scripts: `&name` and `&&name` are substitution variables by default. A `SET DEFINE OFF` line (or `SET DEF OFF`) turns substitution off for the rest of the input, so `&` is then ordinary text, as it already is inside string literals; `SET DEFINE ON` turns it back on, and `SET DEFINE <char>` (for example `SET DEFINE ^`) makes that character the prefix instead. Only a `SET` that starts a line and is followed by nothing but the value counts, so `UPDATE t SET define = 1` is unaffected. For plain SQL that is not a script, `new ParseOptions { SubstitutionEnabled = false }` turns substitution off from the start.
@@ -195,8 +213,7 @@ Limitations:
 - Without `IncludeSemicolons` a multi-statement script no longer parses (statements are only separated by newlines).
 - Some purely optional spellings are not stored and are normalised: `ASC`, `VIRTUAL`, `1..3` vs `1 .. 3`, `RETURN`/`RETURNING`, `JSON DUALITY VIEW` as `JSON RELATIONAL DUALITY VIEW`, `PIPELINED ROW POLYMORPHIC`.
 
-`SqlWriter.ToSql(node)` remains as a thin compatibility facade: compact output, upper-case keywords and upper-case unquoted
-identifiers (it is not marked `[Obsolete]` so that dependent code builds without warnings). New code should use `SqlScriptGenerator`.
+For a compact, normalised single line (upper-case keywords and unquoted identifiers), use `new SqlScriptGenerator(new SqlScriptGeneratorOptions { IdentifierCasing = IdentifierCasing.Uppercase }).Generate(node)`.
 
 ## Examining and editing trees
 

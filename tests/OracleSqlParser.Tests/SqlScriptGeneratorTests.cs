@@ -387,6 +387,6 @@ public class SqlScriptGeneratorTests
     public void OracleVerifiedForms_ArePrintedAsOracleRequires(string sql, string expected) => Assert.Equal(expected, Gen(sql));
 
     [Fact]
-    public void SqlWriterFacade_IsCompactUppercase() =>
-        Assert.Equal("SELECT MYCOL FROM T", SqlWriter.ToSql(Shape.Parse("select MyCol from t").Statements[0]));
+    public void Shape_Sql_IsCompactUppercase() =>
+        Assert.Equal("SELECT MYCOL FROM T", Shape.Sql(Shape.Parse("select MyCol from t").Statements[0]));
 }

@@ -5,7 +5,7 @@ namespace OracleSqlParser.Tests;
 
 public class PlsqlShapeTests
 {
-    private static Block FirstBlock(string sql) => Shape.Parse(sql).Descendants().OfType<Block>().First();
+    private static BlockStatement FirstBlock(string sql) => Shape.Parse(sql).Descendants().OfType<BlockStatement>().First();
     private static string Stmts(string body) => AstPrinter.Print(FirstBlock("BEGIN " + body + " END;").Statements);
 
     [Fact]
@@ -96,7 +96,7 @@ BEGIN NULL; END;");
     {
         var b = FirstBlock("DECLARE PROCEDURE p(x IN OUT NOCOPY NUMBER) IS BEGIN x := 1; END p; FUNCTION f RETURN NUMBER; BEGIN NULL; END;");
         Assert.Equal(
-            "[(SubprogramDeclaration name=[P] parameters=[(Parameter name=X mode=InOut noCopy type=(DataType name=NUMBER))] body=(Block statements=[(AssignmentStatement target=X value=1)] endName=P)) " +
+            "[(SubprogramDeclaration name=[P] parameters=[(Parameter name=X mode=InOut noCopy type=(DataType name=NUMBER))] body=(BlockStatement statements=[(AssignmentStatement target=X value=1)] endName=P)) " +
             "(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER))]",
             AstPrinter.Print(b.Declarations));
     }
@@ -176,7 +176,7 @@ BEGIN NULL; END;");
     [InlineData("SELECT a INTO v FROM t WHERE id = 1;",
         "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(= ID 1) into=[V]))]")]
     [InlineData("BEGIN NULL; EXCEPTION WHEN OTHERS THEN NULL; END;",
-        "[(Block statements=[(NullStatement)] handlers=[(ExceptionHandler others statements=[(NullStatement)])])]")]
+        "[(BlockStatement statements=[(NullStatement)] handlers=[(ExceptionHandler others statements=[(NullStatement)])])]")]
     [InlineData("v := SQL%ROWCOUNT; IF c1%ISOPEN THEN NULL; END IF;",
         "[(AssignmentStatement target=V value=SQL%ROWCOUNT) (IfStatement condition=C1%ISOPEN thenStatements=[(NullStatement)])]")]
     public void Statements(string body, string expected) => Assert.Equal(expected, Stmts(body.Replace("BEGIN NULL; EXCEPTION WHEN OTHERS THEN NULL; END;", "BEGIN NULL; EXCEPTION WHEN OTHERS THEN NULL; END;")));
@@ -185,7 +185,7 @@ BEGIN NULL; END;");
     public void Block_LabelAndDeclareFlag()
     {
         var b = Shape.Parse("<<lbl>> DECLARE x NUMBER; BEGIN NULL; END lbl;").Statements[0];
-        Assert.Equal("(Block hasDeclare declarations=[(VariableDeclaration name=X type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=LBL labels=[LBL])", AstPrinter.Print(b));
+        Assert.Equal("(BlockStatement hasDeclare declarations=[(VariableDeclaration name=X type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=LBL labels=[LBL])", AstPrinter.Print(b));
     }
 
     // ---- program units ----
@@ -197,7 +197,7 @@ BEGIN NULL; END;");
             "(Parameter name=A mode=In type=(DataType name=NUMBER)) " +
             "(Parameter name=B mode=InOut noCopy type=(DataType name=VARCHAR2) default='x') " +
             "(Parameter name=C mode=Out type=(DataType name=T))] " +
-            "body=(Block declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=P)))",
+            "body=(BlockStatement declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=P)))",
             Shape.Of("CREATE OR REPLACE PROCEDURE p (a IN NUMBER, b IN OUT NOCOPY VARCHAR2 DEFAULT 'x', c OUT t) AS v NUMBER; BEGIN NULL; END p;"));
 
     [Theory]
@@ -243,24 +243,24 @@ BEGIN NULL; END;");
     [Fact]
     public void CreatePackage_Body() =>
         Assert.Equal(
-            "(CreatePackageBodyStatement name=[PKG] declarations=[(SubprogramDeclaration name=[P] body=(Block statements=[(NullStatement)]))] " +
+            "(CreatePackageBodyStatement name=[PKG] declarations=[(SubprogramDeclaration name=[P] body=(BlockStatement statements=[(NullStatement)]))] " +
             "initStatements=[(AssignmentStatement target=G value=1)] initHandlers=[(ExceptionHandler others statements=[(NullStatement)])] endName=PKG)",
             Shape.Of("CREATE PACKAGE BODY pkg AS PROCEDURE p IS BEGIN NULL; END; BEGIN g := 1; EXCEPTION WHEN OTHERS THEN NULL; END pkg;"));
 
     [Theory]
     [InlineData("CREATE OR REPLACE TRIGGER trg BEFORE INSERT OR UPDATE OF a, b ON hr.t REFERENCING NEW AS n OLD o FOR EACH ROW FOLLOWS other_trg WHEN (n.a > 0) BEGIN NULL; END;",
         "(CreateTriggerStatement orReplace name=[TRG] timing=Before events=[(TriggerEvent kind=Insert) (TriggerEvent kind=Update columns=[A B])] targetKind=Table target=[HR T] " +
-        "referencing=[(ReferencingItem kind=New alias=N) (ReferencingItem kind=Old alias=O)] forEachRow ordering=Follows orderingTriggers=[[OTHER_TRG]] when=(> N.A 0) body=(Block statements=[(NullStatement)]))")]
+        "referencing=[(ReferencingItem kind=New alias=N) (ReferencingItem kind=Old alias=O)] forEachRow ordering=Follows orderingTriggers=[[OTHER_TRG]] when=(> N.A 0) body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg AFTER LOGON ON DATABASE BEGIN NULL; END;",
-        "(CreateTriggerStatement name=[TRG] timing=After events=[(TriggerEvent kind=Database eventName=LOGON)] targetKind=Database body=(Block statements=[(NullStatement)]))")]
+        "(CreateTriggerStatement name=[TRG] timing=After events=[(TriggerEvent kind=Database eventName=LOGON)] targetKind=Database body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg AFTER CREATE OR DROP ON hr.SCHEMA BEGIN NULL; END;",
-        "(CreateTriggerStatement name=[TRG] timing=After events=[(TriggerEvent kind=Ddl eventName=CREATE) (TriggerEvent kind=Ddl eventName=DROP)] targetKind=Schema target=[HR] body=(Block statements=[(NullStatement)]))")]
+        "(CreateTriggerStatement name=[TRG] timing=After events=[(TriggerEvent kind=Ddl eventName=CREATE) (TriggerEvent kind=Ddl eventName=DROP)] targetKind=Schema target=[HR] body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg INSTEAD OF INSERT ON v FOR EACH ROW DECLARE x NUMBER; BEGIN NULL; END;",
-        "(CreateTriggerStatement name=[TRG] timing=InsteadOf events=[(TriggerEvent kind=Insert)] targetKind=Table target=[V] forEachRow body=(Block hasDeclare declarations=[(VariableDeclaration name=X type=(DataType name=NUMBER))] statements=[(NullStatement)]))")]
+        "(CreateTriggerStatement name=[TRG] timing=InsteadOf events=[(TriggerEvent kind=Insert)] targetKind=Table target=[V] forEachRow body=(BlockStatement hasDeclare declarations=[(VariableDeclaration name=X type=(DataType name=NUMBER))] statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg INSTEAD OF INSERT ON NESTED TABLE c OF v FOR EACH ROW BEGIN NULL; END;",
-        "(CreateTriggerStatement name=[TRG] timing=InsteadOf events=[(TriggerEvent kind=Insert)] targetKind=NestedTable target=[V] nestedTableColumn=C forEachRow body=(Block statements=[(NullStatement)]))")]
+        "(CreateTriggerStatement name=[TRG] timing=InsteadOf events=[(TriggerEvent kind=Insert)] targetKind=NestedTable target=[V] nestedTableColumn=C forEachRow body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg BEFORE DELETE ON t FOR EACH ROW FORWARD CROSSEDITION DISABLE BEGIN NULL; END;",
-        "(CreateTriggerStatement name=[TRG] timing=Before events=[(TriggerEvent kind=Delete)] targetKind=Table target=[T] forEachRow crossEdition=Forward enabled=false body=(Block statements=[(NullStatement)]))")]
+        "(CreateTriggerStatement name=[TRG] timing=Before events=[(TriggerEvent kind=Delete)] targetKind=Table target=[T] forEachRow crossEdition=Forward enabled=false body=(BlockStatement statements=[(NullStatement)]))")]
     [InlineData("CREATE TRIGGER trg BEFORE INSERT ON t CALL proc(1)",
         "(CreateTriggerStatement name=[TRG] timing=Before events=[(TriggerEvent kind=Insert)] targetKind=Table target=[T] call=(CallStatement routine=(FunctionCall name=[PROC] arguments=[(Argument value=1)])))")]
     [InlineData("CREATE TRIGGER trg FOR UPDATE ON t COMPOUND TRIGGER v NUMBER; BEFORE STATEMENT IS BEGIN NULL; END BEFORE STATEMENT; AFTER EACH ROW IS BEGIN v := 1; END AFTER EACH ROW; END trg;",
@@ -285,14 +285,14 @@ BEGIN NULL; END;");
     [Fact]
     public void TypeBody() =>
         Assert.Equal(
-            "(CreateTypeBodyStatement name=[ADDR] members=[(SubprogramDeclaration isFunction modifiers=Member name=[FULL] returnType=(DataType name=VARCHAR2) body=(Block statements=[(ReturnStatement value=STREET)]))])",
+            "(CreateTypeBodyStatement name=[ADDR] members=[(SubprogramDeclaration isFunction modifiers=Member name=[FULL] returnType=(DataType name=VARCHAR2) body=(BlockStatement statements=[(ReturnStatement value=STREET)]))])",
             Shape.Of("CREATE TYPE BODY addr AS MEMBER FUNCTION full RETURN VARCHAR2 IS BEGIN RETURN street; END; END;"));
 
     [Fact]
     public void Script_BlocksAndSlashes()
     {
         var s = Shape.Parse("BEGIN NULL; END;\n/\nSELECT 1 FROM dual;\nBEGIN NULL; END;\n/\n");
-        Assert.Equal(["Block", "SelectStatement", "Block"], s.Statements.Select(x => x.GetType().Name).ToArray());
+        Assert.Equal(["BlockStatement", "SelectStatement", "BlockStatement"], s.Statements.Select(x => x.GetType().Name).ToArray());
     }
 
     // ---- error recovery ----
@@ -344,33 +344,33 @@ BEGIN NULL; END;");
     // name and an index variable are the same syntax, so the parser cannot tell them apart and needs no node for it.
     [Theory]
     [InlineData("BEGIN x := rec_t(a => 1, b => 2); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(FunctionCall name=[REC_T] arguments=[(Argument name=A value=1) (Argument name=B value=2)]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(FunctionCall name=[REC_T] arguments=[(Argument name=A value=1) (Argument name=B value=2)]))])")]
     // Index choices that are not names: a literal index, OTHERS and the FOR iterator each get a QualifiedExpression.
     [InlineData("BEGIN x := arr_t(1 => 'x', 2 => 'y'); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression choice=1 value='x')) (Argument value=(QualifiedExpression choice=2 value='y'))]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression choice=1 value='x')) (Argument value=(QualifiedExpression choice=2 value='y'))]))])")]
     [InlineData("BEGIN x := arr_t(OTHERS => 0); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression others value=0))]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression others value=0))]))])")]
     [InlineData("BEGIN x := arr_t(FOR i IN 1..3 => i); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression iterator=(IndexIterator variable=I low=1 high=3) value=I))]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression iterator=(IndexIterator variable=I low=1 high=3) value=I))]))])")]
     [InlineData("BEGIN x := arr_t(1 => 'x', OTHERS => 'z'); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression choice=1 value='x')) (Argument value=(QualifiedExpression others value='z'))]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR_T] arguments=[(Argument value=(QualifiedExpression choice=1 value='x')) (Argument value=(QualifiedExpression others value='z'))]))])")]
     [InlineData("BEGIN x := arr(1); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR] arguments=[(Argument value=1)]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(FunctionCall name=[ARR] arguments=[(Argument value=1)]))])")]
     public void QualifiedExpressions(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]
     [InlineData("BEGIN arr(1)(2) := 3; END;",
-        "(Block statements=[(AssignmentStatement target=(ChainedCall target=(FunctionCall name=[ARR] arguments=[(Argument value=1)]) arguments=[(Argument value=2)]) value=3)])")]
+        "(BlockStatement statements=[(AssignmentStatement target=(ChainedCall target=(FunctionCall name=[ARR] arguments=[(Argument value=1)]) arguments=[(Argument value=2)]) value=3)])")]
     [InlineData("BEGIN x := f(x)(y); END;",
-        "(Block statements=[(AssignmentStatement target=X value=(ChainedCall target=(FunctionCall name=[F] arguments=[(Argument value=X)]) arguments=[(Argument value=Y)]))])")]
+        "(BlockStatement statements=[(AssignmentStatement target=X value=(ChainedCall target=(FunctionCall name=[F] arguments=[(Argument value=X)]) arguments=[(Argument value=Y)]))])")]
     public void ChainedCallsInPlsql(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     // ** is PL/SQL-only. Inside procedural code it parses (and binds tighter than unary minus); in SQL it is an error.
     [Theory]
-    [InlineData("BEGIN x := -a ** 2; END;", "(Block statements=[(AssignmentStatement target=X value=(- (** A 2)))])")]
-    [InlineData("BEGIN x := 2 ** 3; END;", "(Block statements=[(AssignmentStatement target=X value=(** 2 3))])")]
-    [InlineData("DECLARE c CONSTANT NUMBER := 2 ** 3; BEGIN NULL; END;", "(Block hasDeclare declarations=[(VariableDeclaration name=C constant type=(DataType name=NUMBER) default=(** 2 3))] statements=[(NullStatement)])")]
-    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=[(NamedTable name=[DUAL])]) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(Block statements=[(ReturnStatement value=(** 2 3))]))])")]
+    [InlineData("BEGIN x := -a ** 2; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(- (** A 2)))])")]
+    [InlineData("BEGIN x := 2 ** 3; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(** 2 3))])")]
+    [InlineData("DECLARE c CONSTANT NUMBER := 2 ** 3; BEGIN NULL; END;", "(BlockStatement hasDeclare declarations=[(VariableDeclaration name=C constant type=(DataType name=NUMBER) default=(** 2 3))] statements=[(NullStatement)])")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=[(NamedTable name=[DUAL])]) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(** 2 3))]))])")]
     public void ExponentInPlsql(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]

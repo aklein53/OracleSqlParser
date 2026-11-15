@@ -7,7 +7,7 @@ public sealed partial class SqlScriptGenerator
         // ---------- script ----------
 
         private static bool IsPlsqlUnit(Statement st) =>
-            st is Block or CreateProgramStatement or CreatePackageStatement or CreatePackageBodyStatement or CreateTriggerStatement
+            st is BlockStatement or CreateProgramStatement or CreatePackageStatement or CreatePackageBodyStatement or CreateTriggerStatement
                 or CreateTypeStatement or CreateTypeBodyStatement;
 
         private void Script(SqlScript sc)
@@ -18,7 +18,7 @@ public sealed partial class SqlScriptGenerator
                 if (!first) Add("\n");
                 first = false;
                 Statement(st);
-                if (st is SqlPlusCommand) continue;
+                if (st is SqlPlusCommandStatement) continue;
                 if (st is CreateJavaStatement { SourceText: not null })
                 {
                     // the Java source runs to a '/' line: required even without SqlPlusSlashAfterPlsql
@@ -147,7 +147,7 @@ public sealed partial class SqlScriptGenerator
                     else if (ec.Body is ProcedureCallStatement pcs) Expr(pcs.Call);
                     else throw Unsupported(ec.Body);
                     break;
-                case SqlPlusCommand sp2:
+                case SqlPlusCommandStatement sp2:
                     Add(sp2.Command);
                     if (sp2.Arguments.Count > 0)
                     {

@@ -6,7 +6,16 @@ namespace OracleSqlParser;
 // is listed in COVERAGE.md.
 // ======================================================================
 
-/// <summary>One item of a token tree: a fragment of SQL kept as written when no typed node models it.</summary>
+/// <summary>
+/// One item of a token tree: a fragment of SQL kept as written when no typed node models it.
+/// </summary>
+/// <remarks>
+/// Token trees are the documented fallback for long-tail syntax (the properties named <c>Syntax</c>, <c>Body</c>,
+/// <c>OtherClauses</c>, <c>FeatureSyntax</c>, <c>OtherProperties</c> and so on, plus the generic
+/// <see cref="CreateObjectStatement"/>, <see cref="AlterObjectStatement"/> and <see cref="AdminStatement"/>). They keep
+/// every token, so the tree still round-trips through <see cref="SqlScriptGenerator"/>, but their shape is not a typed
+/// model: match on the typed nodes first and treat token trees as opaque text. COVERAGE.md lists what is still a token tree.
+/// </remarks>
 public abstract partial class SyntaxItem : SqlNode { }
 
 /// <summary>An unquoted keyword/identifier (Value upper-cased) or a quoted identifier.</summary>

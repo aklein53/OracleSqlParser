@@ -39,9 +39,6 @@ public abstract partial class SqlNode
     /// <summary>Direct child nodes, in property declaration order (nested lists are flattened). Generated per node type; no reflection.</summary>
     public virtual IEnumerable<SqlNode> GetChildren() => [];
 
-    /// <summary>Direct child nodes, in property declaration order (nested lists are flattened).</summary>
-    public IEnumerable<SqlNode> Children() => GetChildren();
-
     /// <summary>Calls <c>visitor.ExplicitVisit(this)</c> (the typed overload for this node's concrete type).</summary>
     public virtual void Accept(SqlNodeVisitor visitor) => visitor.Visit(this);
 
@@ -133,20 +130,6 @@ public abstract partial class SqlNode
         if (a.Count != b.Count) return false;
         for (int i = 0; i < a.Count; i++) if (!PairList(a[i], b[i], pending)) return false;
         return true;
-    }
-}
-
-/// <summary>
-/// LEGACY visitor: one untyped <c>Visit(SqlNode)</c> that recurses through <see cref="SqlNode.Children"/>.
-/// Prefer <see cref="SqlNodeVisitor"/> (typed <c>Visit(T)</c> / <c>ExplicitVisit(T)</c> callbacks, ScriptDom's model).
-/// Kept for backward compatibility.
-/// </summary>
-public abstract class SqlVisitor
-{
-    /// <summary>Visits <paramref name="node"/>; the default visits every child. Call the base to keep descending.</summary>
-    public virtual void Visit(SqlNode node)
-    {
-        foreach (var c in node.Children()) Visit(c);
     }
 }
 

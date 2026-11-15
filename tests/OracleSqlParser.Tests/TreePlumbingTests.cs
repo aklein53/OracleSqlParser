@@ -73,20 +73,6 @@ public class TreePlumbingTests
         Assert.Equal(script.Descendants().Count(), c.Count);
     }
 
-    [Fact]
-    public void LegacySqlVisitor_StillWorks()
-    {
-        var script = Shape.Parse("SELECT a FROM t");
-        var seen = new List<string>();
-        new LegacyCollector(seen).Visit(script);
-        Assert.Contains("NamedTable", seen);
-    }
-
-    private sealed class LegacyCollector(List<string> seen) : SqlVisitor
-    {
-        public override void Visit(SqlNode node) { seen.Add(node.GetType().Name); base.Visit(node); }
-    }
-
     // ---------- rewriter ----------
 
     private sealed class TableToSubquery : SqlNodeRewriter

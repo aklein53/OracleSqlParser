@@ -24,7 +24,7 @@ public sealed partial class SqlParser
         return labels;
     }
 
-    private Block ParseBlock()
+    private BlockStatement ParseBlock()
     {
         using var _ = SetContext(true);
         Enter();
@@ -33,11 +33,11 @@ public sealed partial class SqlParser
         return r;
     }
 
-    private Block ParseBlockCore()
+    private BlockStatement ParseBlockCore()
     {
         var start = Cur;
         var labels = ParseLabels();
-        var b = new Block { Labels = labels };
+        var b = new BlockStatement { Labels = labels };
         if (AcceptKw("DECLARE"))
         {
             b.HasDeclare = true;
@@ -48,7 +48,7 @@ public sealed partial class SqlParser
     }
 
     /// <summary>Parses BEGIN ... [EXCEPTION ...] END [name] into the block.</summary>
-    private void ParseBlockStatements(Block b)
+    private void ParseBlockStatements(BlockStatement b)
     {
         ExpectKw("BEGIN");
         b.Statements = ParseStatements(AtBlockEnd);
@@ -58,10 +58,10 @@ public sealed partial class SqlParser
     }
 
     /// <summary>Body after IS/AS of a subprogram: declarations then BEGIN ... END.</summary>
-    private Block ParseSubprogramBody()
+    private BlockStatement ParseSubprogramBody()
     {
         var start = Cur;
-        var b = new Block();
+        var b = new BlockStatement();
         b.Declarations = ParseDeclarations(() => IsKw("BEGIN"));
         ParseBlockStatements(b);
         return Fin(b, start);

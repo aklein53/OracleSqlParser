@@ -267,8 +267,8 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
-    /// <summary>Rewrites a <see cref="Block"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
-    public virtual SqlNode? Rewrite(Block node)
+    /// <summary>Rewrites a <see cref="BlockStatement"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(BlockStatement node)
     {
         node.RewriteChildren(this);
         return node;
@@ -1814,8 +1814,8 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
-    /// <summary>Rewrites a <see cref="SqlPlusCommand"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
-    public virtual SqlNode? Rewrite(SqlPlusCommand node)
+    /// <summary>Rewrites a <see cref="SqlPlusCommandStatement"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(SqlPlusCommandStatement node)
     {
         node.RewriteChildren(this);
         return node;

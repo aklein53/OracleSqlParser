@@ -10,26 +10,29 @@ public sealed class ParseResult
     /// The exact text that was parsed. Node <see cref="SqlNode.Start"/>/<see cref="SqlNode.End"/> offsets and
     /// <see cref="Token.Start"/>/<see cref="Token.End"/> index into this string. Empty for a result not produced by <see cref="SqlParser.Parse(string)"/>.
     /// </summary>
-    public string Source { get; init; } = string.Empty;
+    public string Source { get; internal init; } = string.Empty;
 
     /// <summary>The statements that parsed. Statements that failed are omitted, so the script can be partial when <see cref="Errors"/> is not empty.</summary>
-    public SqlScript Script { get; init; } = new();
+    public SqlScript Script { get; internal init; } = new();
 
     /// <summary>
     /// Every lexical, syntax and version diagnostic, in the order found. Lexical errors come first, then syntax
     /// errors, then version errors. Each carries a stable <see cref="ParseError.Code"/>.
     /// </summary>
-    public IReadOnlyList<ParseError> Errors { get; init; } = [];
+    public IReadOnlyList<ParseError> Errors { get; internal init; } = [];
 
     /// <summary>
     /// Every token the lexer produced, in source order, including optimizer hints that the parser does not use and
     /// the final EOF token. Each token's <see cref="Token.LeadingTrivia"/> holds the whitespace and comments before it.
     /// Node <c>FirstTokenIndex</c>/<c>LastTokenIndex</c> are indexes into this list.
     /// </summary>
-    public IReadOnlyList<Token> Tokens { get; init; } = [];
+    public IReadOnlyList<Token> Tokens { get; internal init; } = [];
 
     /// <summary>True when there are no diagnostics at all, including version diagnostics.</summary>
     public bool Success => Errors.Count == 0;
+
+    /// <summary>Created by the parser only, so a consumer cannot fabricate a result whose token indexes do not match its source.</summary>
+    internal ParseResult() { }
 }
 
 /// <summary>Recursive-descent parser for Oracle SQL (queries and DML) producing an AST.</summary>
@@ -397,7 +400,7 @@ public sealed partial class SqlParser
                 // A statement that contains a lexical error (already reported) is unreliable: drop it.
                 int from = _t[startIdx].Start, to = Prev.End;
                 if (!_lexErrors.Any(e => e.Offset >= from && e.Offset <= to)) script.Statements.Add(st);
-                if (st is not SqlPlusCommand && !(st is ExecStatement && Cur.Line > Prev.Line) && Cur.Type != TokenType.EOF && !IsOp(";") && !IsOp("/"))
+                if (st is not SqlPlusCommandStatement && !(st is ExecStatement && Cur.Line > Prev.Line) && Cur.Type != TokenType.EOF && !IsOp(";") && !IsOp("/"))
                     throw Fail($"Unexpected {Describe(Cur)}");
             }
             catch (ParseException ex) { failure = ex; }

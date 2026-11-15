@@ -2335,7 +2335,7 @@ public partial class BindVariable
     }
 }
 
-public partial class Block
+public partial class BlockStatement
 {
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
@@ -2357,10 +2357,10 @@ public partial class Block
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteList(rewriter, Declarations, "Block.Declarations");
-        SqlNodeRewriter.RewriteList(rewriter, Statements, "Block.Statements");
-        SqlNodeRewriter.RewriteList(rewriter, Handlers, "Block.Handlers");
-        EndName = SqlNodeRewriter.RewriteOptional(rewriter, EndName, "Block.EndName");
+        SqlNodeRewriter.RewriteList(rewriter, Declarations, "BlockStatement.Declarations");
+        SqlNodeRewriter.RewriteList(rewriter, Statements, "BlockStatement.Statements");
+        SqlNodeRewriter.RewriteList(rewriter, Handlers, "BlockStatement.Handlers");
+        EndName = SqlNodeRewriter.RewriteOptional(rewriter, EndName, "BlockStatement.EndName");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -2380,7 +2380,7 @@ public partial class Block
 
     internal override SqlNode CloneCore()
     {
-        var c = new Block
+        var c = new BlockStatement
         {
             HasDeclare = HasDeclare,
             Declarations = CloneList(Declarations),
@@ -2395,7 +2395,7 @@ public partial class Block
 
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
-        var o = (Block)other;
+        var o = (BlockStatement)other;
         return HasDeclare == o.HasDeclare
             && PairList(Declarations, o.Declarations, pending)
             && PairList(Statements, o.Statements, pending)
@@ -15920,7 +15920,7 @@ public partial class SetTransactionStatement
     }
 }
 
-public partial class SqlPlusCommand
+public partial class SqlPlusCommandStatement
 {
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
@@ -15936,7 +15936,7 @@ public partial class SqlPlusCommand
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteList(rewriter, Arguments, "SqlPlusCommand.Arguments");
+        SqlNodeRewriter.RewriteList(rewriter, Arguments, "SqlPlusCommandStatement.Arguments");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -15953,7 +15953,7 @@ public partial class SqlPlusCommand
 
     internal override SqlNode CloneCore()
     {
-        var c = new SqlPlusCommand
+        var c = new SqlPlusCommandStatement
         {
             Command = Command,
             Arguments = CloneList(Arguments),
@@ -15965,7 +15965,7 @@ public partial class SqlPlusCommand
 
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
-        var o = (SqlPlusCommand)other;
+        var o = (SqlPlusCommandStatement)other;
         return Command == o.Command
             && PairList(Arguments, o.Arguments, pending)
             && SameStrings(Labels, o.Labels);

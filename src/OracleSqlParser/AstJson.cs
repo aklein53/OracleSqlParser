@@ -13,7 +13,7 @@ namespace OracleSqlParser;
 public static class AstJson
 {
     /// <summary>Maximum JSON nesting depth written or read.</summary>
-    public const int MaxDepth = 1_000_000;
+    private const int MaxDepth = 1_000_000;
 
     /// <summary>Serializes <paramref name="node"/> to a JSON string. <paramref name="includePositions"/> adds the source span fields; <paramref name="indented"/> selects multi-line output.</summary>
     public static string Serialize(SqlNode node, bool includePositions = false, bool indented = true)

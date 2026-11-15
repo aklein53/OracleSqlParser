@@ -239,7 +239,7 @@ public class RobustnessTests
         Assert.Equal(2, r.Errors[0].Line);
         Assert.Equal(8, r.Errors[0].Column);
         Assert.Equal(2, r.Script.Statements.Count);
-        Assert.Contains("SELECT 3", SqlWriter.ToSql(r.Script.Statements[1]).ToUpperInvariant());
+        Assert.Contains("SELECT 3", Shape.Sql(r.Script.Statements[1]).ToUpperInvariant());
     }
 
     [Fact]
@@ -289,7 +289,7 @@ public class RobustnessTests
     public void MethodCall_RoundTripsThroughWriter()
     {
         var script = Shape.Parse("SELECT UTL_HTTP.REQUEST('http://x').foo(1) AS x FROM orders");
-        var sql = SqlWriter.ToSql(script.Statements[0]);
+        var sql = Shape.Sql(script.Statements[0]);
         Assert.Contains(".FOO(1)", sql.ToUpperInvariant());
         Assert.Contains("UTL_HTTP", sql.ToUpperInvariant());
     }

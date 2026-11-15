@@ -481,7 +481,7 @@ public sealed partial class ExecStatement : Statement
 }
 
 /// <summary>A SQL*Plus client command (SET, SPOOL, DEFINE, @script, PROMPT, REM, VARIABLE, WHENEVER, ...). Never sent to the server.</summary>
-public sealed partial class SqlPlusCommand : Statement
+public sealed partial class SqlPlusCommandStatement : Statement
 {
     /// <summary>The command text as written, such as <c>PROMPT hello</c>.</summary>
     public string Command { get; set; } = "";
@@ -796,7 +796,7 @@ public sealed partial class CreateContextStatement : Statement
 // ---------- CREATE / ALTER TABLESPACE ----------
 
 /// <summary>The kind of tablespace.</summary>
-public enum TablespaceType
+public enum TablespaceKind
 {
     /// <summary><c>PERMANENT</c>.</summary>
     Permanent,
@@ -859,7 +859,7 @@ public sealed partial class CreateTablespaceStatement : Statement
     /// <summary>BIGFILE (true) or SMALLFILE (false); null when neither is given.</summary>
     public bool? Bigfile { get; set; }
     /// <summary>The tablespace type, or null for a permanent tablespace written without the keyword.</summary>
-    public TablespaceType? Kind { get; set; }
+    public TablespaceKind? Kind { get; set; }
     /// <summary>True when <c>IF NOT EXISTS</c> is written.</summary>
     public bool IfNotExists { get; set; }
     /// <summary>The tablespace name.</summary>
