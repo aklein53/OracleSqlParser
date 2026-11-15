@@ -194,10 +194,10 @@ sealed class Report
 
         _cleanFiles++;
         _statementsInCleanFiles += statements;
-        RoundTrip(result.Script, display);
+        RoundTrip(result.Script, text, display);
     }
 
-    private void RoundTrip(SqlScript script, string display)
+    private void RoundTrip(SqlScript script, string source, string display)
     {
         _roundTripPresent++;
         string generated;
@@ -211,6 +211,8 @@ sealed class Report
             return;
         }
 
+        var dumpDir = Environment.GetEnvironmentVariable("RWC_DUMP");
+        if (dumpDir != null) File.WriteAllText(Path.Combine(dumpDir, display.Replace('/', '_') + ".gen.sql"), generated);
         var reparsed = SqlParser.Parse(generated, ScriptOptions);
         if (reparsed.Errors.Count > 0)
         {
@@ -234,8 +236,12 @@ sealed class Report
         {
             if (SqlNodeComparer.StructurallyEqual(before[i], after[i])) { _statementsRoundTripped++; continue; }
             fileOk = false;
+            // Show the original text and what the generator wrote for that statement (first example of each cause only).
+            var orig = Snippet(source.Substring(before[i].Start, Math.Max(0, before[i].End - before[i].Start)));
+            var gen = Snippet(new SqlScriptGenerator(new SqlScriptGeneratorOptions { SqlPlusSlashAfterPlsql = true }).Generate(before[i]));
+            // The message is the grouping text; the example shows the source and the generated text.
             AddToGroup($"RT structure {before[i].GetType().Name}", display, 0,
-                $"statement {i + 1} ({before[i].GetType().Name}) differs after generate+reparse", "");
+                "statement differs after generate+reparse", $"source [{orig}] generated [{gen}]");
         }
         if (fileOk) _roundTripFiles++;
     }
@@ -252,6 +258,12 @@ sealed class Report
         g.Files.Add(display);
         if (g.Examples.Count < 3)
             g.Examples.Add((line > 0 ? $"{display}:{line}: " : $"{display}: ") + source.Trim());
+    }
+
+    private static string Snippet(string s)
+    {
+        var flat = s.Replace("\r", "").Replace('\n', ' ');
+        return flat.Length > 160 ? flat[..160] + "..." : flat;
     }
 
     private static string ReadText(string path, out bool fallback)

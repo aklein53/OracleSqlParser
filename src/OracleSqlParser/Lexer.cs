@@ -166,7 +166,8 @@ public sealed class Lexer
             t = t with { LeadingTrivia = _trivia.ToArray() };
             _trivia.Clear();
         }
-        if (t.Line != _lineHeadLine) { _lineHead = t; _lineHeadLine = t.Line; }
+        // The first real token of a line is its head. A synthesized ';' (zero width) takes the line of the text after it, so it is skipped here.
+        if (t.End > t.Start && t.Line != _lineHeadLine) { _lineHead = t; _lineHeadLine = t.Line; }
         if (_sqlPlusScript) TrackStatement(t);
         _prev = t;
         return t;

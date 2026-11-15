@@ -202,6 +202,16 @@ public class DmlAndSessionShapeTests
         Assert.Contains("&&ut3_owner._cbac_role", printed);
     }
 
+    // A synthesized ';' after a blank line must not become the head of the next line: '@&d' after a DEFINE line is still a command.
+    [Fact]
+    public void SqlPlusScript_FileRunAfterBlankLineAndDefine()
+    {
+        var r = SqlParser.Parse("@a.sql\n\nDEFINE d = 1\n@&d\n", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("(SqlPlusCommand command=@ arguments=[(LiteralItem kind=String value=&d)])",
+            r.Script.Statements.Select(st => AstPrinter.Print(st)));
+    }
+
     // SQL*Plus script reading (ParseOptions.SqlPlusScript): a '-' at the end of a line continues the command, and a blank
     // line ends an unterminated statement unless SET SQLBLANKLINES ON. Plain SQL keeps both as ordinary text.
     [Fact]
