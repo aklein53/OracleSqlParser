@@ -248,7 +248,7 @@ public sealed partial class SqlParser
             if (IsOp("[")) { if (_plsql) throw Fail("Array steps are not valid in PL/SQL expressions (PLS-00103)", ParseErrorCodes.InvalidCombination); e = ParseSubscripts(e, start); }
             else if (e is CellReference or ChainedCall && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
             else if (e is FunctionCall or CellReference or ChainedCall or MethodCall && IsOp("(")) e = ParseChainedCall(e, start);
-            else if (e is CastExpression { Kind: CastKind.Treat } && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
+            else if (e is CastExpression { Kind: CastKind.Treat or CastKind.GeneralizedInvocation } && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier) e = ParseMemberChain(e, start);
             else if (IsKw("AT") && (IsKwAt(1, "TIME") || IsKwAt(1, "LOCAL")))
             {
                 Next();
@@ -321,13 +321,13 @@ public sealed partial class SqlParser
                     }
                     if (AcceptOp(")")) return Fin(new ExpressionList(), start);
                     var first = ParseExpr();
-                    // (expr AS type) is a downcast written in parentheses, as in (SELF AS sub_t).method(): the same as TREAT(expr AS type)
+                    // (expr AS type) in parentheses is generalized invocation, as in (SELF AS parent_t).method() (not TREAT: no dynamic dispatch)
                     if (IsKw("AS"))
                     {
                         Next();
-                        var downcast = ParseDataType();
+                        var named = ParseDataType();
                         ExpectOp(")");
-                        return Fin(new CastExpression { Kind = CastKind.Treat, Value = first, Type = downcast }, start);
+                        return Fin(new CastExpression { Kind = CastKind.GeneralizedInvocation, Value = first, Type = named }, start);
                     }
                     if (IsOp(","))
                     {
@@ -398,7 +398,7 @@ public sealed partial class SqlParser
                     throw FailExpected("Expected constructor call after NEW", "constructor call");
                 }
             }
-            if (Reserved.Contains(Cur.Value) && !ExpressionKeywords.Contains(Cur.Value))
+            if (IsReservedHere(Cur.Value) && !ExpressionKeywords.Contains(Cur.Value))
                 throw Fail($"Unexpected keyword {Cur.Text}");
         }
         return ParseNameOrFunction();
@@ -468,7 +468,7 @@ public sealed partial class SqlParser
     {
         // An attributed reference continues too: SQL%BULK_EXCEPTIONS.COUNT is a member of SQL%BULK_EXCEPTIONS.
         int prog114 = -1;
-        while ((result is FunctionCall or MethodCall or MemberAccess or CellReference or ChainedCall or CastExpression { Kind: CastKind.Treat } || result is ColumnReference { Attribute: not null }) && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog114))
+        while ((result is FunctionCall or MethodCall or MemberAccess or CellReference or ChainedCall or CastExpression { Kind: CastKind.Treat or CastKind.GeneralizedInvocation } || result is ColumnReference { Attribute: not null }) && IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog114))
         {
             Next();
             var m = ParseIdentifier();

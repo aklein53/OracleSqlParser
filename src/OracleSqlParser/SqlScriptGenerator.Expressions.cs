@@ -281,6 +281,11 @@ public sealed partial class SqlScriptGenerator
 
         private void Cast(CastExpression c)
         {
+            if (c.Kind == CastKind.GeneralizedInvocation)
+            {
+                Add("("); Expr(c.Value); Add(" AS "); Type(c.Type!); Add(")");
+                return;
+            }
             string fn = c.Kind switch { CastKind.XmlCast => "XMLCAST", CastKind.Treat => "TREAT", CastKind.ValidateConversion => "VALIDATE_CONVERSION", CastKind.XmlSerialize => "XMLSERIALIZE", _ => "CAST" };
             Add(fn + "(");
             if (c.Kind == CastKind.XmlSerialize)

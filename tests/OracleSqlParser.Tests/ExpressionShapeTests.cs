@@ -223,13 +223,16 @@ public class ExpertStressRegressionTests
         Assert.Contains("&&ut3_owner.ut_pkg.f(1)", printed);
     }
 
-    // (expr AS type) is a downcast written in parentheses, as in (SELF AS sub_t).method(); it is TREAT(expr AS type).
+    // (expr AS type) is generalized invocation: it calls the supertype's method, so it is NOT TREAT (which dispatches dynamically).
     [Fact]
-    public void ParenthesizedDowncastIsTreat()
+    public void ParenthesizedDowncastIsGeneralizedInvocation()
     {
         var shape = Shape.Of("BEGIN l_result := (self as ut_matcher).run_matcher(a_actual); END;");
-        Assert.Contains("kind=Treat", shape);
+        Assert.Contains("kind=GeneralizedInvocation", shape);
         Assert.Contains("(MethodCall", shape);
+        Assert.DoesNotContain("kind=Treat", shape);
+        var r = SqlParser.Parse("BEGIN l_result := (self as ut_matcher).run_matcher(a_actual); END;");
+        Assert.Contains("(self AS UT_MATCHER).run_matcher(", new SqlScriptGenerator().Generate(r.Script));
     }
 
     // XMLSERIALIZE's AS type is optional; the trailing [NO] INDENT is a flag clause.

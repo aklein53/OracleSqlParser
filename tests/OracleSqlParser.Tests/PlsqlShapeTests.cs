@@ -291,6 +291,11 @@ BEGIN NULL; END;");
     public void FileIsAnOrdinaryIdentifier() =>
         Assert.True(SqlParser.Parse("DECLARE file NUMBER := 1; BEGIN file := file + 1; END;").Success);
 
+    // ... but in SQL it stays reserved: Oracle 23 rejects SELECT 1 file FROM dual and CREATE TABLE file (ORA-00923 / ORA-00903).
+    [Fact]
+    public void FileIsReservedInSql() =>
+        Assert.False(SqlParser.Parse("SELECT 1 file FROM dual").Success);
+
     [Fact]
     public void TypeBody() =>
         Assert.Equal(

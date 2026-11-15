@@ -243,6 +243,26 @@ public class DmlAndSessionShapeTests
         Assert.True(SqlParser.Parse("SELECT 1-\n2 FROM dual").Success);
     }
 
+    // A '$' or '!' that starts a command line is the SQL*Plus host command (the rest of the line is an operating-system command);
+    // '!=' and '$name' are not.
+    [Fact]
+    public void SqlPlus_HostShellEscapeTakesRestOfLine()
+    {
+        var r = SqlParser.Parse("$ del params.sql.tmp\nSELECT 1 FROM dual WHERE 1\n!= 2", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal("(SqlPlusCommand command=$ arguments=[(LiteralItem kind=String value=del params.sql.tmp)])", AstPrinter.Print(r.Script.Statements[0]));
+        Assert.Equal(2, r.Script.Statements.Count);
+    }
+
+    // In PL/SQL a '-' at a line end is still a minus (checked on Oracle 23: v := 5 - newline 3 gives 2).
+    [Fact]
+    public void SqlPlusScript_HyphenInsidePlsqlIsAMinus()
+    {
+        var r = SqlParser.Parse("DECLARE\n  v NUMBER;\nBEGIN\n  v := 5 -\n3;\nEND;\n/", new ParseOptions { SqlPlusScript = true });
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains("5 - 3", new SqlScriptGenerator().Generate(r.Script));
+    }
+
     [Fact]
     public void SqlPlusScript_BlankLineEndsAnUnterminatedStatement()
     {

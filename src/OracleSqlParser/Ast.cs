@@ -942,6 +942,9 @@ public enum CastKind
     ValidateConversion,
     /// <summary><c>XMLSERIALIZE</c>.</summary>
     XmlSerialize,
+    /// <summary>The parenthesized downcast <c>(expr AS type)</c>, as in <c>(SELF AS parent_t).method()</c>: generalized invocation
+    /// calls the named supertype's method without dynamic dispatch, which <c>TREAT</c> does not do.</summary>
+    GeneralizedInvocation,
 }
 
 /// <summary>CAST / XMLCAST / TREAT / VALIDATE_CONVERSION (all of the form f(expr AS type ...)).</summary>

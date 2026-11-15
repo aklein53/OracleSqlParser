@@ -358,6 +358,12 @@ public sealed partial class SqlParser
         "VALUES","VARCHAR","VARCHAR2","VIEW","WHENEVER","WHERE","WITH",
     };
 
+    /// <summary>Reserved in SQL but an ordinary name in PL/SQL (checked on Oracle 23: a PL/SQL variable may be called file).</summary>
+    private static readonly HashSet<string> SqlOnlyReserved = new(StringComparer.Ordinal) { "FILE" };
+
+    /// <summary>True when the word is reserved in the current context: <see cref="Reserved"/>, plus the SQL-only words outside PL/SQL.</summary>
+    private bool IsReservedHere(string word) => Reserved.Contains(word) || (!_plsql && SqlOnlyReserved.Contains(word));
+
     /// <summary>Reserved words that nevertheless act as value expressions.</summary>
     private static readonly HashSet<string> ExpressionKeywords = new(StringComparer.Ordinal)
     {
@@ -374,7 +380,7 @@ public sealed partial class SqlParser
 
     private bool CanBeImplicitAlias(Token t) =>
         t.Type == TokenType.QuotedIdentifier ||
-        (t.Type == TokenType.Identifier && !Reserved.Contains(t.Value) && !ClauseWords.Contains(t.Value));
+        (t.Type == TokenType.Identifier && !IsReservedHere(t.Value) && !ClauseWords.Contains(t.Value));
 
     // ---- script & statements ----
 
@@ -1028,7 +1034,7 @@ public sealed partial class SqlParser
         var s = Cur;
         ReturningImage? image = null;
         var next = PeekTok();
-        bool nextStartsItem = next.Type == TokenType.QuotedIdentifier || (next.Type == TokenType.Identifier && !Reserved.Contains(next.Value));
+        bool nextStartsItem = next.Type == TokenType.QuotedIdentifier || (next.Type == TokenType.Identifier && !IsReservedHere(next.Value));
         if ((IsKw("OLD") || IsKw("NEW")) && nextStartsItem)
         {
             RequireVersion(OracleVersion.Oracle23, "RETURNING OLD/NEW", Cur);

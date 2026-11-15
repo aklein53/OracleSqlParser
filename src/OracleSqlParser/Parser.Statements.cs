@@ -14,7 +14,7 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         if (IsOp("<<") || IsKw("DECLARE") || IsKw("BEGIN")) return ParseBlock();
-        if (IsOp("@") || IsOp("@@")) return ParseSqlPlusCommand(start, Next().Value);
+        if (IsOp("@") || IsOp("@@") || IsOp("!") || IsOp("$")) return ParseSqlPlusCommand(start, Next().Value);
         if (Cur.Type != TokenType.Identifier) throw Fail($"Unsupported or unexpected statement start {Describe(Cur)}");
 
         switch (Cur.Value)
@@ -1257,9 +1257,9 @@ public sealed partial class SqlParser
             ExpectOp(")");
         }
         ParseOnCommit(st);
-        st.Attributes = ParsePhysicalAttributes(() => AtAsQuery() || (IsKw("ON") && IsKwAt(1, "COMMIT")));
+        st.Attributes = ParsePhysicalAttributes(() => AtAsQuery() || (IsKw("ON") && IsKwAt(1, "COMMIT")) || AtStatementEnd());
         ParseOnCommit(st);
-        if (!AtAsQuery() && IsKw("ON")) st.Attributes.AddRange(ParsePhysicalAttributes(AtAsQuery));
+        if (!AtAsQuery() && IsKw("ON")) st.Attributes.AddRange(ParsePhysicalAttributes(() => AtAsQuery() || AtStatementEnd()));
         if (AtAsQuery()) { Next(); st.AsQuery = ParseSelectStatement(); }
         return Fin(st, start);
     }

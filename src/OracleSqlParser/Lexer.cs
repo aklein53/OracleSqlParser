@@ -215,6 +215,16 @@ public sealed class Lexer
         if (_i >= _s.Length) return new Token(TokenType.EOF, "", _i, _i, line, col);
         char c = Cur;
 
+        // SQL*Plus host command: '$ cmd' (Windows) or '! cmd' (Unix) at the start of a command line runs the rest of the line.
+        if ((c == '!' && Peek() != '=' || c == '$' && Peek() is ' ' or '\t')
+            && _s.AsSpan(_lineStart, _i - _lineStart).Trim().IsEmpty
+            && (_prev.Text is null || _prev.Type == TokenType.String || _prev is { Type: TokenType.Operator, Text: ";" or "/" }
+                || (_lineHead.Text is not null && SqlParser.SqlPlusCommands.Contains(_lineHead.Value))))
+        {
+            Advance();
+            _pendingRest = true;
+            return Make(TokenType.Operator, start, line, col);
+        }
         // SQL*Plus '@file' / '@@file' at the start of a line: the rest of the line is the file name, taken verbatim.
         // Read it as one raw string (like PROMPT) so that '/*' or '--' in a path is not lexed as a comment. Only where a
         // command can start: after ';', '/', a raw string, or a SQL*Plus command line. After an SQL line, '@' starts a
@@ -312,7 +322,7 @@ public sealed class Lexer
             return new Token(TokenType.Operator, ";", start, _i, line, col);
         }
         // SQL*Plus line continuation: a '-' that ends its line joins the next line (both the hyphen and the line break go).
-        if (c == '-' && _sqlPlusScript && LineEndsAt(_i + 1))
+        if (c == '-' && _sqlPlusScript && !_plsqlUnit && LineEndsAt(_i + 1))
         {
             Advance();
             return NextCore();
