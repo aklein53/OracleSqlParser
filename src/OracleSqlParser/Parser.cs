@@ -397,7 +397,7 @@ public sealed partial class SqlParser
                 // A statement that contains a lexical error (already reported) is unreliable: drop it.
                 int from = _t[startIdx].Start, to = Prev.End;
                 if (!_lexErrors.Any(e => e.Offset >= from && e.Offset <= to)) script.Statements.Add(st);
-                if (st is not SqlPlusCommand && !(st is ExecStatement && Cur.Line > Prev.Line) && Cur.Type != TokenType.EOF && !IsOp(";") && !IsOp("/"))
+                if (st is not SqlPlusCommandStatement && !(st is ExecStatement && Cur.Line > Prev.Line) && Cur.Type != TokenType.EOF && !IsOp(";") && !IsOp("/"))
                     throw Fail($"Unexpected {Describe(Cur)}");
             }
             catch (ParseException ex) { failure = ex; }

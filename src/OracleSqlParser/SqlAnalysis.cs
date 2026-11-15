@@ -438,7 +438,7 @@ public static class SqlAnalysis
             node.On?.Accept(this);
         }
 
-        public override void ExplicitVisit(Block node) => WithDeclared(node.Declarations.OfType<VariableDeclaration>().Select(d => d.Name.Value), () => base.ExplicitVisit(node));
+        public override void ExplicitVisit(BlockStatement node) => WithDeclared(node.Declarations.OfType<VariableDeclaration>().Select(d => d.Name.Value), () => base.ExplicitVisit(node));
 
         public override void ExplicitVisit(SubprogramDeclaration node) => WithDeclared(node.Parameters.OfType<Parameter>().Select(p => p.Name.Value), () => base.ExplicitVisit(node));
 

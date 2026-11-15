@@ -27,7 +27,7 @@ public sealed partial class SqlScriptGenerator
         // ---------- blocks ----------
 
         /// <summary>[DECLARE decls] BEGIN statements [EXCEPTION handlers] END [name]; with <paramref name="afterIs"/> the intro (IS) is already printed.</summary>
-        private void BlockBody(Block b, bool afterIs)
+        private void BlockBody(BlockStatement b, bool afterIs)
         {
             bool intro = afterIs;
             if (!afterIs && (b.HasDeclare || b.Declarations.Count > 0)) { Add("DECLARE"); intro = true; }
@@ -289,7 +289,7 @@ public sealed partial class SqlScriptGenerator
         {
             switch (st)
             {
-                case Block b: BlockBody(b, false); break;
+                case BlockStatement b: BlockBody(b, false); break;
                 case CreateProgramStatement cp:
                     Add("CREATE");
                     if (cp.OrReplace) Add(" OR REPLACE");

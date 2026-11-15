@@ -852,15 +852,15 @@ public sealed partial class SqlParser
         }
     }
 
-    private DualityAnnotation ParseDualityWord()
+    private DualityAnnotationKind ParseDualityWord()
     {
         var w = Next().Value;
-        if (w == "NO") return Next().Value == "CHECK" ? DualityAnnotation.NoCheck : DualityAnnotation.NoEtag;
+        if (w == "NO") return Next().Value == "CHECK" ? DualityAnnotationKind.NoCheck : DualityAnnotationKind.NoEtag;
         return w switch
         {
-            "INSERT" => DualityAnnotation.Insert, "UPDATE" => DualityAnnotation.Update, "DELETE" => DualityAnnotation.Delete,
-            "NOINSERT" => DualityAnnotation.NoInsert, "NOUPDATE" => DualityAnnotation.NoUpdate, "NODELETE" => DualityAnnotation.NoDelete,
-            "NOCHECK" => DualityAnnotation.NoCheck, "ETAG" => DualityAnnotation.Etag, _ => DualityAnnotation.NoEtag,
+            "INSERT" => DualityAnnotationKind.Insert, "UPDATE" => DualityAnnotationKind.Update, "DELETE" => DualityAnnotationKind.Delete,
+            "NOINSERT" => DualityAnnotationKind.NoInsert, "NOUPDATE" => DualityAnnotationKind.NoUpdate, "NODELETE" => DualityAnnotationKind.NoDelete,
+            "NOCHECK" => DualityAnnotationKind.NoCheck, "ETAG" => DualityAnnotationKind.Etag, _ => DualityAnnotationKind.NoEtag,
         };
     }
 

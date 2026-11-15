@@ -378,11 +378,11 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
-    /// <summary>Called for a <see cref="Block"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
-    public virtual void Visit(Block node) => Visit((SqlNode)node);
+    /// <summary>Called for a <see cref="BlockStatement"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(BlockStatement node) => Visit((SqlNode)node);
 
-    /// <summary>Entry point for a <see cref="Block"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
-    public virtual void ExplicitVisit(Block node)
+    /// <summary>Entry point for a <see cref="BlockStatement"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(BlockStatement node)
     {
         Visit(node);
         node.AcceptChildren(this);
@@ -2588,11 +2588,11 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
-    /// <summary>Called for a <see cref="SqlPlusCommand"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
-    public virtual void Visit(SqlPlusCommand node) => Visit((SqlNode)node);
+    /// <summary>Called for a <see cref="SqlPlusCommandStatement"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(SqlPlusCommandStatement node) => Visit((SqlNode)node);
 
-    /// <summary>Entry point for a <see cref="SqlPlusCommand"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
-    public virtual void ExplicitVisit(SqlPlusCommand node)
+    /// <summary>Entry point for a <see cref="SqlPlusCommandStatement"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(SqlPlusCommandStatement node)
     {
         Visit(node);
         node.AcceptChildren(this);

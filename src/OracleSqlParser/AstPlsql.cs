@@ -3,7 +3,7 @@ namespace OracleSqlParser;
 // ---------- Blocks ----------
 
 /// <summary>An anonymous or nested PL/SQL block: <c>[DECLARE ...] BEGIN ... [EXCEPTION ...] END [name]</c>.</summary>
-public sealed partial class Block : Statement
+public sealed partial class BlockStatement : Statement
 {
     /// <summary>True when the block starts with <c>DECLARE</c>, even when it declares nothing.</summary>
     public bool HasDeclare { get; set; }
@@ -507,7 +507,7 @@ public sealed partial class SubprogramDeclaration : Declaration
     /// <summary>The subprogram options, such as <c>AUTHID</c> or <c>DETERMINISTIC</c>, or null when absent.</summary>
     public ProgramOptions? Options { get; set; }
     /// <summary>The body after <c>IS</c> or <c>AS</c>, or null for a declaration without a body.</summary>
-    public Block? Body { get; set; }
+    public BlockStatement? Body { get; set; }
     /// <summary>The external call specification after <c>LANGUAGE</c>, or null when absent.</summary>
     public ExternalCall? External { get; set; }
 }
@@ -700,7 +700,7 @@ public sealed partial class CreateTriggerStatement : Statement
     /// <summary>The <c>WHEN</c> condition, or null when absent.</summary>
     public Expression? When { get; set; }
     /// <summary>The block of a simple trigger, or null when the trigger calls a procedure or is compound.</summary>
-    public Block? Body { get; set; }
+    public BlockStatement? Body { get; set; }
     /// <summary>The <c>CALL</c> statement of a trigger that calls a procedure, or null when absent.</summary>
     public CallStatement? Call { get; set; }
     /// <summary>True for a <c>COMPOUND TRIGGER</c>.</summary>

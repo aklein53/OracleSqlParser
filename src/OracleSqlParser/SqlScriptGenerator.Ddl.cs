@@ -96,7 +96,7 @@ public sealed partial class SqlScriptGenerator
                 case CreateTablespaceStatement ct:
                     Add("CREATE");
                     if (ct.Bigfile != null) Add(ct.Bigfile.Value ? " BIGFILE" : " SMALLFILE");
-                    if (ct.Kind != null) Add(ct.Kind == TablespaceType.Temporary ? " TEMPORARY" : ct.Kind == TablespaceType.Undo ? " UNDO" : "");
+                    if (ct.Kind != null) Add(ct.Kind == TablespaceKind.Temporary ? " TEMPORARY" : ct.Kind == TablespaceKind.Undo ? " UNDO" : "");
                     Add(" TABLESPACE");
                     if (ct.IfNotExists) Add(" IF NOT EXISTS");
                     Sp(); Id(ct.Name);

@@ -68,7 +68,7 @@ public sealed partial class SqlParser
     private Statement ParseSqlPlusCommand(Token start, string command)
     {
         if (command == "@") { Next(); if (IsOp("@")) { Next(); command = "@@"; } }
-        var cmd = new SqlPlusCommand { Command = command };
+        var cmd = new SqlPlusCommandStatement { Command = command };
         cmd.Arguments = ParseSyntaxItems(() => Cur.Line != start.Line || IsOp(";"));
         return Fin(cmd, start);
     }
@@ -718,7 +718,7 @@ public sealed partial class SqlParser
 
     // ---- CREATE / ALTER TABLESPACE ----
 
-    private Statement ParseCreateTablespace(Token start, bool orReplace, bool pub, bool? bigfile, TablespaceType? kind)
+    private Statement ParseCreateTablespace(Token start, bool orReplace, bool pub, bool? bigfile, TablespaceKind? kind)
     {
         if (orReplace || pub) throw Fail("OR REPLACE and PUBLIC do not apply to CREATE TABLESPACE", ParseErrorCodes.InvalidCombination);
         var ifNotExists = TryIfNotExists();
@@ -1140,7 +1140,7 @@ public sealed partial class SqlParser
         bool orReplace = false, unique = false, bitmap = false, pub = false, andResolve = false, andCompile = false, noForce = false;
         bool force = false, editioning = false, gtt = false, ptt = false, dup = false, imm = false, blk = false, useCase = false, shared = false;
         bool? bigfile = null;
-        TablespaceType? tsType = null;
+        TablespaceKind? tsType = null;
         EditionableKind? editionable = null;
         int prog22 = -1;
         while (Progress(ref prog22))
@@ -1162,8 +1162,8 @@ public sealed partial class SqlParser
             else if (IsKw("BITMAP")) { Next(); bitmap = true; }
             else if (IsKw("SHARED") && (IsKwAt(1, "PUBLIC") || IsKwAt(1, "DATABASE"))) { Next(); shared = true; }
             else if ((IsKw("BIGFILE") || IsKw("SMALLFILE")) && (IsKwAt(1, "TABLESPACE") || IsKwAt(1, "TEMPORARY") || IsKwAt(1, "UNDO"))) { bigfile = Next().Value == "BIGFILE"; }
-            else if (IsKw("TEMPORARY") && IsKwAt(1, "TABLESPACE")) { Next(); tsType = TablespaceType.Temporary; }
-            else if (IsKw("UNDO") && IsKwAt(1, "TABLESPACE")) { Next(); tsType = TablespaceType.Undo; }
+            else if (IsKw("TEMPORARY") && IsKwAt(1, "TABLESPACE")) { Next(); tsType = TablespaceKind.Temporary; }
+            else if (IsKw("UNDO") && IsKwAt(1, "TABLESPACE")) { Next(); tsType = TablespaceKind.Undo; }
             else if (IsKw("PUBLIC")) { Next(); pub = true; }
             else break;
         }

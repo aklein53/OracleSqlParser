@@ -43,7 +43,7 @@ public sealed partial class JsonArrayConstructor : Expression
 }
 
 /// <summary>A JSON relational duality view annotation written after a table, as in <c>WITH INSERT UPDATE DELETE</c>.</summary>
-public enum DualityAnnotation
+public enum DualityAnnotationKind
 {
     /// <summary><c>WITH INSERT</c>: rows can be inserted through the view.</summary>
     Insert,
@@ -69,7 +69,7 @@ public enum DualityAnnotation
 public sealed partial class DualityAnnotationItem : SqlNode
 {
     /// <summary>The annotation written.</summary>
-    public DualityAnnotation Kind { get; set; }
+    public DualityAnnotationKind Kind { get; set; }
 }
 
 /// <summary>CREATE [OR REPLACE] JSON [RELATIONAL] DUALITY VIEW v AS SELECT JSON {...} FROM ... (SQL form; the GraphQL form is not modelled).</summary>

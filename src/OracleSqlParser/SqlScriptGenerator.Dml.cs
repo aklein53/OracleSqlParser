@@ -22,7 +22,7 @@ public sealed partial class SqlScriptGenerator
                 case CommitStatement or RollbackStatement or SavepointStatement or SetTransactionStatement or SetConstraintsStatement
                     or SetRoleStatement or AlterSessionStatement or CallStatement or ExplainPlanStatement or LockTableStatement
                     or TruncateStatement or CommentStatement or GrantStatement or RenameStatement or PurgeStatement
-                    or FlashbackTableStatement or ExecStatement or SqlPlusCommand or AdminStatement:
+                    or FlashbackTableStatement or ExecStatement or SqlPlusCommandStatement or AdminStatement:
                     AdminLike(st); break;
                 // generic and typed DDL
                 case AlterIndexStatement ai: AlterIndex(ai); break;
@@ -42,7 +42,7 @@ public sealed partial class SqlScriptGenerator
                     or CreateAuditPolicyStatement or AlterAuditPolicyStatement or AuditStatement:
                     Ddl(st); break;
                 // PL/SQL
-                case Block or CreateProgramStatement or CreatePackageStatement or CreatePackageBodyStatement or CreateTriggerStatement
+                case BlockStatement or CreateProgramStatement or CreatePackageStatement or CreatePackageBodyStatement or CreateTriggerStatement
                     or CreateTypeStatement or CreateTypeBodyStatement or NullStatement or AssignmentStatement or ProcedureCallStatement
                     or IfStatement or PlsqlCaseStatement or LoopStatement or ExitStatement or ContinueStatement or GotoStatement
                     or ReturnStatement or RaiseStatement or OpenStatement or FetchStatement or CloseStatement
