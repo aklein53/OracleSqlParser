@@ -25,4 +25,9 @@ public static class Shape
     }
 
     public static string Expr(string sql) => AstPrinter.Print(SqlParser.ParseExpression(sql));
+
+    private static readonly SqlScriptGenerator Normalizer = new(new SqlScriptGeneratorOptions { IdentifierCasing = IdentifierCasing.Uppercase });
+
+    /// <summary>Single-line SQL with upper-case keywords and unquoted identifiers (the normalized form the guard prints).</summary>
+    public static string Sql(SqlNode node) => Normalizer.Generate(node);
 }

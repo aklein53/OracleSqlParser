@@ -120,6 +120,9 @@ public sealed record GuardedSql(string Sql, IReadOnlyList<string> BindNames);
 [Experimental("PLSQLGUARD001")]
 public static class QueryGuard
 {
+    /// <summary>Prints the rewritten query in normalized form: single line, upper-case keywords and unquoted identifiers.</summary>
+    private static readonly SqlScriptGenerator Normalizer = new(new SqlScriptGeneratorOptions { IdentifierCasing = IdentifierCasing.Uppercase });
+
     private static readonly HashSet<string> StructuralFunctions = new(StringComparer.OrdinalIgnoreCase) { "ROLLUP", "CUBE", "GROUPING SETS" };
 
     /// <summary>Checks a user-supplied query against the policy. Empty result means it is acceptable.</summary>
@@ -287,7 +290,7 @@ public static class QueryGuard
         var result = new SelectStatement { Body = outer };
         HoistOrderBy(user, result, outNames);
 
-        var sql = SqlWriter.ToSql(result);
+        var sql = Normalizer.Generate(result);
         // The printed SQL must be a single valid SELECT; guards against writer/parser drift.
         var check = SqlParser.Parse(sql);
         if (!check.Success || check.Script.Statements.Count != 1 || check.Script.Statements[0] is not SelectStatement)

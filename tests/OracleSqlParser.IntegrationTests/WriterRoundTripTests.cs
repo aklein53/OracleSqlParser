@@ -3,7 +3,7 @@ using Xunit;
 namespace OracleSqlParser.IntegrationTests;
 
 /// <summary>
-/// For each curated query: run the original on Oracle (proves the test SQL is valid), parse + print it with SqlWriter,
+/// For each curated query: run the original on Oracle (proves the test SQL is valid), parse + print it with SqlScriptGenerator,
 /// run the printed SQL, and require identical column names and identical rows in identical order.
 /// </summary>
 [Collection(OracleCollection.Name)]
@@ -106,7 +106,7 @@ public class WriterRoundTripTests(OracleFixture db)
 
         var parsed = SqlParser.Parse(sql);
         Assert.True(parsed.Success, $"parser rejected: {string.Join("; ", parsed.Errors)}");
-        var printed = SqlWriter.ToSql(parsed.Script.Statements[0]);
+        var printed = new SqlScriptGenerator().Generate(parsed.Script.Statements[0]);
 
         ResultSet reprinted;
         try { reprinted = await OracleFixture.QueryAsync(conn, printed, binds); }

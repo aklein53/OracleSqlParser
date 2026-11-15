@@ -45,7 +45,7 @@ string json = AstJson.Serialize(result.Script, includePositions: true);
 
 - `SqlParser.Parse` handles multi-statement scripts (`;` or `/`), collects errors and resyncs at the next `;`.
 - `SqlParser.ParseStatement`, `ParseExpression` and `ParseSelect` throw `ParseException` instead; the others in the table below never throw.
-- Every `SqlNode` has `Start`/`End`/`Line`/`Column`, `Children()` and `Descendants()`; subclass `SqlNodeVisitor` to walk (see below; `SqlVisitor` is the legacy untyped visitor). Spans are set by the parser; nodes you build in code have zero spans.
+- Every `SqlNode` has `Start`/`End`/`Line`/`Column`, `GetChildren()` and `Descendants()`; subclass `SqlNodeVisitor` to walk (see below). Spans are set by the parser; nodes you build in code have zero spans.
 - Unquoted identifiers are upper-cased in `Identifier.Value`; quoted ones keep case (`Quoted = true`).
 
 SQL*Plus scripts: `&name` and `&&name` are substitution variables by default. A `SET DEFINE OFF` line (or `SET DEF OFF`) turns substitution off for the rest of the input, so `&` is then ordinary text, as it already is inside string literals; `SET DEFINE ON` turns it back on, and `SET DEFINE <char>` (for example `SET DEFINE ^`) makes that character the prefix instead. Only a `SET` that starts a line and is followed by nothing but the value counts, so `UPDATE t SET define = 1` is unaffected. For plain SQL that is not a script, `new ParseOptions { SubstitutionEnabled = false }` turns substitution off from the start.
@@ -194,8 +194,7 @@ Limitations:
 - Without `IncludeSemicolons` a multi-statement script no longer parses (statements are only separated by newlines).
 - Some purely optional spellings are not stored and are normalised: `ASC`, `VIRTUAL`, `1..3` vs `1 .. 3`, `RETURN`/`RETURNING`, `JSON DUALITY VIEW` as `JSON RELATIONAL DUALITY VIEW`, `PIPELINED ROW POLYMORPHIC`.
 
-`SqlWriter.ToSql(node)` remains as a thin compatibility facade: compact output, upper-case keywords and upper-case unquoted
-identifiers (it is not marked `[Obsolete]` so that dependent code builds without warnings). New code should use `SqlScriptGenerator`.
+For a compact, normalised single line (upper-case keywords and unquoted identifiers), use `new SqlScriptGenerator(new SqlScriptGeneratorOptions { IdentifierCasing = IdentifierCasing.Uppercase }).Generate(node)`.
 
 ## Examining and editing trees
 

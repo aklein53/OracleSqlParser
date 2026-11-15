@@ -4,7 +4,7 @@ using Xunit;
 
 namespace OracleSqlParser.Tests;
 
-public class SqlWriterTests
+public class CompactOutputTests
 {
     private static IEnumerable<string> SmokeQueries()
     {
@@ -24,7 +24,7 @@ public class SqlWriterTests
     public void RoundTrip_PreservesTree(string sql)
     {
         var first = Shape.Parse(sql).Statements[0];
-        var printed = SqlWriter.ToSql(first);
+        var printed = Shape.Sql(first);
         var reparsed = SqlParser.Parse(printed);
         Assert.True(reparsed.Success, $"printed SQL does not parse: {printed}\n{string.Join("; ", reparsed.Errors)}");
         Assert.Equal(AstPrinter.Print(first), AstPrinter.Print(reparsed.Script.Statements[0]));
@@ -42,7 +42,7 @@ public class SqlWriterTests
     [InlineData("SELECT N'abc' FROM dual", "SELECT N'abc' FROM DUAL")]
     [InlineData("SELECT /*+ FULL(t) */ a FROM t", "SELECT /*+ FULL(t) */ A FROM T")]
     [InlineData("SELECT a - -1 FROM t", "SELECT A - -1 FROM T")]
-    public void ExactOutput(string sql, string expected) => Assert.Equal(expected, SqlWriter.ToSql(Shape.Parse(sql).Statements[0]));
+    public void ExactOutput(string sql, string expected) => Assert.Equal(expected, Shape.Sql(Shape.Parse(sql).Statements[0]));
 
     [Fact]
     public void Precedence_ParenthesesAddedForEditedTrees()
@@ -51,20 +51,20 @@ public class SqlWriterTests
         var user = SqlParser.ParseExpression("a = 1 OR b = 2");
         var access = SqlParser.ParseExpression("tenant_id = :t");
         var combined = new BinaryExpression { Left = user, Operator = "AND", Right = access };
-        Assert.Equal("(A = 1 OR B = 2) AND TENANT_ID = :t", SqlWriter.ToSql(combined));
+        Assert.Equal("(A = 1 OR B = 2) AND TENANT_ID = :t", Shape.Sql(combined));
 
         var neg = new UnaryExpression { Operator = "NOT", Operand = user };
-        Assert.Equal("NOT (A = 1 OR B = 2)", SqlWriter.ToSql(neg));
+        Assert.Equal("NOT (A = 1 OR B = 2)", Shape.Sql(neg));
         var sub = new BinaryExpression { Left = SqlParser.ParseExpression("a"), Operator = "-", Right = SqlParser.ParseExpression("b - c") };
-        Assert.Equal("A - (B - C)", SqlWriter.ToSql(sub));
+        Assert.Equal("A - (B - C)", Shape.Sql(sub));
     }
 
     [Fact]
     public void WithFunction_IsPrinted() =>
         Assert.Equal("WITH FUNCTION F RETURN NUMBER IS BEGIN RETURN 1; END; SELECT F FROM DUAL",
-            SqlWriter.ToSql(Shape.Parse("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; SELECT f FROM dual").Statements[0]));
+            Shape.Sql(Shape.Parse("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; SELECT f FROM dual").Statements[0]));
 
     [Fact]
     public void NonQueryStatements_ArePrintedByTheFacade() =>
-        Assert.Equal("DELETE FROM T", SqlWriter.ToSql(Shape.Parse("DELETE FROM t").Statements[0]));
+        Assert.Equal("DELETE FROM T", Shape.Sql(Shape.Parse("DELETE FROM t").Statements[0]));
 }
