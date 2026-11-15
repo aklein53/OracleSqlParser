@@ -32,6 +32,14 @@ public sealed partial class SqlScriptGenerator
         private void Type(DataType dt)
         {
             if (dt.Ref) Add("REF ");
+            // A user-defined or anchored name is printed from its parts, so quoting and dot boundaries survive.
+            if (dt.NameParts.Count > 0)
+            {
+                Name(dt.NameParts);
+                if (dt.Attribute != null) { Add("%").Add(dt.Attribute); return; }
+                if (dt.Arguments.Count > 0) TypeArguments(dt);
+                return;
+            }
             if (dt.Attribute != null) { Add(dt.Name).Add("%").Add(dt.Attribute); return; }
             // name words: the parenthesized arguments follow the first word group that precedes WITH/TO/etc.
             var words = dt.Name.Split(' ');
@@ -49,12 +57,18 @@ public sealed partial class SqlScriptGenerator
                     Add("(").ExprC(dt.Arguments[1]).Add(")");
                     return;
                 }
-                Add("(");
-                Sep(dt.Arguments, a => Expr(a));
-                if (dt.Semantics != null) Add(dt.Semantics == CharSemantics.Char ? " CHAR" : " BYTE");
-                Add(")");
+                TypeArguments(dt);
             }
             if (argAt < words.Length) Add(" " + string.Join(" ", words.Skip(argAt)));
+        }
+
+        /// <summary>The parenthesized length, precision or scale arguments, with CHAR or BYTE semantics when given.</summary>
+        private void TypeArguments(DataType dt)
+        {
+            Add("(");
+            Sep(dt.Arguments, a => Expr(a));
+            if (dt.Semantics != null) Add(dt.Semantics == CharSemantics.Char ? " CHAR" : " BYTE");
+            Add(")");
         }
 
         private Printer ExprC(Expression e) { Expr(e); return this; }

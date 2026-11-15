@@ -6446,17 +6446,20 @@ public partial class DataType
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Arguments is not null) foreach (var x in Arguments) yield return x;
+        if (NameParts is not null) foreach (var x in NameParts) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Arguments is not null) foreach (var x in Arguments) x.Accept(visitor);
+        if (NameParts is not null) foreach (var x in NameParts) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Arguments, "DataType.Arguments");
+        SqlNodeRewriter.RewriteList(rewriter, NameParts, "DataType.NameParts");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -6466,6 +6469,7 @@ public partial class DataType
         new("Semantics", Semantics),
         new("Attribute", Attribute),
         new("Ref", Ref),
+        new("NameParts", NameParts),
     ];
 
     /// <inheritdoc/>
@@ -6482,6 +6486,7 @@ public partial class DataType
             Semantics = Semantics,
             Attribute = Attribute,
             Ref = Ref,
+            NameParts = CloneList(NameParts),
         };
         CopySpan(this, c);
         return c;
@@ -6494,7 +6499,8 @@ public partial class DataType
             && PairList(Arguments, o.Arguments, pending)
             && Semantics == o.Semantics
             && Attribute == o.Attribute
-            && Ref == o.Ref;
+            && Ref == o.Ref
+            && PairList(NameParts, o.NameParts, pending);
     }
 }
 

@@ -29,14 +29,14 @@ BEGIN NULL; END;");
         Assert.Equal(
             "[(VariableDeclaration name=V_N type=(DataType name=NUMBER) default=0) " +
             "(VariableDeclaration name=C_MAX constant type=(DataType name=PLS_INTEGER) default=10) " +
-            "(VariableDeclaration name=V_NAME type=(DataType name=EMP.ENAME attribute=TYPE)) " +
-            "(VariableDeclaration name=R type=(DataType name=EMP attribute=ROWTYPE)) " +
+            "(VariableDeclaration name=V_NAME type=(DataType name=EMP.ENAME attribute=TYPE nameParts=[EMP ENAME])) " +
+            "(VariableDeclaration name=R type=(DataType name=EMP attribute=ROWTYPE nameParts=[EMP])) " +
             "(ExceptionDeclaration name=E_BAD) " +
             "(PragmaDeclaration name=EXCEPTION_INIT arguments=[E_BAD (Minus 20001)]) " +
             "(CursorDeclaration name=C1 parameters=[(Parameter name=P type=(DataType name=NUMBER))] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))) " +
             "(CollectionTypeDeclaration name=T_TAB kind=Table elementType=(DataType name=NUMBER) indexBy=(DataType name=PLS_INTEGER)) " +
             "(RecordTypeDeclaration name=T_REC fields=[(VariableDeclaration name=A type=(DataType name=NUMBER)) (VariableDeclaration name=B type=(DataType name=VARCHAR2 arguments=[10]) notNull default='x')]) " +
-            "(RefCursorTypeDeclaration name=T_CUR returnType=(DataType name=EMP attribute=ROWTYPE)) " +
+            "(RefCursorTypeDeclaration name=T_CUR returnType=(DataType name=EMP attribute=ROWTYPE nameParts=[EMP])) " +
             "(CollectionTypeDeclaration name=T_VA kind=Varray limit=5 elementType=(DataType name=VARCHAR2 arguments=[3]) notNull) " +
             "(SubtypeDeclaration name=SMALL baseType=(DataType name=NUMBER arguments=[3]) rangeLow=1 rangeHigh=10 notNull)]",
             AstPrinter.Print(b.Declarations));
@@ -196,7 +196,7 @@ BEGIN NULL; END;");
             "(CreateProgramStatement orReplace subprogram=(SubprogramDeclaration name=[P] parameters=[" +
             "(Parameter name=A mode=In type=(DataType name=NUMBER)) " +
             "(Parameter name=B mode=InOut noCopy type=(DataType name=VARCHAR2) default='x') " +
-            "(Parameter name=C mode=Out type=(DataType name=T))] " +
+            "(Parameter name=C mode=Out type=(DataType name=T nameParts=[T]))] " +
             "body=(BlockStatement declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=P)))",
             Shape.Of("CREATE OR REPLACE PROCEDURE p (a IN NUMBER, b IN OUT NOCOPY VARCHAR2 DEFAULT 'x', c OUT t) AS v NUMBER; BEGIN NULL; END p;"));
 
@@ -272,12 +272,12 @@ BEGIN NULL; END;");
     [InlineData("CREATE TYPE addr AS OBJECT (street VARCHAR2(30), zip NUMBER, MEMBER FUNCTION full RETURN VARCHAR2, STATIC PROCEDURE sp, CONSTRUCTOR FUNCTION addr (SELF IN OUT addr) RETURN SELF AS RESULT) NOT FINAL",
         "(CreateTypeStatement name=[ADDR] kind=Object final=false attributes=[(VariableDeclaration name=STREET type=(DataType name=VARCHAR2 arguments=[30])) (VariableDeclaration name=ZIP type=(DataType name=NUMBER))] " +
         "members=[(SubprogramDeclaration isFunction modifiers=Member name=[FULL] returnType=(DataType name=VARCHAR2)) (SubprogramDeclaration modifiers=Static name=[SP]) " +
-        "(SubprogramDeclaration isFunction modifiers=Constructor name=[ADDR] parameters=[(Parameter name=SELF mode=InOut type=(DataType name=ADDR))] returnSelfAsResult)])")]
+        "(SubprogramDeclaration isFunction modifiers=Constructor name=[ADDR] parameters=[(Parameter name=SELF mode=InOut type=(DataType name=ADDR nameParts=[ADDR]))] returnSelfAsResult)])")]
     [InlineData("CREATE TYPE nums AS TABLE OF NUMBER", "(CreateTypeStatement name=[NUMS] kind=Table elementType=(DataType name=NUMBER))")]
     [InlineData("CREATE OR REPLACE TYPE nums AS TABLE OF NUMBER (10)\n/\nSELECT 1 FROM dual",
         "(CreateTypeStatement orReplace name=[NUMS] kind=Table elementType=(DataType name=NUMBER arguments=[10])) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))")]
     [InlineData("CREATE TYPE fwd; CREATE TYPE fwd2 OID '82A4AF6A4CD9656DE034080020E0EE3D';", "(CreateTypeStatement name=[FWD] kind=Incomplete) ; (CreateTypeStatement name=[FWD2] kind=Incomplete oid='82A4AF6A4CD9656DE034080020E0EE3D')")]
-    [InlineData("CREATE TYPE t AS TABLE OF REF category_typ", "(CreateTypeStatement name=[T] kind=Table elementType=(DataType name=CATEGORY_TYP ref))")]
+    [InlineData("CREATE TYPE t AS TABLE OF REF category_typ", "(CreateTypeStatement name=[T] kind=Table elementType=(DataType name=CATEGORY_TYP ref nameParts=[CATEGORY_TYP]))")]
     [InlineData("CREATE TYPE v AS VARRAY(10) OF VARCHAR2(5)", "(CreateTypeStatement name=[V] kind=Varray elementType=(DataType name=VARCHAR2 arguments=[5]) limit=10)")]
     [InlineData("CREATE TYPE sub UNDER addr (extra NUMBER) FINAL INSTANTIABLE", "(CreateTypeStatement name=[SUB] kind=Under final=true instantiable=true attributes=[(VariableDeclaration name=EXTRA type=(DataType name=NUMBER))] superType=[ADDR])")]
     [InlineData("CREATE TYPE t FORCE OID '123' AUTHID DEFINER AS OBJECT (a NUMBER) NOT PERSISTABLE",

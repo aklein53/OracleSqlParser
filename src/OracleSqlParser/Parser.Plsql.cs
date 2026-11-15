@@ -583,7 +583,7 @@ public sealed partial class SqlParser
             else { ep.Kind = ExternalParameterKind.Named; ep.Name = ParseIdentifier(); }
             ep.Property = TryParseExternalProperty();
             if (IsKw("BY")) { Next(); ExpectKw("REFERENCE"); ep.ByReference = true; }
-            if (Cur.Type == TokenType.Identifier && !IsOp(",")) ep.Type = ParseDataType();
+            if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier && !IsOp(",")) ep.Type = ParseDataType();
         }
         return Fin(ep, s);
     }

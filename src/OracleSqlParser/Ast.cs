@@ -1146,7 +1146,11 @@ public enum CharSemantics
 /// <summary>A data type, such as <c>NUMBER(10,2)</c> or <c>VARCHAR2(10 CHAR)</c>.</summary>
 public sealed partial class DataType : SqlNode
 {
-    /// <summary>E.g. "VARCHAR2", "NUMBER", "TIMESTAMP WITH TIME ZONE", or a dotted user-defined type.</summary>
+    /// <summary>
+    /// The type name as text: "VARCHAR2", "NUMBER", "TIMESTAMP WITH TIME ZONE", or the dotted user-defined or anchored name
+    /// (e.g. "HR.MY_TYPE", "T.C"). Names are normalized and carry no quotes, so a quoted name such as "ab" reads as AB here.
+    /// Use <see cref="NameParts"/> when the quoting or the dot boundaries of a user-defined name matter.
+    /// </summary>
     public string Name { get; set; } = "";
     /// <summary>Parenthesized length/precision/scale arguments (numbers, or * for NUMBER(*,2)).</summary>
     public List<Expression> Arguments { get; set; } = [];
@@ -1156,6 +1160,13 @@ public sealed partial class DataType : SqlNode
     public string? Attribute { get; set; }
     /// <summary>True for <c>REF object_type</c>: a reference to a row of <see cref="Name"/>.</summary>
     public bool Ref { get; set; }
+    /// <summary>
+    /// The parts of a user-defined or anchored name, schema first, each with its quoting (for example <c>HR</c> and
+    /// <c>"my type"</c> for <c>HR."my type"</c>, or <c>T</c> and <c>"c"</c> for <c>t."c"%TYPE</c>). Empty for a built-in type
+    /// such as <c>VARCHAR2</c>, <c>NUMBER</c> or <c>TIMESTAMP WITH TIME ZONE</c>, for which <see cref="Name"/> is the whole
+    /// type. Prefer this over <see cref="Name"/> when the spelling of a user-defined name must be preserved.
+    /// </summary>
+    public List<Identifier> NameParts { get; set; } = [];
 }
 
 /// <summary>An <c>AT TIME ZONE</c> expression, such as <c>ts AT TIME ZONE 'UTC'</c>.</summary>

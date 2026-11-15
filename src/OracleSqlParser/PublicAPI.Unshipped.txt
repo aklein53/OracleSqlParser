@@ -1459,6 +1459,8 @@ OracleSqlParser.DataType.Attribute.set -> void
 OracleSqlParser.DataType.DataType() -> void
 OracleSqlParser.DataType.Name.get -> string!
 OracleSqlParser.DataType.Name.set -> void
+OracleSqlParser.DataType.NameParts.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
+OracleSqlParser.DataType.NameParts.set -> void
 OracleSqlParser.DataType.Semantics.get -> OracleSqlParser.CharSemantics?
 OracleSqlParser.DataType.Semantics.set -> void
 OracleSqlParser.Declaration

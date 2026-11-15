@@ -1346,7 +1346,8 @@ public sealed partial class SqlParser
     {
         var s = Cur;
         var cd = new ColumnDefinition { Name = ParseIdentifier() };
-        if (Cur.Type == TokenType.Identifier && !ColumnClauseWords.Contains(Cur.Value) && !AtStatementEnd())
+        // A quoted name is a type name ("ab"), never a column clause word; only an unquoted word can be one.
+        if ((Cur.Type == TokenType.QuotedIdentifier || Cur.Type == TokenType.Identifier && !ColumnClauseWords.Contains(Cur.Value)) && !AtStatementEnd())
             cd.Type = ParseDataType();
         int prog130 = -1;
         while (!IsOp(",") && !IsOp(")") && !AtStatementEnd() && !(stop?.Invoke() ?? false) && Progress(ref prog130))

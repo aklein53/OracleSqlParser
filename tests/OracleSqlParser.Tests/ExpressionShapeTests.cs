@@ -49,7 +49,7 @@ public class ExpressionShapeTests
     [InlineData("(1=1) IS NOT FALSE", "(IsExpression value=(paren (Equals 1 1)) not test=False)")]
     [InlineData("a IS TRUE AND b IS NOT TRUE", "(And (IsExpression value=A test=True) (IsExpression value=B not test=True))")]
     [InlineData("x IS JSON STRICT WITH UNIQUE KEYS", "(IsExpression value=X test=Json jsonClauses=[(FlagClause flag=Strict) (FlagClause flag=WithUniqueKeys)])")]
-    [InlineData("x IS OF (ONLY t1, t2)", "(IsExpression value=X test=OfType ofTypes=[(IsOfType only type=(DataType name=T1)) (IsOfType type=(DataType name=T2))])")]
+    [InlineData("x IS OF (ONLY t1, t2)", "(IsExpression value=X test=OfType ofTypes=[(IsOfType only type=(DataType name=T1 nameParts=[T1])) (IsOfType type=(DataType name=T2 nameParts=[T2]))])")]
     [InlineData("a MEMBER OF b", "(MemberOf A B)")]
     [InlineData("a NOT MEMBER OF b", "(NotMemberOf A B)")]
     [InlineData("a MULTISET UNION DISTINCT b", "(MultisetUnionDistinct A B)")]
@@ -66,10 +66,10 @@ public class ExpressionShapeTests
     [InlineData("CAST(b AS TIMESTAMP(6) WITH TIME ZONE)", "(CastExpression kind=Cast value=B type=(DataType name=TIMESTAMP WITH TIME ZONE arguments=[6]))")]
     [InlineData("CAST(b AS INTERVAL DAY(2) TO SECOND(6))", "(CastExpression kind=Cast value=B type=(DataType name=INTERVAL DAY TO SECOND arguments=[2 6]))")]
     [InlineData("CAST(b AS DOUBLE PRECISION)", "(CastExpression kind=Cast value=B type=(DataType name=DOUBLE PRECISION))")]
-    [InlineData("CAST(b AS hr.my_type)", "(CastExpression kind=Cast value=B type=(DataType name=HR.MY_TYPE))")]
+    [InlineData("CAST(b AS hr.my_type)", "(CastExpression kind=Cast value=B type=(DataType name=HR.MY_TYPE nameParts=[HR MY_TYPE]))")]
     [InlineData("CAST(x AS NUMBER DEFAULT 0 ON CONVERSION ERROR, '999')", "(CastExpression kind=Cast value=X type=(DataType name=NUMBER) onConversionError=(OnBehaviorClause behavior=Default value=0 event=ConversionError) format='999')")]
-    [InlineData("CAST(MULTISET(SELECT 1 FROM dual) AS t_tab)", "(CastExpression kind=Cast multiset value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))) type=(DataType name=T_TAB))")]
-    [InlineData("TREAT(x AS REF t)", "(CastExpression kind=Treat value=X ref type=(DataType name=T))")]
+    [InlineData("CAST(MULTISET(SELECT 1 FROM dual) AS t_tab)", "(CastExpression kind=Cast multiset value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))) type=(DataType name=T_TAB nameParts=[T_TAB]))")]
+    [InlineData("TREAT(x AS REF t)", "(CastExpression kind=Treat value=X ref type=(DataType name=T nameParts=[T]))")]
     [InlineData("VALIDATE_CONVERSION(x AS DATE, 'YYYY')", "(CastExpression kind=ValidateConversion value=X type=(DataType name=DATE) format='YYYY')")]
     [InlineData("XMLSERIALIZE(DOCUMENT x AS CLOB INDENT SIZE = 2)", "(CastExpression kind=XmlSerialize value=X type=(DataType name=CLOB) clauses=[(FlagClause flag=Document) (FlagClause flag=Indent) (ValueClause kind=IndentSize value=2)])")]
     [InlineData("EXTRACT(YEAR FROM d)", "(ExtractExpression field=Year source=D)")]
@@ -232,7 +232,8 @@ public class ExpertStressRegressionTests
         Assert.Contains("(MethodCall", shape);
         Assert.DoesNotContain("kind=Treat", shape);
         var r = SqlParser.Parse("BEGIN l_result := (self as ut_matcher).run_matcher(a_actual); END;");
-        Assert.Contains("(self AS UT_MATCHER).run_matcher(", new SqlScriptGenerator().Generate(r.Script));
+        // The type name is printed as typed, like the method name after the dot.
+        Assert.Contains("(self AS ut_matcher).run_matcher(", new SqlScriptGenerator().Generate(r.Script));
     }
 
     // XMLSERIALIZE's AS type is optional; the trailing [NO] INDENT is a flag clause.

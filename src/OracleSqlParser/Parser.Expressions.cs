@@ -1078,6 +1078,20 @@ public sealed partial class SqlParser
         "CHARACTER","CHAR","RAW","WITHOUT","NATIONAL",
     };
 
+    /// <summary>
+    /// The predefined type names that are built-in types, not user-defined ones: SQL data types and the PL/SQL types of
+    /// package STANDARD. Only an unquoted, undotted first word in this set makes a <see cref="DataType"/> built-in; a
+    /// built-in type has no <see cref="DataType.NameParts"/>.
+    /// </summary>
+    private static readonly HashSet<string> BuiltinTypeNames = new(StringComparer.Ordinal)
+    {
+        "CHAR","CHARACTER","NCHAR","NATIONAL","VARCHAR","VARCHAR2","NVARCHAR2","NUMBER","NUMERIC","DECIMAL","DEC",
+        "INTEGER","INT","SMALLINT","FLOAT","DOUBLE","REAL","BINARY_FLOAT","BINARY_DOUBLE","DATE","TIME","TIMESTAMP",
+        "INTERVAL","RAW","LONG","BLOB","CLOB","NCLOB","BFILE","ROWID","UROWID","JSON","VECTOR","BOOLEAN",
+        "PLS_INTEGER","BINARY_INTEGER","NATURAL","NATURALN","POSITIVE","POSITIVEN","SIGNTYPE","SIMPLE_INTEGER",
+        "SIMPLE_FLOAT","SIMPLE_DOUBLE","SYS_REFCURSOR",
+    };
+
     private DataType ParseDataType()
     {
         var start = Cur;
@@ -1089,21 +1103,28 @@ public sealed partial class SqlParser
             dt.Ref = true;
         }
         var words = new List<string>();
+        var parts = new List<Identifier>();
         var first = ParseIdentifier();
         words.Add(first.Value);
+        parts.Add(first);
         int prog120 = -1;
         while (IsOp(".") && PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier && Progress(ref prog120))
         {
             Next();
-            words[^1] += "." + ParseIdentifier().Value;
+            var part = ParseIdentifier();
+            words[^1] += "." + part.Value;
+            parts.Add(part);
         }
         if (IsOp("%") && (IsKwAt(1, "TYPE") || IsKwAt(1, "ROWTYPE")))
         {
             Next();
             dt.Attribute = Next().Value;
             dt.Name = words[0];
+            dt.NameParts = parts;
             return Fin(dt, start);
         }
+        // A user-defined name is one name group: a following word (such as WITH) is the caller's, not part of the type.
+        bool builtin = parts.Count == 1 && !first.Quoted && BuiltinTypeNames.Contains(first.Value);
         int prog9 = -1;
         while (Progress(ref prog9))
         {
@@ -1119,7 +1140,7 @@ public sealed partial class SqlParser
                 } while (AcceptOp(","));
                 ExpectOp(")");
             }
-            else if (Cur.Type == TokenType.Identifier && TypeWords.Contains(Cur.Value)) words.Add(Next().Value);
+            else if (builtin && Cur.Type == TokenType.Identifier && TypeWords.Contains(Cur.Value)) words.Add(Next().Value);
             else break;
         }
         if (!first.Quoted && words.Count == 1)
@@ -1132,6 +1153,7 @@ public sealed partial class SqlParser
             }
         }
         dt.Name = string.Join(" ", words);
+        if (!builtin) dt.NameParts = parts;
         return Fin(dt, start);
     }
 
