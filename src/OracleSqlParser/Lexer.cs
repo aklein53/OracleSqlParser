@@ -87,7 +87,7 @@ public readonly record struct Token(TokenType Type, string Text, int Start, int 
 /// tokenising continues: an unterminated string or quoted identifier ends at end-of-line (followed by a
 /// synthetic ';' so the damaged statement is delimited), an unterminated comment ends at end-of-input.
 /// </summary>
-public sealed class Lexer
+internal sealed class Lexer
 {
     private readonly string _s;
     private int _i, _line = 1, _lineStart;

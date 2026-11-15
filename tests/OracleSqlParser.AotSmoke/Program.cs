@@ -4,7 +4,7 @@ using OracleSqlParser;
 var sql = "WITH o AS (SELECT * FROM hr.orders WHERE r = :r) SELECT o.id, CASE WHEN o.x IS TRUE THEN 1 END FROM o JOIN c ON c.id = o.cid FETCH FIRST 5 ROWS ONLY";
 var r = SqlParser.Parse(sql);
 Console.WriteLine($"ok={r.Success} stmts={r.Script.Statements.Count}");
-Console.WriteLine(AstPrinter.Print(r.Script.Statements[0])[..120]);
+Console.WriteLine(new SqlScriptGenerator().Generate(r.Script.Statements[0])[..60]);
 Console.WriteLine(AstJson.Serialize(r.Script.Statements[0])[..80]);
 Console.WriteLine(new SqlScriptGenerator().Generate(r.Script));
 Console.WriteLine(string.Join(", ", SqlAnalysis.GetTables(r.Script)));
