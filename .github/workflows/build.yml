@@ -71,17 +71,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write   # create the GitHub release
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Validate tag matches csproj versions
+      - name: Validate tag matches core and CLI versions
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
           status=0
-          for csproj in src/OracleSqlParser/OracleSqlParser.csproj src/OracleSqlParser.Guard/OracleSqlParser.Guard.csproj src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj; do
+          # The tag versions the core library and the CLI. OracleSqlParser.Guard is versioned on its own (experimental, 0.x):
+          # bump its <Version> when it changes; an unchanged Guard version is skipped by --skip-duplicate.
+          for csproj in src/OracleSqlParser/OracleSqlParser.csproj src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj; do
             csproj_version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$csproj" | head -n1)
             if [ -z "$csproj_version" ]; then
               echo "::error::Could not find <Version> in $csproj"
@@ -92,6 +94,14 @@ jobs:
             fi
           done
           exit $status
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v h="## [$version]" 'index($0, h) == 1 { on = 1; next } on && /^## \[/ { exit } on { print }' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::CHANGELOG.md has no '## [$version]' section. Add release notes before tagging."
+            exit 1
+          fi
       - uses: actions/download-artifact@v4
         with:
           name: package
@@ -103,3 +113,10 @@ jobs:
           user: aklein53
       - name: Push to nuget.org
         run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --skip-duplicate
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=""
+          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md $prerelease artifacts/*.nupkg

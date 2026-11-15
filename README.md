@@ -39,7 +39,7 @@ built by the `build` job to nuget.org.
 ```csharp
 var result = SqlParser.Parse("SELECT e.name FROM emp e WHERE e.sal > :min");
 if (!result.Success) foreach (var err in result.Errors) Console.WriteLine(err); // (line:col) message
-foreach (var table in result.Script.Descendants().OfType<NamedTable>()) ...
+foreach (var table in result.Script.Descendants().OfType<NamedTable>()) Console.WriteLine(table.Name[^1].Value); // EMP
 string json = AstJson.Serialize(result.Script, includePositions: true);
 ```
 
@@ -63,6 +63,7 @@ SQL*Plus scripts: `&name` and `&&name` are substitution variables by default. A 
 
 `ParseSelect` and `TryParseSelect` accept one SELECT with an optional trailing `;` or `/`. Anything else (no statement, two statements, or an INSERT, UPDATE, DELETE or MERGE) is reported with code `PSP0008`. `ParseException.Errors` holds every diagnostic, and `ParseException.Error` the first.
 
+<!-- sample-prelude: var sql = "SELECT e.name FROM emp e"; -->
 ```csharp
 if (SqlParser.TryParseSelect(sql, out var select, out var errors))
     Console.WriteLine(select.Descendants().OfType<NamedTable>().Count());

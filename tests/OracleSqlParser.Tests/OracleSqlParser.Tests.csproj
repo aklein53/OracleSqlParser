@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- The library ships net8.0 and net10.0. CI (CI=true) runs the tests on both; locally only net10.0, so a missing
+         .NET 8 runtime does not break `dotnet test`. Run net8.0 locally with `dotnet test -p:CI=true` if it is installed. -->
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CI)' == 'true'">net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -9,6 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <!-- Compiles the README code samples (ReadmeSamplesTests). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
@@ -20,7 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OracleSqlParser\OracleSqlParser.csproj" />
-    <ProjectReference Include="..\..\tools\AstGen\AstGen.csproj" />
+    <!-- AstGen (net10.0 only) backs GeneratedCode_IsUpToDate, which does not depend on the runtime version. -->
+    <ProjectReference Include="..\..\tools\AstGen\AstGen.csproj" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
 </Project>

@@ -14,6 +14,7 @@ public class GeneratedCodeTests(Xunit.Abstractions.ITestOutputHelper output)
         throw new InvalidOperationException("repository root not found");
     }
 
+#if NET10_0_OR_GREATER
     /// <summary>Fails when a node type or property was added/changed without running <c>dotnet run --project tools/AstGen</c>.</summary>
     [Fact]
     public void GeneratedCode_IsUpToDate()
@@ -30,6 +31,7 @@ public class GeneratedCodeTests(Xunit.Abstractions.ITestOutputHelper output)
         var extra = Directory.GetFiles(dir, "*.g.cs").Select(Path.GetFileName).Except(generated.Keys).ToList();
         Assert.True(extra.Count == 0, "unexpected generated files: " + string.Join(", ", extra));
     }
+#endif
 
     internal static string AndChain(int terms) =>
         "SELECT 1 FROM dual WHERE " + string.Join(" AND ", Enumerable.Range(0, terms).Select(i => $"c{i} = {i}"));

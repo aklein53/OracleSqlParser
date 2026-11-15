@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- The library ships net8.0 and net10.0. CI (CI=true) runs the tests on both; locally only net10.0, so a missing
+         .NET 8 runtime does not break `dotnet test`. Run net8.0 locally with `dotnet test -p:CI=true` if it is installed. -->
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CI)' == 'true'">net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
