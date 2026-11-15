@@ -46,7 +46,8 @@ public class FuzzSmokeTests
                 problems.Add($"{failure.Category} [{failure.Signature}]: {Show(c)}\n{failure.Detail}");
         }
         Assert.True(problems.Count == 0, string.Join("\n\n", problems));
-        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(10), $"smoke fuzz took {clock.Elapsed}");
+        // About 3 s locally and 15 s on shared CI runners; the bound only catches a blow-up (such as a quadratic regression).
+        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(60), $"smoke fuzz took {clock.Elapsed}");
     }
 
     [Fact]
