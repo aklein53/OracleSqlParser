@@ -15,11 +15,23 @@ public static class AstJson
     /// <summary>Maximum JSON nesting depth written or read.</summary>
     public const int MaxDepth = 1_000_000;
 
-    /// <summary>Serializes <paramref name="node"/> to a JSON string. <paramref name="includePositions"/> adds the source span fields; <paramref name="indented"/> selects multi-line output.</summary>
+    /// <summary>
+    /// The deepest tree, in nodes, that is written indented. Indentation costs one level of spaces per JSON level on every
+    /// line, so an indented deep tree (a 10,000-term chain is 10,000 levels deep) would be quadratic in size and exhaust
+    /// memory. Deeper trees are written compactly, which keeps the output linear in the tree size.
+    /// </summary>
+    public const int MaxIndentedNodeDepth = 1000;
+
+    /// <summary>
+    /// Serializes <paramref name="node"/> to a JSON string. <paramref name="includePositions"/> adds the source span fields;
+    /// <paramref name="indented"/> selects multi-line output, which is written compactly for trees deeper than
+    /// <see cref="MaxIndentedNodeDepth"/> nodes.
+    /// </summary>
     public static string Serialize(SqlNode node, bool includePositions = false, bool indented = true)
     {
+        bool indent = indented && TreeShape.NestingDepth(node) <= MaxIndentedNodeDepth;
         using var ms = new MemoryStream();
-        using (var w = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = indented, MaxDepth = MaxDepth }))
+        using (var w = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = indent, MaxDepth = MaxDepth }))
             Write(w, node, includePositions);
         return Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
     }
