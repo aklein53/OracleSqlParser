@@ -101,6 +101,8 @@ public sealed class Lexer
     private char _prefix = '&';
     private int _setState; // SQL*Plus SET DEFINE detection: 1 = saw SET at line start, 2 = saw SET DEFINE
     private Token _prev; // the previous token returned by Next(), for context-sensitive ':'
+    private Token _lineHead; // the first token of the line holding _prev (SQL*Plus commands are recognised by their first word)
+    private int _lineHeadLine = -1;
 
     /// <summary>Lexical errors recorded so far (the lexer recovers and keeps going).</summary>
     public List<ParseError> Errors { get; } = [];
@@ -155,6 +157,7 @@ public sealed class Lexer
             t = t with { LeadingTrivia = _trivia.ToArray() };
             _trivia.Clear();
         }
+        if (t.Line != _lineHeadLine) { _lineHead = t; _lineHeadLine = t.Line; }
         _prev = t;
         return t;
     }
@@ -198,6 +201,19 @@ public sealed class Lexer
         if (_i >= _s.Length) return new Token(TokenType.EOF, "", _i, _i, line, col);
         char c = Cur;
 
+        // SQL*Plus '@file' / '@@file' at the start of a line: the rest of the line is the file name, taken verbatim.
+        // Read it as one raw string (like PROMPT) so that '/*' or '--' in a path is not lexed as a comment. Only where a
+        // command can start: after ';', '/', a raw string, or a SQL*Plus command line. After an SQL line, '@' starts a
+        // database link (FROM emp <newline> @remote), which stays SQL.
+        if (c == '@' && _s.AsSpan(_lineStart, _i - _lineStart).Trim().IsEmpty
+            && (_prev.Text is null || _prev.Type == TokenType.String || _prev is { Type: TokenType.Operator, Text: ";" or "/" }
+                || (_lineHead.Text is not null && SqlParser.SqlPlusCommands.Contains(_lineHead.Value))))
+        {
+            Advance();
+            if (Cur == '@') Advance();
+            _pendingRest = true;
+            return Make(TokenType.Operator, start, line, col);
+        }
         // q'[...]' / nq'[...]' alternative quoting, n'...' national strings
         if ((c is 'q' or 'Q') && Peek() == '\'' ) return QuoteString(start, line, col, 1);
         if ((c is 'n' or 'N') && (Peek() is 'q' or 'Q') && Peek(2) == '\'') return QuoteString(start, line, col, 2);

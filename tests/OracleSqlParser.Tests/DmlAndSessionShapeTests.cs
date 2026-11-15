@@ -173,12 +173,27 @@ public class DmlAndSessionShapeTests
             "(SqlPlusCommand command=SPOOL arguments=[(WordItem value=OUT) (SymbolItem symbol=.) (WordItem value=LOG)])",
             "(SqlPlusCommand command=PROMPT arguments=[(LiteralItem kind=String value=it's fine)])",
             "(SqlPlusCommand command=DEFINE arguments=[(WordItem value=X) (SymbolItem symbol==) (LiteralItem kind=Number value=5)])",
-            "(SqlPlusCommand command=@ arguments=[(WordItem value=CHILD) (SymbolItem symbol=.) (WordItem value=SQL)])",
+            "(SqlPlusCommand command=@ arguments=[(LiteralItem kind=String value=child.sql)])",
             "(SqlPlusCommand command=WHENEVER arguments=[(WordItem value=SQLERROR) (WordItem value=EXIT) (WordItem value=FAILURE) (WordItem value=ROLLBACK)])",
             "(ExecStatement body=(ProcedureCallStatement call=(FunctionCall name=[DBMS_OUTPUT PUT_LINE] arguments=[(Argument value='x')])))",
             "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(SubstitutionVariable name=x))] from=[(NamedTable name=[DUAL])]))",
         ], printed);
     }
+
+    // '@file' and '@@file' at the start of a line take the rest of the line as the file name, verbatim: '/*' in a path is not a comment.
+    [Fact]
+    public void SqlPlus_FileRun_TakesRestOfLine() =>
+        Assert.Equal(
+            "(SqlPlusCommand command=@ arguments=[(LiteralItem kind=String value=../packages/*.pks)]) ; " +
+            "(SqlPlusCommand command=@@ arguments=[(LiteralItem kind=String value=sub/x--y.sql)]) ; " +
+            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))",
+            Shape.Of("@../packages/*.pks\n@@sub/x--y.sql\nSELECT 1 FROM dual"));
+
+    // A line starting with '@' after a table name is a database link, not a SQL*Plus file run.
+    [Fact]
+    public void Line_Starting_With_At_After_Table_Is_DbLink() =>
+        Assert.Equal("(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[EMP] dbLink=[REMOTE])]))",
+            Shape.Of("SELECT * FROM emp\n@remote"));
 
     [Theory]
     [InlineData("EXEC :x := 1;", "(ExecStatement body=(AssignmentStatement target=:x value=1))")]

@@ -2,7 +2,7 @@ namespace OracleSqlParser;
 
 public sealed partial class SqlParser
 {
-    private static readonly HashSet<string> SqlPlusCommands = new(StringComparer.Ordinal)
+    internal static readonly HashSet<string> SqlPlusCommands = new(StringComparer.Ordinal)
     {
         "SET","SPOOL","DEFINE","UNDEFINE","VARIABLE","VAR","PRINT","PROMPT","REM","REMARK","WHENEVER","CONNECT","CONN",
         "DISCONNECT","DISC","EXIT","QUIT","ACCEPT","COLUMN","COL","BREAK","COMPUTE","CLEAR","DESCRIBE","DESC","SHOW",
@@ -14,7 +14,7 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         if (IsOp("<<") || IsKw("DECLARE") || IsKw("BEGIN")) return ParseBlock();
-        if (IsOp("@")) return ParseSqlPlusCommand(start, "@");
+        if (IsOp("@") || IsOp("@@")) return ParseSqlPlusCommand(start, Next().Value);
         if (Cur.Type != TokenType.Identifier) throw Fail($"Unsupported or unexpected statement start {Describe(Cur)}");
 
         switch (Cur.Value)
@@ -67,7 +67,7 @@ public sealed partial class SqlParser
 
     private Statement ParseSqlPlusCommand(Token start, string command)
     {
-        if (command == "@") { Next(); if (IsOp("@")) { Next(); command = "@@"; } }
+        if (command == "@" && IsOp("@")) { Next(); command = "@@"; } // "@@" on one line is lexed as "@" then "@" unless at line start
         var cmd = new SqlPlusCommand { Command = command };
         cmd.Arguments = ParseSyntaxItems(() => Cur.Line != start.Line || IsOp(";"));
         return Fin(cmd, start);
