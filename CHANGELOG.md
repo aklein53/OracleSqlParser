@@ -56,12 +56,17 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 - Found by fuzzing (530,000 inputs): no stack overflow when printing, generating, cloning or analysing very deep trees or
   10,000-join chains; indented JSON stays linear for deep trees; `a IN (1) IN (2)` and similar chained comparisons,
   AUDIT options, column constraints after unrecognised words, and quoted statement labels round-trip.
+- A quoted or dotted user-defined type name keeps its quoting in the generated SQL: `"ab"` no longer prints as `ab` (the
+  type AB), and `hr."my type"` and `"a.b".t` no longer lose their quotes. The parts are in the new `DataType.NameParts`;
+  `DataType.Name` is unchanged. A quoted type name is also accepted in a column definition and an external parameter.
 
 ### Changed
 - `OracleSqlParser.Guard` is versioned independently of the core library and stays 0.x while experimental.
 - Unit and Guard tests run on both net8.0 and net10.0 in CI.
 - README code samples are compiled by a unit test.
 - Tagged releases create a GitHub release with the CHANGELOG section as notes.
+- The generator prints a user-defined type name as typed under `IdentifierCasing.Preserve`, like other identifiers (it was
+  upper-cased). `IdentifierCasing.Uppercase` and `Lowercase` apply as they do to other identifiers.
 
 ## [0.7.0-preview.1] - 2026-11-14
 
