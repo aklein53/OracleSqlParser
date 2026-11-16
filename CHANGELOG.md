@@ -8,6 +8,12 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+## [1.0.0-rc.1] - 2026-11-15
+
+Release candidate for 1.0: the public API is frozen and will ship as 1.0.0 unless problems are found.
+`OracleSqlParser.Guard` 0.8.0-preview.1 is released alongside it (it no longer uses the removed `SqlWriter`; Guard 0.7
+does not work with this version of the core library).
+
 ### Changed (breaking)
 - Public API reviewed and frozen with PublicApiAnalyzers (`PublicAPI.*.txt`); any public surface change now fails the build
   until the baseline is updated.

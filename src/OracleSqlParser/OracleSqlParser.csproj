@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <PackageId>OracleSqlParser</PackageId>
-    <Version>0.7.0-preview.1</Version>
+    <Version>1.0.0-rc.1</Version>
     <Authors>aklein53</Authors>
     <Description>Oracle SQL and PL/SQL parser producing a typed AST, with a SQL script generator (SqlScriptGenerator) for every statement.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
