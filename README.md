@@ -1,6 +1,6 @@
 # OracleSqlParser
 
-A hand-written lexer and recursive-descent parser for Oracle SQL that builds an abstract syntax tree
+A lexer and recursive-descent parser for Oracle SQL that builds an abstract syntax tree
 (similar in spirit to Microsoft's `TSqlParser`/ScriptDom). Targets net8.0 and net10.0 and has no NuGet package dependencies (SourceLink is build-time only).
 
 ## Installing
@@ -149,7 +149,7 @@ it is fully typed or a typed header with a token-tree body, and the known gaps. 
 
 ## Tests
 
-`tests/OracleSqlParser.Tests` (and `tests/OracleSqlParser.Guard.Tests` for the guard): hand-written expected trees (`*ShapeTests.cs`, compared via `AstPrinter`) plus a smoke
+`tests/OracleSqlParser.Tests` (and `tests/OracleSqlParser.Guard.Tests` for the guard): explicit expected trees (`*ShapeTests.cs`, compared via `AstPrinter`) plus a smoke
 corpus (`SmokeCorpusTests.cs`) that only checks inputs parse.
 
 ## Query guard (experimental, separate package)

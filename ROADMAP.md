@@ -10,7 +10,7 @@ stream / trivia; the visitor is untyped and reflection-based; fuzzing found one 
 process-fatal recursion.
 
 Findings come from four independent reviews (DX/API, syntax coverage vs. Oracle 23 docs, security, ~6M-input
-fuzz) and were re-verified by hand where cited.
+fuzz) and were re-verified where cited.
 
 ## Epic 0 — Library robustness (table stakes) · ~1 week
 

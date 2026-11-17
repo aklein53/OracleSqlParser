@@ -2,7 +2,7 @@
 
 Definition of done: every statement in Oracle's "Types of SQL Statements" index (Oracle Database 23, SQL Language
 Reference, fetched 2026-11-10) plus the PL/SQL constructs below. Each row names the AST node and the test file
-asserting its tree shape (tests are hand-written expected trees, see `AstPrinter`).
+asserting its tree shape (tests are explicit expected trees, see `AstPrinter`).
 
 Legend: **typed** = fully modeled nodes. **header+tree** = typed header (verb, object kind, name) with the remaining
 clauses as a nested token tree (`WordItem`/`LiteralItem`/`SymbolItem`/`GroupItem`), never a raw string.
