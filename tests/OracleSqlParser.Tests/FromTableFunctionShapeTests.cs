@@ -36,7 +36,7 @@ public class FromTableFunctionShapeTests
     {
         var r = SqlParser.Parse("SELECT * FROM (pkg.match_paths(a, b)) m");
         Assert.True(r.Success, string.Join("; ", r.Errors));
-        var pt = Assert.IsType<ParenthesizedTable>(((QuerySpecification)((SelectStatement)r.Script.Statements[0]).Body).From[0]);
+        var pt = Assert.IsType<ParenthesizedTable>(((QuerySpecification)((SelectStatement)r.Script.Statements[0]).Body).From!.Tables[0]);
         Assert.IsType<TableFunction>(pt.Inner);
         Assert.Equal("m", pt.Alias!.Value.ToLowerInvariant());
     }

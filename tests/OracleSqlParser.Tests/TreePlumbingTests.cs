@@ -92,7 +92,7 @@ public class TreePlumbingTests
         var result = new TableToSubquery().RewriteTree(script);
         Assert.Same(script, result);
         var sql = Gen(script);
-        Assert.Equal(0, script.Descendants().OfType<SubqueryTable>().Count(s => s.Query.Body is QuerySpecification q && q.From[0] is SubqueryTable));
+        Assert.Equal(0, script.Descendants().OfType<SubqueryTable>().Count(s => s.Query.Body is QuerySpecification q && q.From!.Tables[0] is SubqueryTable));
         Assert.Contains("(SELECT * FROM A) x", sql);
         Assert.Contains("(SELECT * FROM B) T", sql);
         Assert.True(SqlParser.Parse(sql).Success);
@@ -104,7 +104,9 @@ public class TreePlumbingTests
         {
             base.Rewrite(node); // rewrite nested subqueries first
             var p = SqlParser.ParseExpression(predicate);
-            node.Where = node.Where is null ? p : new BinaryExpression { Left = node.Where, Operator = BinaryOperator.And, Right = p };
+            node.Where = node.Where is null
+                ? new WhereClause { Condition = p }
+                : new WhereClause { Condition = new BinaryExpression { Left = node.Where.Condition, Operator = BinaryOperator.And, Right = p } };
             return node;
         }
     }
@@ -134,7 +136,7 @@ public class TreePlumbingTests
 
     private sealed class DropWhere : SqlNodeRewriter
     {
-        public override SqlNode? Rewrite(BinaryExpression node) => null;
+        public override SqlNode? Rewrite(WhereClause node) => null;
     }
 
     [Fact]
@@ -168,7 +170,7 @@ public class TreePlumbingTests
     {
         var script = Shape.Parse("SELECT * FROM a");
         var ex = Assert.Throws<InvalidOperationException>(() => new WrongType().RewriteTree(script));
-        Assert.Contains("QuerySpecification.From", ex.Message);
+        Assert.Contains("FromClause.Tables", ex.Message);
         Assert.Contains("Literal", ex.Message);
     }
 

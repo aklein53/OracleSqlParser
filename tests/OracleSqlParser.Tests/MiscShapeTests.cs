@@ -7,9 +7,9 @@ public class MiscShapeTests
 {
     [Theory]
     [InlineData("INSERT INTO t VALUES rec", "(InsertStatement target=(NamedTable name=[T]) recordValue=REC)")]
-    [InlineData("UPDATE t SET ROW = rec WHERE id = 1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause row value=REC)] where=(Equals ID 1))")]
+    [InlineData("UPDATE t SET ROW = rec WHERE id = 1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause row value=REC)] where=(WhereClause condition=(Equals ID 1)))")]
     [InlineData("UPDATE t1 SET a = t2.a FROM t2 WHERE t1.id = t2.id",
-        "(UpdateStatement target=(NamedTable name=[T1]) set=[(SetClause columns=[A] value=T2.A)] from=[(NamedTable name=[T2])] where=(Equals T1.ID T2.ID))")]
+        "(UpdateStatement target=(NamedTable name=[T1]) set=[(SetClause columns=[A] value=T2.A)] from=(FromClause tables=[(NamedTable name=[T2])]) where=(WhereClause condition=(Equals T1.ID T2.ID)))")]
     [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN DELETE WHERE t.x = 1",
         "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeClause matched deleteWhere=(Equals T.X 1))])")]
     [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v",

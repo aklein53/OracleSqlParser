@@ -5,7 +5,7 @@ namespace OracleSqlParser.Tests;
 
 public class DmlAndSessionShapeTests
 {
-    private const string SelDual = "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))";
+    private const string SelDual = "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))";
 
     [Theory]
     [InlineData("INSERT INTO t (a, b) VALUES (1, DEFAULT) RETURNING a INTO :x",
@@ -32,11 +32,11 @@ public class DmlAndSessionShapeTests
 
     [Theory]
     [InlineData("UPDATE t SET a = 1, (b, c) = (SELECT 1, 2 FROM dual) WHERE id = 5",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1) (SetClause columns=[B C] value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=[(NamedTable name=[DUAL])]))))] where=(Equals ID 5))")]
-    [InlineData("UPDATE t SET a = 1 WHERE CURRENT OF c1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] where=(CurrentOfExpression cursor=C1))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1) (SetClause columns=[B C] value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=(FromClause tables=[(NamedTable name=[DUAL])])))))] where=(WhereClause condition=(Equals ID 5)))")]
+    [InlineData("UPDATE t SET a = 1 WHERE CURRENT OF c1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] where=(WhereClause condition=(CurrentOfExpression cursor=C1)))")]
     [InlineData("UPDATE t SET a = DEFAULT RETURNING a INTO v", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=DEFAULT)] returning=[(ReturningItem expression=A)] returningInto=[V])")]
     [InlineData("DELETE FROM t x WHERE x.a = 1 RETURNING a BULK COLLECT INTO tab",
-        "(DeleteStatement target=(NamedTable name=[T] alias=X) where=(Equals X.A 1) returning=[(ReturningItem expression=A)] returningBulkCollect returningInto=[TAB])")]
+        "(DeleteStatement target=(NamedTable name=[T] alias=X) where=(WhereClause condition=(Equals X.A 1)) returning=[(ReturningItem expression=A)] returningBulkCollect returningInto=[TAB])")]
     [InlineData("DELETE t", "(DeleteStatement target=(NamedTable name=[T]))")]
     [InlineData("UPDATE t SET a = 1 RETURNING OLD a, NEW a INTO :o, :n",
         "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=[(ReturningItem image=Old expression=A) (ReturningItem image=New expression=A)] returningInto=[:o :n])")]
@@ -45,11 +45,11 @@ public class DmlAndSessionShapeTests
     [InlineData("UPDATE t SET a = 1 RETURNING NEW SUM(a) INTO :n",
         "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=[(ReturningItem image=New expression=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] returningInto=[:n])")]
     [InlineData("UPDATE t SET t.a = u.a FROM u WHERE t.id = u.id",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[T.A] value=U.A)] from=[(NamedTable name=[U])] where=(Equals T.ID U.ID))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[T.A] value=U.A)] from=(FromClause tables=[(NamedTable name=[U])]) where=(WhereClause condition=(Equals T.ID U.ID)))")]
     [InlineData("DELETE FROM t FROM u WHERE t.id = u.id",
-        "(DeleteStatement target=(NamedTable name=[T]) from=[(NamedTable name=[U])] where=(Equals T.ID U.ID))")]
+        "(DeleteStatement target=(NamedTable name=[T]) from=(FromClause tables=[(NamedTable name=[U])]) where=(WhereClause condition=(Equals T.ID U.ID)))")]
     [InlineData("DELETE FROM t x FROM t y JOIN u ON y.id = u.id WHERE x.id = y.id",
-        "(DeleteStatement target=(NamedTable name=[T] alias=X) from=[(JoinTable left=(NamedTable name=[T] alias=Y) kind=Inner right=(NamedTable name=[U]) on=(Equals Y.ID U.ID))] where=(Equals X.ID Y.ID))")]
+        "(DeleteStatement target=(NamedTable name=[T] alias=X) from=(FromClause tables=[(JoinTable left=(NamedTable name=[T] alias=Y) kind=Inner right=(NamedTable name=[U]) on=(Equals Y.ID U.ID))]) where=(WhereClause condition=(Equals X.ID Y.ID)))")]
     [InlineData("DELETE FROM t RETURNING OLD a INTO :o",
         "(DeleteStatement target=(NamedTable name=[T]) returning=[(ReturningItem image=Old expression=A)] returningInto=[:o])")]
     public void UpdatesAndDeletes(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
@@ -57,7 +57,7 @@ public class DmlAndSessionShapeTests
     [Fact]
     public void Merge_Shape() =>
         Assert.Equal(
-            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[S])])) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
+            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
             "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)] updateWhere=(GreaterThan S.V 0) deleteWhere=(Equals T.V 0)) " +
             "(MergeClause insertColumns=[ID V] insertValues=[S.ID S.V] insertWhere=(GreaterThan S.V 1))])",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 DELETE WHERE t.v = 0 WHEN NOT MATCHED THEN INSERT (id, v) VALUES (s.id, s.v) WHERE s.v > 1")
@@ -66,7 +66,7 @@ public class DmlAndSessionShapeTests
     [Fact]
     public void Merge_LogErrors_Shape() =>
         Assert.Equal(
-            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[S])])) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
+            "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
             "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)])] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v LOG ERRORS INTO err_t ('x') REJECT LIMIT 5"));
 
@@ -176,7 +176,7 @@ public class DmlAndSessionShapeTests
             "(SqlPlusCommandStatement command=@ arguments=[(LiteralItem kind=String value=child.sql)])",
             "(SqlPlusCommandStatement command=WHENEVER arguments=[(WordItem value=SQLERROR) (WordItem value=EXIT) (WordItem value=FAILURE) (WordItem value=ROLLBACK)])",
             "(ExecStatement body=(ProcedureCallStatement call=(FunctionCall name=[DBMS_OUTPUT PUT_LINE] arguments=[(Argument value='x')])))",
-            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(SubstitutionVariable name=x))] from=[(NamedTable name=[DUAL])]))",
+            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(SubstitutionVariable name=x))] from=(FromClause tables=[(NamedTable name=[DUAL])])))",
         ], printed);
     }
 
@@ -186,7 +186,7 @@ public class DmlAndSessionShapeTests
         Assert.Equal(
             "(SqlPlusCommandStatement command=@ arguments=[(LiteralItem kind=String value=../packages/*.pks)]) ; " +
             "(SqlPlusCommandStatement command=@@ arguments=[(LiteralItem kind=String value=sub/x--y.sql)]) ; " +
-            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))",
+            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))",
             Shape.Of("@../packages/*.pks\n@@sub/x--y.sql\nSELECT 1 FROM dual"));
 
     // A substitution variable can stand for a name (CREATE USER &owner ...), and it keeps the text that continues it.
@@ -313,7 +313,7 @@ public class DmlAndSessionShapeTests
     // A line starting with '@' after a table name is a database link, not a SQL*Plus file run.
     [Fact]
     public void Line_Starting_With_At_After_Table_Is_DbLink() =>
-        Assert.Equal("(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=[(NamedTable name=[EMP] dbLink=[REMOTE])]))",
+        Assert.Equal("(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[EMP] dbLink=[REMOTE])])))",
             Shape.Of("SELECT * FROM emp\n@remote"));
 
     [Theory]

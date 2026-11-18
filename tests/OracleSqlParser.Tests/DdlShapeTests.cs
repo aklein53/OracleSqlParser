@@ -5,7 +5,7 @@ namespace OracleSqlParser.Tests;
 
 public class DdlShapeTests
 {
-    private const string SelDual = "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))";
+    private const string SelDual = "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))";
 
     [Fact]
     public void CreateTable_ColumnsAndConstraints() =>
@@ -58,7 +58,7 @@ public class DdlShapeTests
     [InlineData("CREATE TABLE IF NOT EXISTS t (a NUMBER)", "(CreateTableStatement ifNotExists name=[T] columns=[(ColumnDefinition name=A type=(DataType name=NUMBER))])")]
     [InlineData("CREATE TABLE t2 AS SELECT 1 FROM dual", "(CreateTableStatement name=[T2] asQuery=" + SelDual + ")")]
     [InlineData("CREATE TABLE t3 (a, b) AS SELECT 1, 2 FROM dual",
-        "(CreateTableStatement name=[T3] columns=[(ColumnDefinition name=A) (ColumnDefinition name=B)] asQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=[(NamedTable name=[DUAL])])))")]
+        "(CreateTableStatement name=[T3] columns=[(ColumnDefinition name=A) (ColumnDefinition name=B)] asQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))")]
     [InlineData("CREATE TABLE t OF emp_type", "(CreateTableStatement name=[T] ofType=[EMP_TYPE])")]
     [InlineData("CREATE OR REPLACE IMMUTABLE BLOCKCHAIN TABLE t (a NUMBER)", "(CreateTableStatement orReplace immutable blockchain name=[T] columns=[(ColumnDefinition name=A type=(DataType name=NUMBER))])")]
     public void CreateTable_Forms(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
@@ -104,7 +104,7 @@ public class DdlShapeTests
 
     [Theory]
     [InlineData("CREATE OR REPLACE FORCE VIEW v (a, b) AS SELECT 1, 2 FROM dual WITH READ ONLY",
-        "(CreateViewStatement orReplace force name=[V] columns=[(ViewColumn name=A) (ViewColumn name=B)] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=[(NamedTable name=[DUAL])])) readOnly)")]
+        "(CreateViewStatement orReplace force name=[V] columns=[(ViewColumn name=A) (ViewColumn name=B)] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=(FromClause tables=[(NamedTable name=[DUAL])]))) readOnly)")]
     [InlineData("CREATE VIEW v AS SELECT 1 FROM dual WITH CHECK OPTION CONSTRAINT c1", "(CreateViewStatement name=[V] query=" + SelDual + " checkOption checkOptionConstraint=C1)")]
     [InlineData("CREATE EDITIONING VIEW v BEQUEATH CURRENT_USER AS SELECT 1 FROM dual", "(CreateViewStatement editioning name=[V] bequeath=CurrentUser query=" + SelDual + ")")]
     [InlineData("CREATE MATERIALIZED VIEW mv TABLESPACE users BUILD IMMEDIATE REFRESH FAST ON COMMIT ENABLE QUERY REWRITE AS SELECT 1 FROM dual",
@@ -126,7 +126,7 @@ public class DdlShapeTests
     [InlineData("DROP TABLE IF EXISTS t CASCADE CONSTRAINTS PURGE", "(DropStatement kind=Table ifExists name=[T] cascadeConstraints purge)")]
     [InlineData("DROP PUBLIC SYNONYM s", "(DropStatement kind=Synonym public name=[S])")]
     // CREATE TABLE without ';' followed by a SQL*Plus '/' line: the '/' ends the table, it is not a trailing attribute.
-    [InlineData("CREATE TABLE t1 (a NUMBER)\n/\nSELECT 1 FROM dual;", "(CreateTableStatement name=[T1] columns=[(ColumnDefinition name=A type=(DataType name=NUMBER))]) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))")]
+    [InlineData("CREATE TABLE t1 (a NUMBER)\n/\nSELECT 1 FROM dual;", "(CreateTableStatement name=[T1] columns=[(ColumnDefinition name=A type=(DataType name=NUMBER))]) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))")]
     [InlineData("GRANT &&owner._role TO &&owner", "(GrantStatement privileges=[(GrantPrivilege name=&&owner._role)] grantees=[(Grantee name=&&OWNER)])")]
     [InlineData("DROP SEQUENCE s\n/\nBEGIN NULL; END;", "(DropStatement kind=Sequence name=[S]) ; (BlockStatement statements=[(NullStatement)])")]
     [InlineData("DROP MATERIALIZED VIEW LOG ON t", "(DropStatement kind=MaterializedViewLog onTable=[T])")]
@@ -415,7 +415,7 @@ public class DdlShapeTests
 
     [Theory]
     [InlineData("CREATE JAVA RESOURCE NAMED r USING BFILE (dir, 'f.txt')", "(CreateJavaStatement kind=Resource name=[R] usingKind=Bfile usingDirectory=DIR usingFile='f.txt')")]
-    [InlineData("CREATE JAVA CLASS NAMED c USING BLOB SELECT b FROM t", "(CreateJavaStatement kind=Class name=[C] usingKind=Blob usingQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=B)] from=[(NamedTable name=[T])])))")]
+    [InlineData("CREATE JAVA CLASS NAMED c USING BLOB SELECT b FROM t", "(CreateJavaStatement kind=Class name=[C] usingKind=Blob usingQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=B)] from=(FromClause tables=[(NamedTable name=[T])]))))")]
     [InlineData("CREATE JAVA SOURCE NAMED s RESOLVER ((* sys)) USING 'key'", "(CreateJavaStatement kind=Source name=[S] resolver=[(GroupItem items=[(GroupItem items=[(SymbolItem symbol=*) (WordItem value=SYS)])])] usingKind=Key usingKey='key')")]
     public void CreateJava_Other(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 

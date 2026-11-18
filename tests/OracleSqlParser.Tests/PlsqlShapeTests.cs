@@ -33,7 +33,7 @@ BEGIN NULL; END;");
             "(VariableDeclaration name=R type=(DataType name=EMP attribute=ROWTYPE nameParts=[EMP])) " +
             "(ExceptionDeclaration name=E_BAD) " +
             "(PragmaDeclaration name=EXCEPTION_INIT arguments=[E_BAD (Minus 20001)]) " +
-            "(CursorDeclaration name=C1 parameters=[(Parameter name=P type=(DataType name=NUMBER))] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))) " +
+            "(CursorDeclaration name=C1 parameters=[(Parameter name=P type=(DataType name=NUMBER))] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))) " +
             "(CollectionTypeDeclaration name=T_TAB kind=Table elementType=(DataType name=NUMBER) indexBy=(DataType name=PLS_INTEGER)) " +
             "(RecordTypeDeclaration name=T_REC fields=[(VariableDeclaration name=A type=(DataType name=NUMBER)) (VariableDeclaration name=B type=(DataType name=VARCHAR2 arguments=[10]) notNull default='x')]) " +
             "(RefCursorTypeDeclaration name=T_CUR returnType=(DataType name=EMP attribute=ROWTYPE nameParts=[EMP])) " +
@@ -129,7 +129,7 @@ BEGIN NULL; END;");
         "[(LoopStatement kind=While condition=(LessThan X 5) body=[(ContinueStatement label=OUTER when=(Equals X 2)) (ExitStatement label=OUTER)] endLabel=OUTER labels=[OUTER])]")]
     [InlineData("FOR i IN REVERSE 1..n LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl reverse lower=1 upper=N)] body=[(NullStatement)])]")]
     [InlineData("FOR r IN (SELECT 1 FROM dual) LOOP NULL; END LOOP;",
-        "[(LoopStatement kind=For iterands=[(ForIterand name=R)] controls=[(CursorControl query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])))] body=[(NullStatement)])]")]
+        "[(LoopStatement kind=For iterands=[(ForIterand name=R)] controls=[(CursorControl query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))] body=[(NullStatement)])]")]
     [InlineData("FOR r IN c1(5) LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=R)] controls=[(ExpressionControl value=(FunctionCall name=[C1] arguments=[(Argument value=5)]))] body=[(NullStatement)])]")]
     [InlineData("FOR i IN 1..10 BY 2 LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl lower=1 upper=10 by=2)] body=[(NullStatement)])]")]
     [InlineData("FOR i IN REVERSE 1..10 BY 2 LOOP NULL; END LOOP;", "[(LoopStatement kind=For iterands=[(ForIterand name=I)] controls=[(RangeControl reverse lower=1 upper=10 by=2)] body=[(NullStatement)])]")]
@@ -154,7 +154,7 @@ BEGIN NULL; END;");
     [InlineData("OPEN c1; OPEN c2(1, 2); CLOSE c1;",
         "[(OpenStatement cursor=C1) (OpenStatement cursor=(FunctionCall name=[C2] arguments=[(Argument value=1) (Argument value=2)])) (CloseStatement cursor=C1)]")]
     [InlineData("OPEN rc FOR SELECT a FROM t WHERE b = :x USING y;",
-        "[(OpenStatement cursor=RC forQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(Equals B :x))) using=[(UsingArgument value=Y)])]")]
+        "[(OpenStatement cursor=RC forQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=(FromClause tables=[(NamedTable name=[T])]) where=(WhereClause condition=(Equals B :x)))) using=[(UsingArgument value=Y)])]")]
     [InlineData("OPEN rc FOR 'select 1 from dual';", "[(OpenStatement cursor=RC forExpression='select 1 from dual')]")]
     [InlineData("FETCH c1 INTO a, b; FETCH c2 BULK COLLECT INTO tab LIMIT 100;",
         "[(FetchStatement cursor=C1 into=[A B]) (FetchStatement cursor=C2 bulkCollect into=[TAB] limit=100)]")]
@@ -164,7 +164,7 @@ BEGIN NULL; END;");
     [InlineData("FORALL i IN 1..tab.COUNT SAVE EXCEPTIONS INSERT INTO t VALUES (tab(i));",
         "[(ForallStatement index=I lower=1 upper=TAB.COUNT saveExceptions body=(InsertStatement target=(NamedTable name=[T]) valueRows=[[(FunctionCall name=[TAB] arguments=[(Argument value=I)])]]))]")]
     [InlineData("FORALL i IN INDICES OF tab BETWEEN 1 AND 5 DELETE FROM t WHERE id = tab(i);",
-        "[(ForallStatement index=I indicesOf=TAB betweenLow=1 betweenHigh=5 body=(DeleteStatement target=(NamedTable name=[T]) where=(Equals ID (FunctionCall name=[TAB] arguments=[(Argument value=I)]))))]")]
+        "[(ForallStatement index=I indicesOf=TAB betweenLow=1 betweenHigh=5 body=(DeleteStatement target=(NamedTable name=[T]) where=(WhereClause condition=(Equals ID (FunctionCall name=[TAB] arguments=[(Argument value=I)])))))]")]
     [InlineData("FORALL i IN VALUES OF idx UPDATE t SET a = 1;", "[(ForallStatement index=I valuesOf=IDX body=(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)]))]")]
     [InlineData("RETURN; RETURN x + 1; RAISE; RAISE my_err; GOTO done; <<done>> NULL;",
         "[(ReturnStatement) (ReturnStatement value=(Add X 1)) (RaiseStatement) (RaiseStatement exception=[MY_ERR]) (GotoStatement target=DONE) (NullStatement labels=[DONE])]")]
@@ -174,7 +174,7 @@ BEGIN NULL; END;");
         "(ProcedureCallStatement call=(FunctionCall name=[RAISE_APPLICATION_ERROR] arguments=[(Argument value=(Minus 20001)) (Argument value='bad')]))]")]
     [InlineData("COMMIT; ROLLBACK TO sp; SAVEPOINT sp;", "[(CommitStatement) (RollbackStatement toSavepoint=SP) (SavepointStatement name=SP)]")]
     [InlineData("SELECT a INTO v FROM t WHERE id = 1;",
-        "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=[(NamedTable name=[T])] where=(Equals ID 1) into=[V]))]")]
+        "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=(FromClause tables=[(NamedTable name=[T])]) where=(WhereClause condition=(Equals ID 1)) into=[V]))]")]
     [InlineData("BEGIN NULL; EXCEPTION WHEN OTHERS THEN NULL; END;",
         "[(BlockStatement statements=[(NullStatement)] handlers=[(ExceptionHandler others statements=[(NullStatement)])])]")]
     [InlineData("v := SQL%ROWCOUNT; IF c1%ISOPEN THEN NULL; END IF;",
@@ -275,7 +275,7 @@ BEGIN NULL; END;");
         "(SubprogramDeclaration isFunction modifiers=Constructor name=[ADDR] parameters=[(Parameter name=SELF mode=InOut type=(DataType name=ADDR nameParts=[ADDR]))] returnSelfAsResult)])")]
     [InlineData("CREATE TYPE nums AS TABLE OF NUMBER", "(CreateTypeStatement name=[NUMS] kind=Table elementType=(DataType name=NUMBER))")]
     [InlineData("CREATE OR REPLACE TYPE nums AS TABLE OF NUMBER (10)\n/\nSELECT 1 FROM dual",
-        "(CreateTypeStatement orReplace name=[NUMS] kind=Table elementType=(DataType name=NUMBER arguments=[10])) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))")]
+        "(CreateTypeStatement orReplace name=[NUMS] kind=Table elementType=(DataType name=NUMBER arguments=[10])) ; (SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))")]
     [InlineData("CREATE TYPE fwd; CREATE TYPE fwd2 OID '82A4AF6A4CD9656DE034080020E0EE3D';", "(CreateTypeStatement name=[FWD] kind=Incomplete) ; (CreateTypeStatement name=[FWD2] kind=Incomplete oid='82A4AF6A4CD9656DE034080020E0EE3D')")]
     [InlineData("CREATE TYPE t AS TABLE OF REF category_typ", "(CreateTypeStatement name=[T] kind=Table elementType=(DataType name=CATEGORY_TYP ref nameParts=[CATEGORY_TYP]))")]
     [InlineData("CREATE TYPE v AS VARRAY(10) OF VARCHAR2(5)", "(CreateTypeStatement name=[V] kind=Varray elementType=(DataType name=VARCHAR2 arguments=[5]) limit=10)")]
@@ -384,7 +384,7 @@ BEGIN NULL; END;");
     [InlineData("BEGIN x := -a ** 2; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(Minus (Power A 2)))])")]
     [InlineData("BEGIN x := 2 ** 3; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(Power 2 3))])")]
     [InlineData("DECLARE c CONSTANT NUMBER := 2 ** 3; BEGIN NULL; END;", "(BlockStatement hasDeclare declarations=[(VariableDeclaration name=C constant type=(DataType name=NUMBER) default=(Power 2 3))] statements=[(NullStatement)])")]
-    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=[(NamedTable name=[DUAL])]) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Power 2 3))]))])")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=(FromClause tables=[(NamedTable name=[DUAL])])) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Power 2 3))]))])")]
     public void ExponentInPlsql(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]
