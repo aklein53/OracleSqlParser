@@ -8,6 +8,11 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+## [1.0.0-rc.2] - 2026-11-18
+
+Second release candidate. `OracleSqlParser.Guard` 0.9.0-preview.1 is released alongside it: Guard 0.8 reads the clause
+properties changed below and does not work with this version of the core library.
+
 ### Changed (breaking)
 - Query and DML clauses are nodes, as in ScriptDom, so a clause spans its keyword instead of only its body. This is
   what lets a caller take a clause as written, or replace it, without scanning the token stream back for the keyword.
