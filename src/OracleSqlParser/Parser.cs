@@ -561,10 +561,11 @@ public sealed partial class SqlParser
 
         if (IsKw("ORDER"))
         {
-            Next();
-            stmt.OrderSiblings = AcceptKw("SIBLINGS");
+            var orderTok = Next();
+            var order = new OrderByClause { Siblings = AcceptKw("SIBLINGS") };
             ExpectKw("BY");
-            stmt.OrderBy = ParseOrderByList();
+            order.Items = ParseOrderByList();
+            stmt.OrderBy = Fin(order, orderTok);
         }
         if (IsKw("OFFSET") && !IsOpAt(1, ",")) // OFFSET n ROWS
         {
@@ -667,9 +668,12 @@ public sealed partial class SqlParser
         if (IsKw("BULK") && IsKwAt(1, "COLLECT")) { Next(); Next(); qs.IntoBulkCollect = true; ExpectKw("INTO"); ParseIntoTargets(qs.Into); }
         else if (AcceptKw("INTO")) ParseIntoTargets(qs.Into);
 
-        if (AcceptKw("FROM"))
+        if (IsKw("FROM"))
         {
-            do qs.From.Add(ParseJoinedTable()); while (AcceptOp(","));
+            var fromTok = Next();
+            var from = new FromClause();
+            do from.Tables.Add(ParseJoinedTable()); while (AcceptOp(","));
+            qs.From = Fin(from, fromTok);
         }
         else RequireVersion(OracleVersion.Oracle23, "SELECT without FROM", start);
 
@@ -677,23 +681,34 @@ public sealed partial class SqlParser
         int prog3 = -1;
         while (Progress(ref prog3))
         {
-            if (IsKw("WHERE") && qs.Where == null) { Next(); qs.Where = ParseExpr(); }
+            if (IsKw("WHERE") && qs.Where == null)
+            {
+                var kw = Next();
+                qs.Where = Fin(new WhereClause { Condition = ParseExpr() }, kw);
+            }
             else if (IsKw("START") && IsKwAt(1, "WITH") && qs.StartWith == null)
             {
-                Next(); Next(); qs.StartWith = ParseExpr();
+                var kw = Next(); Next();
+                qs.StartWith = Fin(new StartWithClause { Condition = ParseExpr() }, kw);
             }
             else if (IsKw("CONNECT") && IsKwAt(1, "BY") && qs.ConnectBy == null)
             {
-                Next(); Next();
-                qs.NoCycle = AcceptKw("NOCYCLE");
-                qs.ConnectBy = ParseExpr();
+                var kw = Next(); Next();
+                var connectBy = new ConnectByClause { NoCycle = AcceptKw("NOCYCLE"), Condition = ParseExpr() };
+                qs.ConnectBy = Fin(connectBy, kw);
             }
-            else if (IsKw("GROUP") && IsKwAt(1, "BY") && qs.GroupBy.Count == 0)
+            else if (IsKw("GROUP") && IsKwAt(1, "BY") && qs.GroupBy == null)
             {
-                Next(); Next();
-                do qs.GroupBy.Add(ParseGroupByItem()); while (AcceptOp(","));
+                var kw = Next(); Next();
+                var groupBy = new GroupByClause();
+                do groupBy.Items.Add(ParseGroupByItem()); while (AcceptOp(","));
+                qs.GroupBy = Fin(groupBy, kw);
             }
-            else if (IsKw("HAVING") && qs.Having == null) { Next(); qs.Having = ParseExpr(); }
+            else if (IsKw("HAVING") && qs.Having == null)
+            {
+                var kw = Next();
+                qs.Having = Fin(new HavingClause { Condition = ParseExpr() }, kw);
+            }
             else if (IsKw("MODEL") && qs.Model == null) qs.Model = ParseModelClause();
             else break;
         }
@@ -996,8 +1011,15 @@ public sealed partial class SqlParser
         var st = new UpdateStatement { Hint = hint, Target = target };
         ExpectKw("SET");
         st.Set = ParseSetClauses();
-        if (AcceptVersioned("FROM", OracleVersion.Oracle23, "UPDATE ... FROM")) { do st.From.Add(ParseJoinedTable()); while (AcceptOp(",")); }
-        if (AcceptKw("WHERE")) st.Where = ParseWhereCondition();
+        var fromKeyword = Cur;
+        if (AcceptVersioned("FROM", OracleVersion.Oracle23, "UPDATE ... FROM"))
+        {
+            var from = new FromClause();
+            do from.Tables.Add(ParseJoinedTable()); while (AcceptOp(","));
+            st.From = Fin(from, fromKeyword);
+        }
+        var whereKeyword = Cur;
+        if (AcceptKw("WHERE")) st.Where = Fin(new WhereClause { Condition = ParseWhereCondition() }, whereKeyword);
         ParseDmlTail(st);
         return Fin(st, start);
     }
@@ -1038,8 +1060,15 @@ public sealed partial class SqlParser
         AcceptKw("FROM");
         var target = ParseTablePrimary();
         var st = new DeleteStatement { Hint = hint, Target = target };
-        if (AcceptVersioned("FROM", OracleVersion.Oracle23, "DELETE ... FROM")) { do st.From.Add(ParseJoinedTable()); while (AcceptOp(",")); }
-        if (AcceptKw("WHERE")) st.Where = ParseWhereCondition();
+        var fromKeyword = Cur;
+        if (AcceptVersioned("FROM", OracleVersion.Oracle23, "DELETE ... FROM"))
+        {
+            var from = new FromClause();
+            do from.Tables.Add(ParseJoinedTable()); while (AcceptOp(","));
+            st.From = Fin(from, fromKeyword);
+        }
+        var whereKeyword = Cur;
+        if (AcceptKw("WHERE")) st.Where = Fin(new WhereClause { Condition = ParseWhereCondition() }, whereKeyword);
         ParseDmlTail(st);
         return Fin(st, start);
     }

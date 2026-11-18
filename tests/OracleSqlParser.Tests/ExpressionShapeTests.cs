@@ -68,7 +68,7 @@ public class ExpressionShapeTests
     [InlineData("CAST(b AS DOUBLE PRECISION)", "(CastExpression kind=Cast value=B type=(DataType name=DOUBLE PRECISION))")]
     [InlineData("CAST(b AS hr.my_type)", "(CastExpression kind=Cast value=B type=(DataType name=HR.MY_TYPE nameParts=[HR MY_TYPE]))")]
     [InlineData("CAST(x AS NUMBER DEFAULT 0 ON CONVERSION ERROR, '999')", "(CastExpression kind=Cast value=X type=(DataType name=NUMBER) onConversionError=(OnBehaviorClause behavior=Default value=0 event=ConversionError) format='999')")]
-    [InlineData("CAST(MULTISET(SELECT 1 FROM dual) AS t_tab)", "(CastExpression kind=Cast multiset value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])]))) type=(DataType name=T_TAB nameParts=[T_TAB]))")]
+    [InlineData("CAST(MULTISET(SELECT 1 FROM dual) AS t_tab)", "(CastExpression kind=Cast multiset value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))) type=(DataType name=T_TAB nameParts=[T_TAB]))")]
     [InlineData("TREAT(x AS REF t)", "(CastExpression kind=Treat value=X ref type=(DataType name=T nameParts=[T]))")]
     [InlineData("VALIDATE_CONVERSION(x AS DATE, 'YYYY')", "(CastExpression kind=ValidateConversion value=X type=(DataType name=DATE) format='YYYY')")]
     [InlineData("XMLSERIALIZE(DOCUMENT x AS CLOB INDENT SIZE = 2)", "(CastExpression kind=XmlSerialize value=X type=(DataType name=CLOB) clauses=[(FlagClause flag=Document) (FlagClause flag=Indent) (ValueClause kind=IndentSize value=2)])")]
@@ -86,12 +86,12 @@ public class ExpressionShapeTests
     [InlineData("pkg.fn(a => 1, b => 2)", "(FunctionCall name=[PKG FN] arguments=[(Argument name=A value=1) (Argument name=B value=2)])")]
     [InlineData("SYSDATE - 1", "(Subtract SYSDATE 1)")]
     [InlineData("seq.NEXTVAL", "SEQ.NEXTVAL")]
-    [InlineData("ROW_NUMBER() OVER (PARTITION BY d ORDER BY s DESC)", "(FunctionCall name=[ROW_NUMBER] over=(WindowSpec partitionBy=[D] orderBy=[(OrderByItem expression=S descending)]))")]
-    [InlineData("SUM(x) OVER (ORDER BY y ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec orderBy=[(OrderByItem expression=Y)] frame=(WindowFrame unit=Rows startBound=(FrameBound kind=UnboundedPreceding) endBound=(FrameBound kind=CurrentRow))))")]
+    [InlineData("ROW_NUMBER() OVER (PARTITION BY d ORDER BY s DESC)", "(FunctionCall name=[ROW_NUMBER] over=(WindowSpec partitionBy=[D] orderBy=(OrderByClause items=[(OrderByItem expression=S descending)])))")]
+    [InlineData("SUM(x) OVER (ORDER BY y ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec orderBy=(OrderByClause items=[(OrderByItem expression=Y)]) frame=(WindowFrame unit=Rows startBound=(FrameBound kind=UnboundedPreceding) endBound=(FrameBound kind=CurrentRow))))")]
     [InlineData("SUM(x) OVER (RANGE 5 PRECEDING)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec frame=(WindowFrame unit=Range startBound=(FrameBound kind=Preceding offset=5))))")]
     [InlineData("LAG(x, 1) IGNORE NULLS OVER w", "(FunctionCall name=[LAG] arguments=[(Argument value=X) (Argument value=1)] ignoreNulls over=(WindowSpec name=W))")]
-    [InlineData("MAX(sal) KEEP (DENSE_RANK FIRST ORDER BY hire)", "(FunctionCall name=[MAX] arguments=[(Argument value=SAL)] keep=(KeepClause first orderBy=[(OrderByItem expression=HIRE)]))")]
-    [InlineData("LISTAGG(n, ',') WITHIN GROUP (ORDER BY n)", "(FunctionCall name=[LISTAGG] arguments=[(Argument value=N) (Argument value=',')] withinGroup=[(OrderByItem expression=N)])")]
+    [InlineData("MAX(sal) KEEP (DENSE_RANK FIRST ORDER BY hire)", "(FunctionCall name=[MAX] arguments=[(Argument value=SAL)] keep=(KeepClause first orderBy=(OrderByClause items=[(OrderByItem expression=HIRE)])))")]
+    [InlineData("LISTAGG(n, ',') WITHIN GROUP (ORDER BY n)", "(FunctionCall name=[LISTAGG] arguments=[(Argument value=N) (Argument value=',')] withinGroup=(OrderByClause items=[(OrderByItem expression=N)]))")]
     [InlineData("LISTAGG(n, ',' ON OVERFLOW TRUNCATE '...' WITH COUNT)", "(FunctionCall name=[LISTAGG] clauses=[(OverflowClause truncate indicator='...' withCount=true)] arguments=[(Argument value=N) (Argument value=',')])")]
     [InlineData("LISTAGG(n ON OVERFLOW ERROR)", "(FunctionCall name=[LISTAGG] clauses=[(OverflowClause)] arguments=[(Argument value=N)])")]
     [InlineData("SQL%BULK_ROWCOUNT(i)", "(FunctionCall name=[SQL] attribute=BULK_ROWCOUNT arguments=[(Argument value=I)])")]
@@ -111,7 +111,7 @@ public class ExpressionShapeTests
     [InlineData("JSON_OBJECT(KEY 'a' VALUE 1, 'b' VALUE x FORMAT JSON NULL ON NULL)",
         "(FunctionCall name=[JSON_OBJECT] clauses=[(NullOnClause)] arguments=[(Argument keyword=Key value='a' mappedValue=1) (Argument value='b' mappedValue=X format=(FormatClause kind=Json))])")]
     [InlineData("JSON_ARRAYAGG(x ORDER BY y ABSENT ON NULL RETURNING CLOB)",
-        "(FunctionCall name=[JSON_ARRAYAGG] clauses=[(NullOnClause absent) (ReturningClause type=(DataType name=CLOB))] arguments=[(Argument value=X)] orderBy=[(OrderByItem expression=Y)])")]
+        "(FunctionCall name=[JSON_ARRAYAGG] clauses=[(NullOnClause absent) (ReturningClause type=(DataType name=CLOB))] arguments=[(Argument value=X)] orderBy=(OrderByClause items=[(OrderByItem expression=Y)]))")]
     [InlineData("JSON_SERIALIZE(x RETURNING VARCHAR2(100) PRETTY ASCII TRUNCATE)",
         "(FunctionCall name=[JSON_SERIALIZE] clauses=[(ReturningClause type=(DataType name=VARCHAR2 arguments=[100])) (FlagClause flag=Pretty) (FlagClause flag=Ascii) (FlagClause flag=Truncate)] arguments=[(Argument value=X)])")]
     [InlineData("JSON_TRANSFORM(j, SET '$.a' = 1 IGNORE ON MISSING, REMOVE '$.b', RENAME '$.c' WITH 'd', SORT '$.e' DESC)",
@@ -183,8 +183,8 @@ public class ExpressionShapeTests
     [InlineData("f(x)(y)[1]", "(CellReference base=(ChainedCall target=(FunctionCall name=[F] arguments=[(Argument value=X)]) arguments=[(Argument value=Y)]) subscripts=[1])")]
     [InlineData("PRIOR x", "(Prior X)")]
     [InlineData("CONNECT_BY_ROOT x", "(ConnectByRoot X)")]
-    [InlineData("CURSOR(SELECT 1 FROM dual)", "(CursorExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])))")]
-    [InlineData("EXISTS (SELECT 1 FROM dual)", "(ExistsExpression subquery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=[(NamedTable name=[DUAL])])))")]
+    [InlineData("CURSOR(SELECT 1 FROM dual)", "(CursorExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))")]
+    [InlineData("EXISTS (SELECT 1 FROM dual)", "(ExistsExpression subquery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))")]
     public void Postfix_And_Misc(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]
@@ -197,8 +197,8 @@ public class ExpressionShapeTests
     public void IntervalExpressions(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]
-    [InlineData("SELECT (a - b) day FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (Subtract A B)) alias=DAY)] from=[(NamedTable name=[T])]))")]
-    [InlineData("SELECT (a - b) year FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (Subtract A B)) alias=YEAR)] from=[(NamedTable name=[T])]))")]
+    [InlineData("SELECT (a - b) day FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (Subtract A B)) alias=DAY)] from=(FromClause tables=[(NamedTable name=[T])])))")]
+    [InlineData("SELECT (a - b) year FROM t", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(paren (Subtract A B)) alias=YEAR)] from=(FromClause tables=[(NamedTable name=[T])])))")]
     public void IntervalWordsStillWorkAsAliases(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]
@@ -283,7 +283,7 @@ public class ExpertStressRegressionTests
 
     [Fact]
     public void NthValue_WithoutAnalyticTail_KeepsFromAsTable() =>
-        Assert.Contains("from=[(NamedTable name=[LAST])]", Shape.Of("SELECT NTH_VALUE(x, 2) FROM last"));
+        Assert.Contains("from=(FromClause tables=[(NamedTable name=[LAST])])", Shape.Of("SELECT NTH_VALUE(x, 2) FROM last"));
 
     [Fact]
     public void StringLiteral_MaySpanLines()

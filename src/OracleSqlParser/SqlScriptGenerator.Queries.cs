@@ -80,11 +80,11 @@ public sealed partial class SqlScriptGenerator
                 if (Multiline) NewLine(); else Sp();
             }
             Query(s.Body);
-            if (s.OrderBy.Count > 0)
+            if (s.OrderBy is { } orderBy)
             {
                 ClauseStart(_o.NewLineBeforeOrderByClause);
-                Add(s.OrderSiblings ? "ORDER SIBLINGS BY" : "ORDER BY");
-                ClauseBody(() => Sep(s.OrderBy, OrderItem));
+                Add(orderBy.Siblings ? "ORDER SIBLINGS BY" : "ORDER BY");
+                ClauseBody(() => Sep(orderBy.Items, OrderItem));
             }
             if (s.Offset != null) { ClauseStart(_o.NewLineBeforeOrderByClause); Add("OFFSET "); Child(s.Offset, 5); Add(" ROWS"); }
             if (s.Fetch != null)
@@ -155,12 +155,12 @@ public sealed partial class SqlScriptGenerator
             if (_o.MultilineSelectElementsList) Indent(() => SepLines(qs.SelectList, Item));
             else ClauseBody(() => Sep(qs.SelectList, Item));
             if (qs.Into.Count > 0) { Add(qs.IntoBulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(qs.Into, e => Expr(e)); }
-            if (qs.From.Count > 0) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM"); ClauseBody(() => Sep(qs.From, Table)); }
-            if (qs.Where != null) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE"); ClauseBody(() => Expr(qs.Where)); }
-            if (qs.StartWith != null) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add("START WITH "); Expr(qs.StartWith); }
-            if (qs.ConnectBy != null) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add(qs.NoCycle ? "CONNECT BY NOCYCLE " : "CONNECT BY "); Expr(qs.ConnectBy); }
-            if (qs.GroupBy.Count > 0) { ClauseStart(_o.NewLineBeforeGroupByClause); Add("GROUP BY"); ClauseBody(() => Sep(qs.GroupBy, e => Expr(e))); }
-            if (qs.Having != null) { ClauseStart(_o.NewLineBeforeHavingClause); Add("HAVING"); ClauseBody(() => Expr(qs.Having)); }
+            if (qs.From is { } from) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM"); ClauseBody(() => Sep(from.Tables, Table)); }
+            if (qs.Where is { } where) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE"); ClauseBody(() => Expr(where.Condition)); }
+            if (qs.StartWith is { } startWith) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add("START WITH "); Expr(startWith.Condition); }
+            if (qs.ConnectBy is { } connectBy) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add(connectBy.NoCycle ? "CONNECT BY NOCYCLE " : "CONNECT BY "); Expr(connectBy.Condition); }
+            if (qs.GroupBy is { } groupBy) { ClauseStart(_o.NewLineBeforeGroupByClause); Add("GROUP BY"); ClauseBody(() => Sep(groupBy.Items, e => Expr(e))); }
+            if (qs.Having is { } having) { ClauseStart(_o.NewLineBeforeHavingClause); Add("HAVING"); ClauseBody(() => Expr(having.Condition)); }
             if (qs.Model != null) { Add(" "); Model(qs.Model); }
         }
 
@@ -408,7 +408,7 @@ public sealed partial class SqlScriptGenerator
             bool any = false;
             void Gap() { if (any) Add(" "); any = true; }
             if (m.PartitionBy.Count > 0) { Gap(); Add("PARTITION BY "); Sep(m.PartitionBy, e => Expr(e)); }
-            if (m.OrderBy.Count > 0) { Gap(); Add("ORDER BY "); Sep(m.OrderBy, OrderItem); }
+            if (m.OrderBy is { } matchOrder) { Gap(); Add("ORDER BY "); Sep(matchOrder.Items, OrderItem); }
             if (m.Measures.Count > 0) { Gap(); Add("MEASURES "); Sep(m.Measures, i => Item(i)); }
             if (m.RowsPerMatch == RowsPerMatch.OneRow) { Gap(); Add("ONE ROW PER MATCH"); }
             else if (m.RowsPerMatch == RowsPerMatch.AllRows)
@@ -494,7 +494,7 @@ public sealed partial class SqlScriptGenerator
             {
                 if (r.Mode != null) Add(r.Mode switch { RulesMode.Update => "UPDATE ", RulesMode.Upsert => "UPSERT ", _ => "UPSERT ALL " });
                 Expr(r.Target);
-                if (r.OrderBy.Count > 0) { Add(" ORDER BY "); Sep(r.OrderBy, OrderItem); }
+                if (r.OrderBy is { } ruleOrder) { Add(" ORDER BY "); Sep(ruleOrder.Items, OrderItem); }
                 Add(" = "); Expr(r.Value);
             });
             Add(")");

@@ -579,8 +579,8 @@ public sealed partial class SqlParser
             ParseNullTreatment(fc);
             if (IsKw("ORDER") && IsKwAt(1, "BY"))
             {
-                Next(); Next();
-                fc.OrderBy = ParseOrderByList();
+                var kw = Next(); Next();
+                fc.OrderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, kw);
             }
             int prog115 = -1;
             while (!IsOp(")") && Cur.Type != TokenType.EOF && Progress(ref prog115))
@@ -594,8 +594,9 @@ public sealed partial class SqlParser
             if (IsKw("WITHIN") && IsKwAt(1, "GROUP"))
             {
                 Next(); Next(); ExpectOp("(");
+                var kw = Cur;
                 ExpectKw("ORDER"); ExpectKw("BY");
-                fc.WithinGroup = ParseOrderByList();
+                fc.WithinGroup = Fin(new OrderByClause { Items = ParseOrderByList() }, kw);
                 ExpectOp(")");
             }
             else if (IsKw("KEEP") && IsOpAt(1, "("))
@@ -604,8 +605,9 @@ public sealed partial class SqlParser
                 ExpectKw("DENSE_RANK");
                 var keep = new KeepClause();
                 if (AcceptKw("FIRST")) keep.First = true; else ExpectKw("LAST");
+                var orderKeyword = Cur;
                 ExpectKw("ORDER"); ExpectKw("BY");
-                keep.OrderBy = ParseOrderByList();
+                keep.OrderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, orderKeyword);
                 ExpectOp(")");
                 fc.Keep = Fin(keep, ks);
             }
@@ -918,8 +920,8 @@ public sealed partial class SqlParser
         }
         if (IsKw("ORDER"))
         {
-            Next(); ExpectKw("BY");
-            ws.OrderBy = ParseOrderByList();
+            var kw = Next(); ExpectKw("BY");
+            ws.OrderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, kw);
         }
         if (IsKw("ROWS") || IsKw("RANGE") || IsKw("GROUPS"))
         {

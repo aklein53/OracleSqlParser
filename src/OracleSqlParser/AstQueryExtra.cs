@@ -297,8 +297,8 @@ public sealed partial class MatchRecognizeTable : TableReference
     public required TableReference Source { get; set; }
     /// <summary>The <c>PARTITION BY</c> expressions; empty when absent.</summary>
     public List<Expression> PartitionBy { get; set; } = [];
-    /// <summary>The <c>ORDER BY</c> items within each partition; empty when absent.</summary>
-    public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> within each partition, or null when absent.</summary>
+    public OrderByClause? OrderBy { get; set; }
     /// <summary>The <c>MEASURES</c> expressions, each with an optional alias; empty when absent.</summary>
     public List<ExpressionSelectItem> Measures { get; set; } = [];
     /// <summary>The <c>ONE ROW</c> or <c>ALL ROWS PER MATCH</c> setting, or null when absent.</summary>
@@ -625,8 +625,8 @@ public sealed partial class ModelRule : SqlNode
     public RulesMode? Mode { get; set; }
     /// <summary>The cell or cells the rule assigns, such as <c>s['x', 2002]</c>.</summary>
     public required Expression Target { get; set; }
-    /// <summary>The <c>ORDER BY</c> items that choose the cells in a rule; empty when absent.</summary>
-    public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> that chooses the cells in a rule, or null when absent.</summary>
+    public OrderByClause? OrderBy { get; set; }
     /// <summary>The expression assigned to the target cells.</summary>
     public required Expression Value { get; set; }
 }

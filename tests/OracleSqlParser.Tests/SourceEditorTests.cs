@@ -432,7 +432,7 @@ public class SourceEditorTests
         Assert.Equal("SELECT a FROM t WHERE (x = 1 OR z = 3) AND (y > 2)", output);
         // The OR must be the left operand of the AND, not a sibling of it.
         var where = Find<QuerySpecification>(SqlParser.Parse(output)).Where;
-        Assert.True(SqlNodeComparer.StructurallyEqual(where!, SqlParser.ParseExpression("(x = 1 OR z = 3) AND (y > 2)")));
+        Assert.True(SqlNodeComparer.StructurallyEqual(where!.Condition, SqlParser.ParseExpression("(x = 1 OR z = 3) AND (y > 2)")));
     }
 
     [Fact]
@@ -475,7 +475,7 @@ public class SourceEditorTests
         var parsed = SqlParser.Parse("SELECT /* keep */ a  ,  b\nFROM   orders o -- trailing\nWHERE x = 1");
         var query = parsed.Script.Descendants().OfType<QuerySpecification>().First();
         var editor = new SourceEditor(parsed);
-        editor.Replace(((NamedTable)query.From[0]).Name[0], "employees");   // table name only; the alias o stays
+        editor.Replace(((NamedTable)query.From!.Tables[0]).Name[0], "employees");   // table name only; the alias o stays
         editor.Remove(query.SelectList[1]);                                  // removes "  ,  b"
         editor.AndWhere(query, SqlParser.ParseExpression("o.active = 1"));
 

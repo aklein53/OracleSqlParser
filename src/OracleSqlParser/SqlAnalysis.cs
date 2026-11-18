@@ -357,7 +357,7 @@ public static class SqlAnalysis
                 _selectAliases = null;
                 node.Body.Accept(this);
 
-                if (node.OrderBy.Count > 0)
+                if (node.OrderBy is not null)
                 {
                     // ORDER BY sees the columns of the query block, and the SELECT-list aliases. For a set operation the
                     // names are the result columns, which this analysis does not model, so they are left unresolved.
@@ -373,7 +373,7 @@ public static class SqlAnalysis
                             .ToHashSet();
                     InScope(orderScope, () =>
                     {
-                        foreach (var item in node.OrderBy) item.Accept(this);
+                        node.OrderBy.Accept(this);
                     });
                     _selectAliases = null;
                 }
@@ -404,12 +404,12 @@ public static class SqlAnalysis
                 var scope = new Scope(FlattenAll(node.From), _scope);
                 InScope(scope, () =>
                 {
-                    foreach (var source in node.From) source.Accept(this);
+                    node.From?.Accept(this);
                     foreach (var item in node.SelectList) item.Accept(this);
                     node.Where?.Accept(this);
                     node.StartWith?.Accept(this);
                     node.ConnectBy?.Accept(this);
-                    foreach (var expression in node.GroupBy) expression.Accept(this);
+                    node.GroupBy?.Accept(this);
                     node.Having?.Accept(this);
                     node.Model?.Accept(this);
                 });
@@ -523,7 +523,7 @@ public static class SqlAnalysis
                 sources.AddRange(FlattenAll(node.From));
                 InScope(new Scope(sources, _scope), () =>
                 {
-                    foreach (var source in node.From) source.Accept(this);
+                    node.From?.Accept(this);
                     foreach (var set in node.Set)
                     {
                         foreach (var column in set.Columns) AddColumn(column, column.Parts, write: true, target);
@@ -548,7 +548,7 @@ public static class SqlAnalysis
                 sources.AddRange(FlattenAll(node.From));
                 InScope(new Scope(sources, _scope), () =>
                 {
-                    foreach (var source in node.From) source.Accept(this);
+                    node.From?.Accept(this);
                     node.Where?.Accept(this);
                 });
                 WalkReturning(node, target);
@@ -1021,6 +1021,9 @@ public static class SqlAnalysis
 
         private static string? SourceNameOf(TableReference source) =>
             source.Alias?.Value ?? (source is NamedTable named ? Dotted(named.Name) : null);
+
+        /// <summary>The FROM items of a clause, flattened; an absent clause has none.</summary>
+        private static List<TableReference> FlattenAll(FromClause? from) => FlattenAll(from?.Tables ?? []);
 
         /// <summary>The FROM items of a block, with JOIN and parenthesized joins flattened. Pivot, match-recognize and other wrappers are single items.</summary>
         private static List<TableReference> FlattenAll(IEnumerable<TableReference> from)

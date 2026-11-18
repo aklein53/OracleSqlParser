@@ -272,20 +272,23 @@ public static class QueryGuard
         var key = Col("Q", filter.KeyColumn);
         if (filter.Style == AccessJoinStyle.InSubquery)
         {
-            outer.From = [inline];
-            outer.Where = new InExpression { Value = key, Subquery = access };
+            outer.From = new FromClause { Tables = [inline] };
+            outer.Where = new WhereClause { Condition = new InExpression { Value = key, Subquery = access } };
         }
         else
         {
-            outer.From =
-            [
-                new JoinTable
-                {
-                    Left = inline, Kind = JoinKind.Inner,
-                    Right = new SubqueryTable { Query = access, Alias = Ident("A") },
-                    On = new BinaryExpression { Left = key, Operator = BinaryOperator.Equals, Right = Col("A", filter.AccessIdColumn) },
-                },
-            ];
+            outer.From = new FromClause
+            {
+                Tables =
+                [
+                    new JoinTable
+                    {
+                        Left = inline, Kind = JoinKind.Inner,
+                        Right = new SubqueryTable { Query = access, Alias = Ident("A") },
+                        On = new BinaryExpression { Left = key, Operator = BinaryOperator.Equals, Right = Col("A", filter.AccessIdColumn) },
+                    },
+                ],
+            };
         }
         var result = new SelectStatement { Body = outer };
         HoistOrderBy(user, result, outNames);
@@ -312,9 +315,9 @@ public static class QueryGuard
     /// <summary>Moves the user's top-level ORDER BY outside the inline view when every item can be expressed on its output columns.</summary>
     private static void HoistOrderBy(SelectStatement user, SelectStatement outer, List<string?> outNames)
     {
-        if (user.OrderBy.Count == 0 || user.OrderSiblings) return;
+        if (user.OrderBy is not { Siblings: false } userOrder || userOrder.Items.Count == 0) return;
         var mapped = new List<OrderByItem>();
-        foreach (var item in user.OrderBy)
+        foreach (var item in userOrder.Items)
         {
             string? name = item.Expression switch
             {
@@ -325,7 +328,7 @@ public static class QueryGuard
             if (name == null) return; // cannot express: leave ORDER BY inside
             mapped.Add(new OrderByItem { Expression = Col("Q", name), Descending = item.Descending, Nulls = item.Nulls });
         }
-        outer.OrderBy = mapped;
-        if (user.Fetch == null && user.Offset == null) user.OrderBy = [];
+        outer.OrderBy = new OrderByClause { Items = mapped };
+        if (user.Fetch == null && user.Offset == null) user.OrderBy = null;
     }
 }
