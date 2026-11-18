@@ -242,7 +242,9 @@ sealed class TenantFilter(string predicate) : SqlNodeRewriter
     {
         base.Rewrite(node);                                   // rewrite nested subqueries first
         var p = SqlParser.ParseExpression(predicate);
-        node.Where = node.Where is null ? p : new BinaryExpression { Left = node.Where, Operator = BinaryOperator.And, Right = p };
+        node.Where = node.Where is null
+            ? new WhereClause { Condition = p }
+            : new WhereClause { Condition = new BinaryExpression { Left = node.Where.Condition, Operator = BinaryOperator.And, Right = p } };
         return node;
     }
 }
@@ -250,6 +252,34 @@ var script = SqlParser.Parse("SELECT a FROM t WHERE x = 1 OR y = 2").Script;
 new TenantFilter("tenant = 7").RewriteTree(script);                     
 new SqlScriptGenerator().Generate(script);                                       // SELECT a FROM t WHERE (x = 1 OR y = 2) AND tenant = 7;
 ```
+
+### Clause nodes
+
+A clause is a node, as in ScriptDom: `QuerySpecification.Where` is a `WhereClause`, not the condition, and
+`From`, `GroupBy`, `Having`, `StartWith`, `ConnectBy` and `SelectStatement.OrderBy` follow the same pattern. The
+clause node spans its keyword, which the body alone does not, so the clause can be taken from the source or replaced
+without searching the token stream for the keyword.
+
+```csharp
+const string sql = "SELECT a FROM t WHERE /* keep */ x = 1 GROUP BY a, b";
+var q = (QuerySpecification)((SelectStatement)SqlParser.Parse(sql).Script.Statements[0]).Body;
+
+var where = sql[q.Where!.Start..q.Where.End];       // WHERE /* keep */ x = 1
+var group = sql[q.GroupBy!.Start..q.GroupBy.End];   // GROUP BY a, b
+var first = q.From!.Tables[0];                      // the clause holds the table references
+Console.WriteLine($"{where} | {group} | {first.Start}");
+```
+
+- An absent clause is null, so `SELECT 1` (Oracle 23c) has a null `From` rather than an empty list.
+- `UpdateStatement` and `DeleteStatement` carry the same `WhereClause` and `FromClause`, as ScriptDom puts both on
+  `UpdateDeleteSpecificationBase`.
+- `OrderByClause` is used wherever a sort list is written: on a select statement, inside `OVER (...)`,
+  `WITHIN GROUP (...)` and `KEEP (...)`, and in `MATCH_RECOGNIZE` and `MODEL` rules.
+- A modifier belongs to its clause: `ConnectByClause.NoCycle` and `OrderByClause.Siblings` (for `ORDER SIBLINGS BY`).
+- The condition inside a clause is required, so a rewriter removes a whole clause by returning null for the clause
+  node, not by nulling its condition.
+- The graph pattern `WHERE` (`GraphTable`, `GraphVertexPattern`, `GraphEdgePattern`) stays a bare `Expression`;
+  ScriptDom has no nested `WhereClause` either.
 
 - `ExplicitVisit(T)` (default: `Visit(node)`, then `node.AcceptChildren(this)`) is where to change how the walk descends, as in ScriptDom's `TSqlFragmentVisitor`.
 - A rewriter changes the tree in place. Keep the original with `node.DeepClone<T>()` first. A wrong replacement type, or removing a required child, throws `InvalidOperationException` naming the property.
@@ -273,7 +303,7 @@ outside the edited ranges survive. `SqlScriptGenerator` prints only the replacem
 var parsed = SqlParser.Parse("SELECT /* keep */ a  ,  b\nFROM   orders o -- trailing\nWHERE x = 1");
 var query = parsed.Script.Descendants().OfType<QuerySpecification>().First();
 var editor = new SourceEditor(parsed);
-editor.Replace(((NamedTable)query.From[0]).Name[0], "employees");   // table name only; the alias o stays
+editor.Replace(((NamedTable)query.From!.Tables[0]).Name[0], "employees");   // table name only; the alias o stays
 editor.Remove(query.SelectList[1]);                                  // removes "  ,  b"
 editor.AndWhere(query, SqlParser.ParseExpression("o.active = 1"));   // SourceEdits.AndWhere
 Console.WriteLine(editor.Apply());

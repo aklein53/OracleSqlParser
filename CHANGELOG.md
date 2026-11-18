@@ -8,6 +8,31 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+### Changed (breaking)
+- Query and DML clauses are nodes, as in ScriptDom, so a clause spans its keyword instead of only its body. This is
+  what lets a caller take a clause as written, or replace it, without scanning the token stream back for the keyword.
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `QuerySpecification.From`, `UpdateStatement.From`, `DeleteStatement.From` | `List<TableReference>` | `FromClause?` (`.Tables`) |
+  | `QuerySpecification.Where`, `UpdateStatement.Where`, `DeleteStatement.Where` | `Expression?` | `WhereClause?` (`.Condition`) |
+  | `QuerySpecification.StartWith` | `Expression?` | `StartWithClause?` (`.Condition`) |
+  | `QuerySpecification.ConnectBy` | `Expression?` | `ConnectByClause?` (`.Condition`) |
+  | `QuerySpecification.GroupBy` | `List<Expression>` | `GroupByClause?` (`.Items`) |
+  | `QuerySpecification.Having` | `Expression?` | `HavingClause?` (`.Condition`) |
+  | `SelectStatement.OrderBy` | `List<OrderByItem>` | `OrderByClause?` (`.Items`) |
+  | `FunctionCall.OrderBy`, `FunctionCall.WithinGroup`, `KeepClause.OrderBy`, `WindowSpec.OrderBy`, `MatchRecognizeTable.OrderBy`, `ModelRule.OrderBy` | `List<OrderByItem>` | `OrderByClause?` (`.Items`) |
+
+  An absent clause is null, so `.Count == 0` becomes `is null` and `SELECT 1` has a null `From`. The JSON and shape
+  output gain the clause level (`where=(WhereClause condition=...)`).
+- `QuerySpecification.NoCycle` moved to `ConnectByClause.NoCycle`, and `SelectStatement.OrderSiblings` to
+  `OrderByClause.Siblings`: a modifier belongs to the clause it modifies, as `GroupByClause.All` does in ScriptDom.
+- The condition inside a clause is required, so a rewriter that returns null for the condition of a `WHERE` now throws
+  instead of silently dropping the clause. Return null for the `WhereClause` to remove the clause.
+- The graph pattern `WHERE` (`GraphTable`, `GraphVertexPattern`, `GraphEdgePattern`) and `RefreshClause.StartWith` are
+  unchanged: ScriptDom has no nested `WhereClause`, and a materialized view's `START WITH <date>` is not a clause of a
+  query.
+
 ## [1.0.0-rc.1] - 2026-11-15
 
 Release candidate for 1.0: the public API is frozen and will ship as 1.0.0 unless problems are found.
