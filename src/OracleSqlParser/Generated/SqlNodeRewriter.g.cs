@@ -463,6 +463,13 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
+    /// <summary>Rewrites a <see cref="ConnectByClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(ConnectByClause node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
     /// <summary>Rewrites a <see cref="ConstraintState"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
     public virtual SqlNode? Rewrite(ConstraintState node)
     {
@@ -911,6 +918,13 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
+    /// <summary>Rewrites a <see cref="FromClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(FromClause node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
     /// <summary>Rewrites a <see cref="FunctionCall"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
     public virtual SqlNode? Rewrite(FunctionCall node)
     {
@@ -1044,8 +1058,22 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
+    /// <summary>Rewrites a <see cref="GroupByClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(GroupByClause node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
     /// <summary>Rewrites a <see cref="GroupItem"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
     public virtual SqlNode? Rewrite(GroupItem node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
+    /// <summary>Rewrites a <see cref="HavingClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(HavingClause node)
     {
         node.RewriteChildren(this);
         return node;
@@ -1368,6 +1396,13 @@ public abstract partial class SqlNodeRewriter
 
     /// <summary>Rewrites a <see cref="OpenStatement"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
     public virtual SqlNode? Rewrite(OpenStatement node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
+    /// <summary>Rewrites a <see cref="OrderByClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(OrderByClause node)
     {
         node.RewriteChildren(this);
         return node;
@@ -1863,6 +1898,13 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
+    /// <summary>Rewrites a <see cref="StartWithClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(StartWithClause node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
     /// <summary>Rewrites a <see cref="StorageAttribute"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
     public virtual SqlNode? Rewrite(StorageAttribute node)
     {
@@ -2089,6 +2131,13 @@ public abstract partial class SqlNodeRewriter
 
     /// <summary>Rewrites a <see cref="WhenClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
     public virtual SqlNode? Rewrite(WhenClause node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
+    /// <summary>Rewrites a <see cref="WhereClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(WhereClause node)
     {
         node.RewriteChildren(this);
         return node;

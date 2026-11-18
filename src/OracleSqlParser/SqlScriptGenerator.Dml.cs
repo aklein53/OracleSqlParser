@@ -149,8 +149,8 @@ public sealed partial class SqlScriptGenerator
             Add("UPDATE"); DmlHint(u);
             Sp(); Table(u.Target);
             ClauseStart(_o.NewLineBeforeSetClause); Add("SET "); Sep(u.Set, SetClauseText);
-            if (u.From.Count > 0) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM "); Sep(u.From, Table); }
-            if (u.Where != null) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE "); Expr(u.Where); }
+            if (u.From is { } uFrom) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM "); Sep(uFrom.Tables, Table); }
+            if (u.Where is { } uWhere) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE "); Expr(uWhere.Condition); }
             DmlTail(u);
         }
 
@@ -158,8 +158,8 @@ public sealed partial class SqlScriptGenerator
         {
             Add("DELETE"); DmlHint(d);
             Add(" FROM "); Table(d.Target);
-            if (d.From.Count > 0) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM "); Sep(d.From, Table); }
-            if (d.Where != null) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE "); Expr(d.Where); }
+            if (d.From is { } dFrom) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM "); Sep(dFrom.Tables, Table); }
+            if (d.Where is { } dWhere) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE "); Expr(dWhere.Condition); }
             DmlTail(d);
         }
 

@@ -180,7 +180,7 @@ public sealed partial class SqlParser
         Next(); Next(); // MATCH_RECOGNIZE (
         // Pattern is required and parsed after the header clauses, so those are collected in locals and the node is built after PATTERN.
         var partitionBy = new List<Expression>();
-        var orderBy = new List<OrderByItem>();
+        OrderByClause? orderBy = null;
         var measures = new List<ExpressionSelectItem>();
         RowsPerMatch? rowsPerMatch = null;
         AllRowsMode? allRowsMode = null;
@@ -188,7 +188,7 @@ public sealed partial class SqlParser
         Identifier? skipVariable = null;
         bool seek = false;
         if (IsKw("PARTITION")) { Next(); ExpectKw("BY"); do partitionBy.Add(ParseExpr()); while (AcceptOp(",")); }
-        if (IsKw("ORDER")) { Next(); ExpectKw("BY"); orderBy = ParseOrderByList(); }
+        if (IsKw("ORDER")) { var kw = Next(); ExpectKw("BY"); orderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, kw); }
         if (AcceptKw("MEASURES")) do measures.Add(ParseExpressionSelectItem()); while (AcceptOp(","));
         if (AcceptKw("ONE")) { ExpectKw("ROW"); ExpectKw("PER"); ExpectKw("MATCH"); rowsPerMatch = RowsPerMatch.OneRow; }
         else if (IsKw("ALL") && IsKwAt(1, "ROWS"))
@@ -655,18 +655,20 @@ public sealed partial class SqlParser
         if (IsKw("UPDATE")) { Next(); mode = RulesMode.Update; }
         else if (IsKw("UPSERT")) { Next(); mode = AcceptKw("ALL") ? RulesMode.UpsertAll : RulesMode.Upsert; }
         var target = ParsePostfix();
-        var orderBy = new List<OrderByItem>();
+        OrderByClause? orderBy = null;
         if (IsKw("ORDER") && IsKwAt(1, "BY"))
         {
-            Next(); Next();
+            var kw = Next(); Next();
+            var items = new List<OrderByItem>();
             do
             {
                 var os = Cur;
                 var item = new OrderByItem { Expression = ParseAdditive() };
                 if (AcceptKw("DESC")) item.Descending = true; else AcceptKw("ASC");
                 if (AcceptKw("NULLS")) { if (AcceptKw("FIRST")) item.Nulls = NullsOrdering.First; else { ExpectKw("LAST"); item.Nulls = NullsOrdering.Last; } }
-                orderBy.Add(Fin(item, os));
+                items.Add(Fin(item, os));
             } while (AcceptOp(","));
+            orderBy = Fin(new OrderByClause { Items = items }, kw);
         }
         ExpectOp("=");
         var value = ParseExpr();

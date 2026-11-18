@@ -30,13 +30,11 @@ public static class SourceEdits
         string condition = editor.Print(predicate);
         if (query.Where is { } where)
         {
-            editor.Replace(where, "(" + editor.SourceText(where) + ") AND (" + condition + ")");
+            editor.Replace(where.Condition, "(" + editor.SourceText(where.Condition) + ") AND (" + condition + ")");
         }
-        else if (query.From.Count > 0)
+        else if (query.From is { } from)
         {
-            // The FROM item that ends last (for a join, its own span covers the joined tables and ON condition).
-            var lastFrom = query.From.MaxBy(t => t.LastTokenIndex)!;
-            editor.InsertAfter(lastFrom, " WHERE " + condition);
+            editor.InsertAfter(from, " WHERE " + condition);
         }
         else
         {

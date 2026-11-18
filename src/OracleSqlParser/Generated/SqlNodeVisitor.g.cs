@@ -658,6 +658,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="ConnectByClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(ConnectByClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="ConnectByClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(ConnectByClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="ConstraintState"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(ConstraintState node) => Visit((SqlNode)node);
 
@@ -1298,6 +1308,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="FromClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(FromClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="FromClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(FromClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="FunctionCall"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(FunctionCall node) => Visit((SqlNode)node);
 
@@ -1488,11 +1508,31 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="GroupByClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(GroupByClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="GroupByClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(GroupByClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="GroupItem"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(GroupItem node) => Visit((SqlNode)node);
 
     /// <summary>Entry point for a <see cref="GroupItem"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
     public virtual void ExplicitVisit(GroupItem node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="HavingClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(HavingClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="HavingClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(HavingClause node)
     {
         Visit(node);
         node.AcceptChildren(this);
@@ -1953,6 +1993,16 @@ public abstract partial class SqlNodeVisitor
 
     /// <summary>Entry point for a <see cref="OpenStatement"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
     public virtual void ExplicitVisit(OpenStatement node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="OrderByClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(OrderByClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="OrderByClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(OrderByClause node)
     {
         Visit(node);
         node.AcceptChildren(this);
@@ -2658,6 +2708,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="StartWithClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(StartWithClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="StartWithClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(StartWithClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="StorageAttribute"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(StorageAttribute node) => Visit((SqlNode)node);
 
@@ -2983,6 +3043,16 @@ public abstract partial class SqlNodeVisitor
 
     /// <summary>Entry point for a <see cref="WhenClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
     public virtual void ExplicitVisit(WhenClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="WhereClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(WhereClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="WhereClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(WhereClause node)
     {
         Visit(node);
         node.AcceptChildren(this);

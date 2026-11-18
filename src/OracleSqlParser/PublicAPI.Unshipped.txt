@@ -872,6 +872,15 @@ OracleSqlParser.ConditionalStatementBranch.Condition.set -> void
 OracleSqlParser.ConditionalStatementBranch.ConditionalStatementBranch() -> void
 OracleSqlParser.ConditionalStatementBranch.Statements.get -> System.Collections.Generic.List<OracleSqlParser.Statement!>!
 OracleSqlParser.ConditionalStatementBranch.Statements.set -> void
+OracleSqlParser.ConnectByClause
+OracleSqlParser.ConnectByClause.Condition.get -> OracleSqlParser.Expression!
+OracleSqlParser.ConnectByClause.Condition.set -> void
+OracleSqlParser.ConnectByClause.ConnectByClause() -> void
+override OracleSqlParser.ConnectByClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ConnectByClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ConnectByClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+OracleSqlParser.ConnectByClause.NoCycle.get -> bool
+OracleSqlParser.ConnectByClause.NoCycle.set -> void
 OracleSqlParser.ConstraintKind
 OracleSqlParser.ConstraintKind.Check = 3 -> OracleSqlParser.ConstraintKind
 OracleSqlParser.ConstraintKind.ForeignKey = 2 -> OracleSqlParser.ConstraintKind
@@ -1467,11 +1476,11 @@ OracleSqlParser.Declaration
 OracleSqlParser.Declaration.Declaration() -> void
 OracleSqlParser.DeleteStatement
 OracleSqlParser.DeleteStatement.DeleteStatement() -> void
-OracleSqlParser.DeleteStatement.From.get -> System.Collections.Generic.List<OracleSqlParser.TableReference!>!
+OracleSqlParser.DeleteStatement.From.get -> OracleSqlParser.FromClause?
 OracleSqlParser.DeleteStatement.From.set -> void
 OracleSqlParser.DeleteStatement.Target.get -> OracleSqlParser.TableReference!
 OracleSqlParser.DeleteStatement.Target.set -> void
-OracleSqlParser.DeleteStatement.Where.get -> OracleSqlParser.Expression?
+OracleSqlParser.DeleteStatement.Where.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.DeleteStatement.Where.set -> void
 OracleSqlParser.DmlStatement
 OracleSqlParser.DmlStatement.DmlStatement() -> void
@@ -1843,6 +1852,13 @@ OracleSqlParser.FrameUnit
 OracleSqlParser.FrameUnit.Groups = 2 -> OracleSqlParser.FrameUnit
 OracleSqlParser.FrameUnit.Range = 1 -> OracleSqlParser.FrameUnit
 OracleSqlParser.FrameUnit.Rows = 0 -> OracleSqlParser.FrameUnit
+OracleSqlParser.FromClause
+OracleSqlParser.FromClause.FromClause() -> void
+override OracleSqlParser.FromClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.FromClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.FromClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+OracleSqlParser.FromClause.Tables.get -> System.Collections.Generic.List<OracleSqlParser.TableReference!>!
+OracleSqlParser.FromClause.Tables.set -> void
 OracleSqlParser.FunctionCall
 OracleSqlParser.FunctionCall.Arguments.get -> System.Collections.Generic.List<OracleSqlParser.Argument!>!
 OracleSqlParser.FunctionCall.Arguments.set -> void
@@ -1863,7 +1879,7 @@ OracleSqlParser.FunctionCall.New.get -> bool
 OracleSqlParser.FunctionCall.New.set -> void
 OracleSqlParser.FunctionCall.Operations.get -> System.Collections.Generic.List<OracleSqlParser.JsonTransformOperation!>!
 OracleSqlParser.FunctionCall.Operations.set -> void
-OracleSqlParser.FunctionCall.OrderBy.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.FunctionCall.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.FunctionCall.OrderBy.set -> void
 OracleSqlParser.FunctionCall.Over.get -> OracleSqlParser.WindowSpec?
 OracleSqlParser.FunctionCall.Over.set -> void
@@ -1871,7 +1887,7 @@ OracleSqlParser.FunctionCall.Quantifier.get -> OracleSqlParser.QuantifierKind?
 OracleSqlParser.FunctionCall.Quantifier.set -> void
 OracleSqlParser.FunctionCall.RespectNulls.get -> bool
 OracleSqlParser.FunctionCall.RespectNulls.set -> void
-OracleSqlParser.FunctionCall.WithinGroup.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.FunctionCall.WithinGroup.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.FunctionCall.WithinGroup.set -> void
 OracleSqlParser.FunctionClause
 OracleSqlParser.FunctionClause.FunctionClause() -> void
@@ -2103,10 +2119,24 @@ OracleSqlParser.GraphVertexPattern.Where.get -> OracleSqlParser.Expression?
 OracleSqlParser.GraphVertexPattern.Where.set -> void
 OracleSqlParser.GraphVertexTable
 OracleSqlParser.GraphVertexTable.GraphVertexTable() -> void
+OracleSqlParser.GroupByClause
+OracleSqlParser.GroupByClause.GroupByClause() -> void
+override OracleSqlParser.GroupByClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.GroupByClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.GroupByClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+OracleSqlParser.GroupByClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
+OracleSqlParser.GroupByClause.Items.set -> void
 OracleSqlParser.GroupItem
 OracleSqlParser.GroupItem.GroupItem() -> void
 OracleSqlParser.GroupItem.Items.get -> System.Collections.Generic.List<OracleSqlParser.SyntaxItem!>!
 OracleSqlParser.GroupItem.Items.set -> void
+OracleSqlParser.HavingClause
+OracleSqlParser.HavingClause.Condition.get -> OracleSqlParser.Expression!
+OracleSqlParser.HavingClause.Condition.set -> void
+OracleSqlParser.HavingClause.HavingClause() -> void
+override OracleSqlParser.HavingClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.HavingClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.HavingClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
 OracleSqlParser.HintClause
 OracleSqlParser.HintClause.HintClause() -> void
 OracleSqlParser.HintClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.HintItem!>!
@@ -2380,7 +2410,7 @@ OracleSqlParser.KeepClause
 OracleSqlParser.KeepClause.First.get -> bool
 OracleSqlParser.KeepClause.First.set -> void
 OracleSqlParser.KeepClause.KeepClause() -> void
-OracleSqlParser.KeepClause.OrderBy.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.KeepClause.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.KeepClause.OrderBy.set -> void
 OracleSqlParser.KeywordCasing
 OracleSqlParser.KeywordCasing.Lowercase = 1 -> OracleSqlParser.KeywordCasing
@@ -2477,7 +2507,7 @@ OracleSqlParser.MatchRecognizeTable.Define.set -> void
 OracleSqlParser.MatchRecognizeTable.MatchRecognizeTable() -> void
 OracleSqlParser.MatchRecognizeTable.Measures.get -> System.Collections.Generic.List<OracleSqlParser.ExpressionSelectItem!>!
 OracleSqlParser.MatchRecognizeTable.Measures.set -> void
-OracleSqlParser.MatchRecognizeTable.OrderBy.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.MatchRecognizeTable.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.MatchRecognizeTable.OrderBy.set -> void
 OracleSqlParser.MatchRecognizeTable.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.MatchRecognizeTable.PartitionBy.set -> void
@@ -2590,7 +2620,7 @@ OracleSqlParser.ModelRule
 OracleSqlParser.ModelRule.Mode.get -> OracleSqlParser.RulesMode?
 OracleSqlParser.ModelRule.Mode.set -> void
 OracleSqlParser.ModelRule.ModelRule() -> void
-OracleSqlParser.ModelRule.OrderBy.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.ModelRule.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.ModelRule.OrderBy.set -> void
 OracleSqlParser.ModelRule.Target.get -> OracleSqlParser.Expression!
 OracleSqlParser.ModelRule.Target.set -> void
@@ -2753,6 +2783,15 @@ OracleSqlParser.OracleVersion
 OracleSqlParser.OracleVersion.Oracle19 = 19 -> OracleSqlParser.OracleVersion
 OracleSqlParser.OracleVersion.Oracle21 = 21 -> OracleSqlParser.OracleVersion
 OracleSqlParser.OracleVersion.Oracle23 = 23 -> OracleSqlParser.OracleVersion
+OracleSqlParser.OrderByClause
+OracleSqlParser.OrderByClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.OrderByClause.Items.set -> void
+OracleSqlParser.OrderByClause.OrderByClause() -> void
+override OracleSqlParser.OrderByClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.OrderByClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.OrderByClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+OracleSqlParser.OrderByClause.Siblings.get -> bool
+OracleSqlParser.OrderByClause.Siblings.set -> void
 OracleSqlParser.OrderByItem
 OracleSqlParser.OrderByItem.Descending.get -> bool
 OracleSqlParser.OrderByItem.Descending.set -> void
@@ -3130,13 +3169,13 @@ OracleSqlParser.QuantifierKind.Unique = 2 -> OracleSqlParser.QuantifierKind
 OracleSqlParser.QueryExpression
 OracleSqlParser.QueryExpression.QueryExpression() -> void
 OracleSqlParser.QuerySpecification
-OracleSqlParser.QuerySpecification.ConnectBy.get -> OracleSqlParser.Expression?
+OracleSqlParser.QuerySpecification.ConnectBy.get -> OracleSqlParser.ConnectByClause?
 OracleSqlParser.QuerySpecification.ConnectBy.set -> void
-OracleSqlParser.QuerySpecification.From.get -> System.Collections.Generic.List<OracleSqlParser.TableReference!>!
+OracleSqlParser.QuerySpecification.From.get -> OracleSqlParser.FromClause?
 OracleSqlParser.QuerySpecification.From.set -> void
-OracleSqlParser.QuerySpecification.GroupBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
+OracleSqlParser.QuerySpecification.GroupBy.get -> OracleSqlParser.GroupByClause?
 OracleSqlParser.QuerySpecification.GroupBy.set -> void
-OracleSqlParser.QuerySpecification.Having.get -> OracleSqlParser.Expression?
+OracleSqlParser.QuerySpecification.Having.get -> OracleSqlParser.HavingClause?
 OracleSqlParser.QuerySpecification.Having.set -> void
 OracleSqlParser.QuerySpecification.Hint.get -> OracleSqlParser.HintClause?
 OracleSqlParser.QuerySpecification.Hint.set -> void
@@ -3146,16 +3185,14 @@ OracleSqlParser.QuerySpecification.IntoBulkCollect.get -> bool
 OracleSqlParser.QuerySpecification.IntoBulkCollect.set -> void
 OracleSqlParser.QuerySpecification.Model.get -> OracleSqlParser.ModelClause?
 OracleSqlParser.QuerySpecification.Model.set -> void
-OracleSqlParser.QuerySpecification.NoCycle.get -> bool
-OracleSqlParser.QuerySpecification.NoCycle.set -> void
 OracleSqlParser.QuerySpecification.Quantifier.get -> OracleSqlParser.QuantifierKind?
 OracleSqlParser.QuerySpecification.Quantifier.set -> void
 OracleSqlParser.QuerySpecification.QuerySpecification() -> void
 OracleSqlParser.QuerySpecification.SelectList.get -> System.Collections.Generic.List<OracleSqlParser.SelectItem!>!
 OracleSqlParser.QuerySpecification.SelectList.set -> void
-OracleSqlParser.QuerySpecification.StartWith.get -> OracleSqlParser.Expression?
+OracleSqlParser.QuerySpecification.StartWith.get -> OracleSqlParser.StartWithClause?
 OracleSqlParser.QuerySpecification.StartWith.set -> void
-OracleSqlParser.QuerySpecification.Where.get -> OracleSqlParser.Expression?
+OracleSqlParser.QuerySpecification.Where.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.QuerySpecification.Where.set -> void
 OracleSqlParser.QuotesClause
 OracleSqlParser.QuotesClause.Keep.get -> bool
@@ -3340,10 +3377,8 @@ OracleSqlParser.SelectStatement.ForUpdate.get -> OracleSqlParser.ForUpdateClause
 OracleSqlParser.SelectStatement.ForUpdate.set -> void
 OracleSqlParser.SelectStatement.Offset.get -> OracleSqlParser.Expression?
 OracleSqlParser.SelectStatement.Offset.set -> void
-OracleSqlParser.SelectStatement.OrderBy.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.SelectStatement.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.SelectStatement.OrderBy.set -> void
-OracleSqlParser.SelectStatement.OrderSiblings.get -> bool
-OracleSqlParser.SelectStatement.OrderSiblings.set -> void
 OracleSqlParser.SelectStatement.SelectStatement() -> void
 OracleSqlParser.SelectStatement.With.get -> System.Collections.Generic.List<OracleSqlParser.CommonTableExpression!>!
 OracleSqlParser.SelectStatement.With.set -> void
@@ -3522,6 +3557,13 @@ OracleSqlParser.StarSelectItem
 OracleSqlParser.StarSelectItem.Qualifier.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 OracleSqlParser.StarSelectItem.Qualifier.set -> void
 OracleSqlParser.StarSelectItem.StarSelectItem() -> void
+OracleSqlParser.StartWithClause
+OracleSqlParser.StartWithClause.Condition.get -> OracleSqlParser.Expression!
+OracleSqlParser.StartWithClause.Condition.set -> void
+OracleSqlParser.StartWithClause.StartWithClause() -> void
+override OracleSqlParser.StartWithClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.StartWithClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.StartWithClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
 OracleSqlParser.Statement
 OracleSqlParser.Statement.Labels.get -> System.Collections.Generic.List<string!>!
 OracleSqlParser.Statement.Labels.set -> void
@@ -3853,14 +3895,14 @@ OracleSqlParser.UnpivotTable.UnpivotTable() -> void
 OracleSqlParser.UnpivotTable.ValueColumns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
 OracleSqlParser.UnpivotTable.ValueColumns.set -> void
 OracleSqlParser.UpdateStatement
-OracleSqlParser.UpdateStatement.From.get -> System.Collections.Generic.List<OracleSqlParser.TableReference!>!
+OracleSqlParser.UpdateStatement.From.get -> OracleSqlParser.FromClause?
 OracleSqlParser.UpdateStatement.From.set -> void
 OracleSqlParser.UpdateStatement.Set.get -> System.Collections.Generic.List<OracleSqlParser.SetClause!>!
 OracleSqlParser.UpdateStatement.Set.set -> void
 OracleSqlParser.UpdateStatement.Target.get -> OracleSqlParser.TableReference!
 OracleSqlParser.UpdateStatement.Target.set -> void
 OracleSqlParser.UpdateStatement.UpdateStatement() -> void
-OracleSqlParser.UpdateStatement.Where.get -> OracleSqlParser.Expression?
+OracleSqlParser.UpdateStatement.Where.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.UpdateStatement.Where.set -> void
 OracleSqlParser.UserClause
 OracleSqlParser.UserClause.AuthenticationRequired.get -> bool
@@ -4000,6 +4042,13 @@ OracleSqlParser.WhenClause.Then.set -> void
 OracleSqlParser.WhenClause.When.get -> OracleSqlParser.Expression!
 OracleSqlParser.WhenClause.When.set -> void
 OracleSqlParser.WhenClause.WhenClause() -> void
+OracleSqlParser.WhereClause
+OracleSqlParser.WhereClause.Condition.get -> OracleSqlParser.Expression!
+OracleSqlParser.WhereClause.Condition.set -> void
+OracleSqlParser.WhereClause.WhereClause() -> void
+override OracleSqlParser.WhereClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.WhereClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.WhereClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
 OracleSqlParser.WindowFrame
 OracleSqlParser.WindowFrame.EndBound.get -> OracleSqlParser.FrameBound?
 OracleSqlParser.WindowFrame.EndBound.set -> void
@@ -4013,7 +4062,7 @@ OracleSqlParser.WindowSpec.Frame.get -> OracleSqlParser.WindowFrame?
 OracleSqlParser.WindowSpec.Frame.set -> void
 OracleSqlParser.WindowSpec.Name.get -> OracleSqlParser.Identifier?
 OracleSqlParser.WindowSpec.Name.set -> void
-OracleSqlParser.WindowSpec.OrderBy.get -> System.Collections.Generic.List<OracleSqlParser.OrderByItem!>!
+OracleSqlParser.WindowSpec.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.WindowSpec.OrderBy.set -> void
 OracleSqlParser.WindowSpec.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.WindowSpec.PartitionBy.set -> void
@@ -4087,8 +4136,29 @@ static OracleSqlParser.Trivia.operator ==(OracleSqlParser.Trivia left, OracleSql
 virtual OracleSqlParser.SqlNode.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 virtual OracleSqlParser.SqlNode.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 virtual OracleSqlParser.SqlNode.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ConnectByClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.FromClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.GroupByClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.HavingClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.OrderByClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.SqlNode! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.StartWithClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.WhereClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ConnectByClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.FromClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.GroupByClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.HavingClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.OrderByClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.StartWithClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.WhereClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConnectByClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.FromClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.GroupByClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.HavingClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.OrderByClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.SqlNode! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.StartWithClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WhereClause! node) -> void
 ~override OracleSqlParser.Token.Equals(object obj) -> bool
 ~override OracleSqlParser.Token.ToString() -> string
 ~override OracleSqlParser.Trivia.Equals(object obj) -> bool

@@ -357,11 +357,11 @@ public sealed partial class SqlScriptGenerator
                 foreach (var op in fc.Operations) { Add(", "); JsonOp(op); }
             }
             if (fc.PartitionBy.Count > 0) { Add("PARTITION BY "); Sep(fc.PartitionBy, e => Expr(e)); }
-            if (fc.OrderBy.Count > 0) { Add(" ORDER BY "); Sep(fc.OrderBy, OrderItem); }
+            if (fc.OrderBy is { } callOrder) { Add(" ORDER BY "); Sep(callOrder.Items, OrderItem); }
             foreach (var c in fc.Clauses) { Add(" "); Clause(c); }
             Add(")");
-            if (fc.WithinGroup.Count > 0) { Add(" WITHIN GROUP (ORDER BY "); Sep(fc.WithinGroup, OrderItem); Add(")"); }
-            if (fc.Keep != null) { Add(" KEEP (DENSE_RANK " + (fc.Keep.First ? "FIRST" : "LAST") + " ORDER BY "); Sep(fc.Keep.OrderBy, OrderItem); Add(")"); }
+            if (fc.WithinGroup is { } withinGroup) { Add(" WITHIN GROUP (ORDER BY "); Sep(withinGroup.Items, OrderItem); Add(")"); }
+            if (fc.Keep is { } keep) { Add(" KEEP (DENSE_RANK " + (keep.First ? "FIRST" : "LAST") + " ORDER BY "); Sep(keep.OrderBy?.Items ?? [], OrderItem); Add(")"); }
             if (fc.FromLast != null) Add(fc.FromLast.Value ? " FROM LAST" : " FROM FIRST");
             if (fc.IgnoreNulls) Add(" IGNORE NULLS");
             if (fc.RespectNulls) Add(" RESPECT NULLS");
@@ -454,12 +454,12 @@ public sealed partial class SqlScriptGenerator
 
         private void Window(WindowSpec w)
         {
-            if (w.Name != null && w.PartitionBy.Count == 0 && w.OrderBy.Count == 0 && w.Frame == null) { Id(w.Name); return; }
+            if (w.Name != null && w.PartitionBy.Count == 0 && w.OrderBy == null && w.Frame == null) { Id(w.Name); return; }
             Add("(");
             bool any = false;
             if (w.Name != null) { Id(w.Name); any = true; }
             if (w.PartitionBy.Count > 0) { if (any) Add(" "); Add("PARTITION BY "); Sep(w.PartitionBy, e => Expr(e)); any = true; }
-            if (w.OrderBy.Count > 0) { if (any) Add(" "); Add("ORDER BY "); Sep(w.OrderBy, OrderItem); any = true; }
+            if (w.OrderBy is { } windowOrder) { if (any) Add(" "); Add("ORDER BY "); Sep(windowOrder.Items, OrderItem); any = true; }
             if (w.Frame != null)
             {
                 if (any) Add(" ");

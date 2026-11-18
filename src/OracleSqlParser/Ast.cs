@@ -202,10 +202,8 @@ public sealed partial class SelectStatement : Statement
     public List<CommonTableExpression> With { get; set; } = [];
     /// <summary>The query body: a query specification, a set operation, a <c>VALUES</c> list or a parenthesized query.</summary>
     public required QueryExpression Body { get; set; }
-    /// <summary>True for <c>ORDER SIBLINGS BY</c>, which keeps the hierarchy order.</summary>
-    public bool OrderSiblings { get; set; }
-    /// <summary>The <c>ORDER BY</c> items, in source order; empty when absent.</summary>
-    public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> clause, or null when absent.</summary>
+    public OrderByClause? OrderBy { get; set; }
     /// <summary>The row count of the <c>OFFSET</c> clause, or null when absent.</summary>
     public Expression? Offset { get; set; }
     /// <summary>The <c>FETCH</c> clause, or null when absent.</summary>
@@ -267,20 +265,18 @@ public sealed partial class QuerySpecification : QueryExpression
     public QuantifierKind? Quantifier { get; set; }
     /// <summary>The select items, in source order.</summary>
     public List<SelectItem> SelectList { get; set; } = [];
-    /// <summary>The table references of the <c>FROM</c> clause, in source order; empty when absent.</summary>
-    public List<TableReference> From { get; set; } = [];
-    /// <summary>The <c>WHERE</c> condition, or null when absent.</summary>
-    public Expression? Where { get; set; }
-    /// <summary>The <c>START WITH</c> condition of a hierarchical query, or null when absent.</summary>
-    public Expression? StartWith { get; set; }
-    /// <summary>The <c>CONNECT BY</c> condition, or null when absent.</summary>
-    public Expression? ConnectBy { get; set; }
-    /// <summary>True when <c>NOCYCLE</c> is written in the <c>CONNECT BY</c> clause.</summary>
-    public bool NoCycle { get; set; }
-    /// <summary>The <c>GROUP BY</c> expressions, in source order; empty when absent.</summary>
-    public List<Expression> GroupBy { get; set; } = [];
-    /// <summary>The <c>HAVING</c> condition, or null when absent.</summary>
-    public Expression? Having { get; set; }
+    /// <summary>The <c>FROM</c> clause, or null when absent (Oracle 23c allows a <c>SELECT</c> without one).</summary>
+    public FromClause? From { get; set; }
+    /// <summary>The <c>WHERE</c> clause, or null when absent.</summary>
+    public WhereClause? Where { get; set; }
+    /// <summary>The <c>START WITH</c> clause of a hierarchical query, or null when absent.</summary>
+    public StartWithClause? StartWith { get; set; }
+    /// <summary>The <c>CONNECT BY</c> clause, or null when absent.</summary>
+    public ConnectByClause? ConnectBy { get; set; }
+    /// <summary>The <c>GROUP BY</c> clause, or null when absent.</summary>
+    public GroupByClause? GroupBy { get; set; }
+    /// <summary>The <c>HAVING</c> clause, or null when absent.</summary>
+    public HavingClause? Having { get; set; }
     /// <summary>The PL/SQL variables of <c>SELECT ... INTO</c>; empty when absent.</summary>
     public List<Expression> Into { get; set; } = [];
     /// <summary>True when <c>BULK COLLECT INTO</c> is written in a PL/SQL query.</summary>
@@ -348,6 +344,75 @@ public sealed partial class StarSelectItem : SelectItem
 {
     /// <summary>The name parts before <c>.*</c>; empty for a plain <c>*</c>.</summary>
     public List<Identifier> Qualifier { get; set; } = [];
+}
+
+/// <summary>
+/// The <c>FROM</c> clause of a query or of an <c>UPDATE</c> / <c>DELETE</c>, such as <c>FROM a JOIN b ON a.x = b.x</c>.
+/// </summary>
+/// <remarks>
+/// A clause node spans its keyword, which the table references alone do not: <c>Tables[0].Start</c> is the first table,
+/// while this node's <see cref="SqlNode.Start"/> is the <c>FROM</c>. That is what lets a caller cut the clause out of
+/// the source, or replace it, without hunting for the keyword in the token stream.
+/// </remarks>
+public sealed partial class FromClause : SqlNode
+{
+    /// <summary>The table references, in source order.</summary>
+    public List<TableReference> Tables { get; set; } = [];
+}
+
+/// <summary>The <c>WHERE</c> clause of a query or of an <c>UPDATE</c> / <c>DELETE</c>, such as <c>WHERE a = 1</c>.</summary>
+/// <remarks>Spans the <c>WHERE</c> keyword; see <see cref="FromClause"/>.</remarks>
+public sealed partial class WhereClause : SqlNode
+{
+    /// <summary>The search condition.</summary>
+    public required Expression Condition { get; set; }
+}
+
+/// <summary>The <c>START WITH</c> clause of a hierarchical query, such as <c>START WITH mgr IS NULL</c>.</summary>
+/// <remarks>Spans the <c>START</c> keyword; see <see cref="FromClause"/>.</remarks>
+public sealed partial class StartWithClause : SqlNode
+{
+    /// <summary>The condition that selects the root rows.</summary>
+    public required Expression Condition { get; set; }
+}
+
+/// <summary>The <c>CONNECT BY</c> clause of a hierarchical query, such as <c>CONNECT BY NOCYCLE PRIOR id = mgr</c>.</summary>
+/// <remarks>Spans the <c>CONNECT</c> keyword; see <see cref="FromClause"/>.</remarks>
+public sealed partial class ConnectByClause : SqlNode
+{
+    /// <summary>True when <c>NOCYCLE</c> is written.</summary>
+    public bool NoCycle { get; set; }
+    /// <summary>The condition that joins a row to its parent.</summary>
+    public required Expression Condition { get; set; }
+}
+
+/// <summary>The <c>GROUP BY</c> clause, such as <c>GROUP BY a, ROLLUP(b, c)</c>.</summary>
+/// <remarks>Spans the <c>GROUP</c> keyword; see <see cref="FromClause"/>.</remarks>
+public sealed partial class GroupByClause : SqlNode
+{
+    /// <summary>The grouping expressions, in source order. <c>ROLLUP</c>, <c>CUBE</c> and <c>GROUPING SETS</c> are function calls.</summary>
+    public List<Expression> Items { get; set; } = [];
+}
+
+/// <summary>The <c>HAVING</c> clause, such as <c>HAVING COUNT(*) > 1</c>.</summary>
+/// <remarks>Spans the <c>HAVING</c> keyword; see <see cref="FromClause"/>.</remarks>
+public sealed partial class HavingClause : SqlNode
+{
+    /// <summary>The search condition.</summary>
+    public required Expression Condition { get; set; }
+}
+
+/// <summary>
+/// An <c>ORDER BY</c> clause, such as <c>ORDER BY a DESC</c>. Used wherever a sort list is written: on a query, inside
+/// <c>OVER (...)</c>, <c>WITHIN GROUP (...)</c> and <c>KEEP (...)</c>, and in <c>MATCH_RECOGNIZE</c> and <c>MODEL</c> rules.
+/// </summary>
+/// <remarks>Spans the <c>ORDER</c> keyword; see <see cref="FromClause"/>.</remarks>
+public sealed partial class OrderByClause : SqlNode
+{
+    /// <summary>True for <c>ORDER SIBLINGS BY</c>, which keeps the hierarchy order.</summary>
+    public bool Siblings { get; set; }
+    /// <summary>The sort items, in source order.</summary>
+    public List<OrderByItem> Items { get; set; } = [];
 }
 
 /// <summary>One item of an <c>ORDER BY</c> list, such as <c>sal DESC NULLS LAST</c>.</summary>
@@ -433,10 +498,10 @@ public sealed partial class UpdateStatement : DmlStatement
     public required TableReference Target { get; set; }
     /// <summary>The <c>SET</c> assignments, in source order.</summary>
     public List<SetClause> Set { get; set; } = [];
-    /// <summary>23ai: UPDATE ... SET ... FROM table_references.</summary>
-    public List<TableReference> From { get; set; } = [];
-    /// <summary>The <c>WHERE</c> condition, or null when absent.</summary>
-    public Expression? Where { get; set; }
+    /// <summary>23ai: UPDATE ... SET ... FROM table_references. Null when absent.</summary>
+    public FromClause? From { get; set; }
+    /// <summary>The <c>WHERE</c> clause, or null when absent.</summary>
+    public WhereClause? Where { get; set; }
 }
 
 /// <summary>One assignment of a <c>SET</c> clause: <c>col = expr</c> or <c>(c1, c2) = (subquery)</c>.</summary>
@@ -455,10 +520,10 @@ public sealed partial class DeleteStatement : DmlStatement
 {
     /// <summary>The table or view that rows are deleted from.</summary>
     public required TableReference Target { get; set; }
-    /// <summary>23ai: DELETE FROM target FROM table_references (direct joins).</summary>
-    public List<TableReference> From { get; set; } = [];
-    /// <summary>The <c>WHERE</c> condition, or null when absent.</summary>
-    public Expression? Where { get; set; }
+    /// <summary>23ai: DELETE FROM target FROM table_references (direct joins). Null when absent.</summary>
+    public FromClause? From { get; set; }
+    /// <summary>The <c>WHERE</c> clause, or null when absent.</summary>
+    public WhereClause? Where { get; set; }
 }
 
 /// <summary><c>MERGE INTO target USING source ON (condition) WHEN ...</c>.</summary>
@@ -1203,14 +1268,14 @@ public sealed partial class FunctionCall : Expression
     public bool IgnoreNulls { get; set; }
     /// <summary>True for <c>RESPECT NULLS</c>.</summary>
     public bool RespectNulls { get; set; }
-    /// <summary>The ordering items of <c>WITHIN GROUP (ORDER BY ...)</c>, as in <c>LISTAGG</c>; empty when absent.</summary>
-    public List<OrderByItem> WithinGroup { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> of <c>WITHIN GROUP (ORDER BY ...)</c>, as in <c>LISTAGG</c>; null when absent.</summary>
+    public OrderByClause? WithinGroup { get; set; }
     /// <summary>KEEP (DENSE_RANK FIRST|LAST ORDER BY ...)</summary>
     public KeepClause? Keep { get; set; }
     /// <summary>The <c>OVER</c> window of an analytic call, or null when absent.</summary>
     public WindowSpec? Over { get; set; }
-    /// <summary>The <c>ORDER BY</c> items written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; empty when absent.</summary>
-    public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; null when absent.</summary>
+    public OrderByClause? OrderBy { get; set; }
     /// <summary>The <c>PARTITION BY</c> expressions of a hypothetical-rank call, <c>APPROX_RANK(PARTITION BY owner ORDER BY n)</c>; empty when absent.</summary>
     public List<Expression> PartitionBy { get; set; } = [];
 }
@@ -1254,8 +1319,8 @@ public sealed partial class KeepClause : SqlNode
 {
     /// <summary>True for <c>FIRST</c>; false for <c>LAST</c>.</summary>
     public bool First { get; set; }
-    /// <summary>The ordering items, in source order.</summary>
-    public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> of the <c>KEEP</c> clause.</summary>
+    public OrderByClause? OrderBy { get; set; }
 }
 
 /// <summary>An <c>OVER</c> window specification, such as <c>(PARTITION BY d ORDER BY s ROWS UNBOUNDED PRECEDING)</c>.</summary>
@@ -1265,8 +1330,8 @@ public sealed partial class WindowSpec : SqlNode
     public Identifier? Name { get; set; }
     /// <summary>The <c>PARTITION BY</c> expressions; empty when absent.</summary>
     public List<Expression> PartitionBy { get; set; } = [];
-    /// <summary>The <c>ORDER BY</c> items; empty when absent.</summary>
-    public List<OrderByItem> OrderBy { get; set; } = [];
+    /// <summary>The <c>ORDER BY</c> clause, or null when absent.</summary>
+    public OrderByClause? OrderBy { get; set; }
     /// <summary>The window frame, or null when absent.</summary>
     public WindowFrame? Frame { get; set; }
 }
