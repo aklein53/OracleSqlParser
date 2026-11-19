@@ -361,7 +361,7 @@ public sealed partial class SqlScriptGenerator
             foreach (var c in fc.Clauses) { Add(" "); Clause(c); }
             Add(")");
             if (fc.WithinGroup is { } withinGroup) { Add(" WITHIN GROUP (ORDER BY "); Sep(withinGroup.Items, OrderItem); Add(")"); }
-            if (fc.Keep is { } keep) { Add(" KEEP (DENSE_RANK " + (keep.First ? "FIRST" : "LAST") + " ORDER BY "); Sep(keep.OrderBy?.Items ?? [], OrderItem); Add(")"); }
+            if (fc.Keep is { } keep) { Add(" KEEP (DENSE_RANK " + (keep.First ? "FIRST" : "LAST") + " ORDER BY "); Sep(keep.OrderBy.Items, OrderItem); Add(")"); }
             if (fc.FromLast != null) Add(fc.FromLast.Value ? " FROM LAST" : " FROM FIRST");
             if (fc.IgnoreNulls) Add(" IGNORE NULLS");
             if (fc.RespectNulls) Add(" RESPECT NULLS");

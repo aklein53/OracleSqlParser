@@ -603,13 +603,13 @@ public sealed partial class SqlParser
             {
                 var ks = Next(); Next();
                 ExpectKw("DENSE_RANK");
-                var keep = new KeepClause();
-                if (AcceptKw("FIRST")) keep.First = true; else ExpectKw("LAST");
+                bool first = AcceptKw("FIRST");
+                if (!first) ExpectKw("LAST");
                 var orderKeyword = Cur;
                 ExpectKw("ORDER"); ExpectKw("BY");
-                keep.OrderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, orderKeyword);
+                var orderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, orderKeyword);
                 ExpectOp(")");
-                fc.Keep = Fin(keep, ks);
+                fc.Keep = Fin(new KeepClause { First = first, OrderBy = orderBy }, ks);
             }
             // NTH_VALUE(x, n) FROM FIRST|LAST: only when an analytic tail follows, so FROM <table named FIRST/LAST> is never taken
             else if (fc.FromLast == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST"))

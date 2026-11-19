@@ -150,6 +150,24 @@ public class ClauseNodeTests
         public override SqlNode? Rewrite(WhereClause node) => null;
     }
 
+    /// <summary>KEEP always has its ORDER BY, so a KEEP without one is a parse error and the clause never has a null order.</summary>
+    [Fact]
+    public void KeepSpansItsOrderBy()
+    {
+        const string sql = "SELECT MAX(a) KEEP (DENSE_RANK LAST /* c */ ORDER BY b) FROM t";
+        var keep = Assert.IsType<FunctionCall>(Assert.IsType<ExpressionSelectItem>(Query(sql).SelectList[0]).Expression).Keep!;
+
+        Assert.Equal("KEEP (DENSE_RANK LAST /* c */ ORDER BY b)", Text(sql, keep));
+        Assert.Equal("ORDER BY b", Text(sql, keep.OrderBy));
+        Assert.False(keep.First);
+    }
+
+    [Fact]
+    public void KeepWithoutOrderByIsRejected()
+    {
+        Assert.False(SqlParser.Parse("SELECT MAX(a) KEEP (DENSE_RANK LAST) FROM t").Success);
+    }
+
     public static IEnumerable<object[]> Corpus() =>
         typeof(SmokeCorpusTests).GetMethod("Parses")!.GetCustomAttributes<InlineDataAttribute>()
             .SelectMany(a => a.GetData(null!))

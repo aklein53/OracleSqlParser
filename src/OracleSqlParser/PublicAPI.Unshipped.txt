@@ -2410,7 +2410,6 @@ OracleSqlParser.KeepClause
 OracleSqlParser.KeepClause.First.get -> bool
 OracleSqlParser.KeepClause.First.set -> void
 OracleSqlParser.KeepClause.KeepClause() -> void
-OracleSqlParser.KeepClause.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.KeepClause.OrderBy.set -> void
 OracleSqlParser.KeywordCasing
 OracleSqlParser.KeywordCasing.Lowercase = 1 -> OracleSqlParser.KeywordCasing
@@ -6032,3 +6031,5 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.Conditional
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptions! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
+
+OracleSqlParser.KeepClause.OrderBy.get -> OracleSqlParser.OrderByClause!

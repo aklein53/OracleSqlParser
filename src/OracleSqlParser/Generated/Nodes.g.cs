@@ -11239,7 +11239,7 @@ public partial class KeepClause
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "KeepClause.OrderBy");
+        OrderBy = SqlNodeRewriter.RewriteRequired(rewriter, OrderBy, "KeepClause.OrderBy");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -11258,7 +11258,7 @@ public partial class KeepClause
         var c = new KeepClause
         {
             First = First,
-            OrderBy = CloneChild(OrderBy),
+            OrderBy = CloneChild(OrderBy)!,
         };
         CopySpan(this, c);
         return c;

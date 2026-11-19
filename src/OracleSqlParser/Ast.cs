@@ -1320,7 +1320,7 @@ public sealed partial class KeepClause : SqlNode
     /// <summary>True for <c>FIRST</c>; false for <c>LAST</c>.</summary>
     public bool First { get; set; }
     /// <summary>The <c>ORDER BY</c> of the <c>KEEP</c> clause.</summary>
-    public OrderByClause? OrderBy { get; set; }
+    public required OrderByClause OrderBy { get; set; }
 }
 
 /// <summary>An <c>OVER</c> window specification, such as <c>(PARTITION BY d ORDER BY s ROWS UNBOUNDED PRECEDING)</c>.</summary>
