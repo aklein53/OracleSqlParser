@@ -157,10 +157,10 @@ BEGIN NULL; END;");
         "[(OpenStatement cursor=RC forQuery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=(FromClause tables=[(NamedTable name=[T])]) where=(WhereClause condition=(Equals B :x)))) using=[(UsingArgument value=Y)])]")]
     [InlineData("OPEN rc FOR 'select 1 from dual';", "[(OpenStatement cursor=RC forExpression='select 1 from dual')]")]
     [InlineData("FETCH c1 INTO a, b; FETCH c2 BULK COLLECT INTO tab LIMIT 100;",
-        "[(FetchStatement cursor=C1 into=[A B]) (FetchStatement cursor=C2 bulkCollect into=[TAB] limit=100)]")]
+        "[(FetchStatement cursor=C1 into=(IntoClause targets=[A B])) (FetchStatement cursor=C2 into=(IntoClause bulkCollect targets=[TAB]) limit=100)]")]
     [InlineData("EXECUTE IMMEDIATE v_sql INTO v USING IN a, OUT b, IN OUT c RETURNING INTO r;",
-        "[(ExecuteImmediateStatement sql=V_SQL into=[V] using=[(UsingArgument mode=In value=A) (UsingArgument mode=Out value=B) (UsingArgument mode=InOut value=C)] returningInto=[R])]")]
-    [InlineData("EXECUTE IMMEDIATE 'x' BULK COLLECT INTO tab;", "[(ExecuteImmediateStatement sql='x' bulkCollect into=[TAB])]")]
+        "[(ExecuteImmediateStatement sql=V_SQL into=(IntoClause targets=[V]) using=[(UsingArgument mode=In value=A) (UsingArgument mode=Out value=B) (UsingArgument mode=InOut value=C)] returningInto=(IntoClause targets=[R]))]")]
+    [InlineData("EXECUTE IMMEDIATE 'x' BULK COLLECT INTO tab;", "[(ExecuteImmediateStatement sql='x' into=(IntoClause bulkCollect targets=[TAB]))]")]
     [InlineData("FORALL i IN 1..tab.COUNT SAVE EXCEPTIONS INSERT INTO t VALUES (tab(i));",
         "[(ForallStatement index=I lower=1 upper=TAB.COUNT saveExceptions body=(InsertStatement target=(NamedTable name=[T]) valueRows=[[(FunctionCall name=[TAB] arguments=[(Argument value=I)])]]))]")]
     [InlineData("FORALL i IN INDICES OF tab BETWEEN 1 AND 5 DELETE FROM t WHERE id = tab(i);",
@@ -174,7 +174,7 @@ BEGIN NULL; END;");
         "(ProcedureCallStatement call=(FunctionCall name=[RAISE_APPLICATION_ERROR] arguments=[(Argument value=(Minus 20001)) (Argument value='bad')]))]")]
     [InlineData("COMMIT; ROLLBACK TO sp; SAVEPOINT sp;", "[(CommitStatement) (RollbackStatement toSavepoint=SP) (SavepointStatement name=SP)]")]
     [InlineData("SELECT a INTO v FROM t WHERE id = 1;",
-        "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=(FromClause tables=[(NamedTable name=[T])]) where=(WhereClause condition=(Equals ID 1)) into=[V]))]")]
+        "[(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=A)] from=(FromClause tables=[(NamedTable name=[T])]) where=(WhereClause condition=(Equals ID 1)) into=(IntoClause targets=[V])))]")]
     [InlineData("BEGIN NULL; EXCEPTION WHEN OTHERS THEN NULL; END;",
         "[(BlockStatement statements=[(NullStatement)] handlers=[(ExceptionHandler others statements=[(NullStatement)])])]")]
     [InlineData("v := SQL%ROWCOUNT; IF c1%ISOPEN THEN NULL; END IF;",

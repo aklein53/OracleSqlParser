@@ -66,8 +66,7 @@ public sealed partial class SqlScriptGenerator
             {
                 ClauseStart(_o.NewLineBeforeReturningClause);
                 Add("RETURNING "); Sep(d.Returning, ReturningItemText);
-                Add(d.ReturningBulkCollect ? " BULK COLLECT INTO " : " INTO ");
-                Sep(d.ReturningInto, e => Expr(e));
+                if (d.ReturningInto is { } returningInto) { Add(returningInto.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(returningInto.Targets, e => Expr(e)); }
             }
             if (d.ErrorLogging != null) { ClauseStart(_o.NewLineBeforeReturningClause); ErrorLoggingText(d.ErrorLogging); }
         }

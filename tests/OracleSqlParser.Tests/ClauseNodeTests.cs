@@ -263,6 +263,126 @@ public class ClauseNodeTests
         Assert.False(SqlParser.Parse(sql).Success);
     }
 
+    /// <summary>The INTO clause spans its keyword, or BULK COLLECT INTO from its BULK, through the last target.</summary>
+    [Theory]
+    [InlineData("SELECT a INTO x, y FROM t", "INTO x, y", false)]
+    [InlineData("SELECT a BULK  COLLECT INTO /*c*/ tab FROM t", "BULK  COLLECT INTO /*c*/ tab", true)]
+    public void SelectIntoSpansItsKeywords(string sql, string expected, bool bulk)
+    {
+        var into = Query(sql).Into!;
+
+        Assert.Equal(expected, Text(sql, into));
+        Assert.Equal(bulk, into.BulkCollect);
+    }
+
+    [Theory]
+    [InlineData("FETCH c1 INTO a, b", "INTO a, b", false)]
+    [InlineData("FETCH c1 BULK COLLECT INTO tab LIMIT 5", "BULK COLLECT INTO tab", true)]
+    [InlineData("FETCH c1 BULK  COLLECT INTO /*c*/ tab", "BULK  COLLECT INTO /*c*/ tab", true)]
+    public void FetchIntoSpansItsKeywords(string statement, string expected, bool bulk)
+    {
+        var sql = InBlock(statement);
+        var into = Assert.Single(Parsed(sql).Script.Descendants().OfType<FetchStatement>()).Into;
+
+        Assert.Equal(expected, Text(sql, into));
+        Assert.Equal(bulk, into.BulkCollect);
+    }
+
+    /// <summary>FETCH and EXECUTE IMMEDIATE are PL/SQL statements, so the tests parse them inside a block.</summary>
+    private static string InBlock(string statement) => "BEGIN " + statement + "; END;";
+
+    private static ParseResult Parsed(string sql)
+    {
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        return r;
+    }
+
+    /// <summary>EXECUTE IMMEDIATE has an INTO and a RETURNING INTO clause; the RETURNING keyword is not inside either span.</summary>
+    [Theory]
+    [InlineData("EXECUTE IMMEDIATE 'x' INTO v USING 1", "INTO v", false)]
+    [InlineData("EXECUTE IMMEDIATE 'x' BULK COLLECT INTO v", "BULK COLLECT INTO v", true)]
+    public void ExecuteImmediateIntoSpansItsKeywords(string statement, string expected, bool bulk)
+    {
+        var sql = InBlock(statement);
+        var into = Assert.Single(Parsed(sql).Script.Descendants().OfType<ExecuteImmediateStatement>()).Into!;
+
+        Assert.Equal(expected, Text(sql, into));
+        Assert.Equal(bulk, into.BulkCollect);
+    }
+
+    /// <summary>The RETURNING INTO clause starts at its INTO (or BULK), not at the RETURNING keyword before it.</summary>
+    [Fact]
+    public void ReturningIntoStartsAtInto()
+    {
+        var sql = InBlock("EXECUTE IMMEDIATE 'x' USING 1 RETURNING BULK COLLECT INTO r");
+        var stmt = Assert.Single(Parsed(sql).Script.Descendants().OfType<ExecuteImmediateStatement>());
+
+        Assert.Null(stmt.Into);
+        Assert.Equal("BULK COLLECT INTO r", Text(sql, stmt.ReturningInto!));
+        Assert.True(stmt.ReturningInto!.BulkCollect);
+    }
+
+    [Theory]
+    [InlineData("UPDATE t SET a = 1 RETURNING a INTO v", "INTO v", false)]
+    [InlineData("DELETE FROM t RETURNING a BULK  COLLECT INTO v", "BULK  COLLECT INTO v", true)]
+    [InlineData("INSERT INTO t VALUES (1) RETURNING a, b BULK COLLECT INTO x, y", "BULK COLLECT INTO x, y", true)]
+    public void DmlReturningIntoSpansItsKeywords(string sql, string expected, bool bulk)
+    {
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        var into = Assert.IsAssignableFrom<DmlStatement>(r.Script.Statements[0]).ReturningInto!;
+
+        Assert.Equal(expected, Text(sql, into));
+        Assert.Equal(bulk, into.BulkCollect);
+    }
+
+    /// <summary>A rewriter can drop a query's INTO, or replace it with a BULK COLLECT INTO over the same targets.</summary>
+    [Fact]
+    public void ARewriterCanDropOrReplaceAnInto()
+    {
+        var dropped = SqlParser.Parse("SELECT a INTO x FROM t").Script;
+        new DropInto().RewriteTree(dropped);
+        Assert.Equal("SELECT a FROM t;", new SqlScriptGenerator().Generate(dropped).Trim());
+
+        var replaced = SqlParser.Parse("SELECT a INTO x FROM t").Script;
+        new BulkInto().RewriteTree(replaced);
+        Assert.Equal("SELECT a BULK COLLECT INTO x FROM t;", new SqlScriptGenerator().Generate(replaced).Trim());
+    }
+
+    private sealed class DropInto : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(IntoClause node) => null;
+    }
+
+    private sealed class BulkInto : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(IntoClause node) => new IntoClause { BulkCollect = true, Targets = node.Targets };
+    }
+
+    [Theory]
+    [InlineData("SELECT a INTO x, y FROM t")]
+    [InlineData("SELECT a BULK COLLECT INTO tab FROM t")]
+    [InlineData("FETCH c1 BULK COLLECT INTO a LIMIT 5")]
+    [InlineData("EXECUTE IMMEDIATE 'x' INTO v USING 1 RETURNING INTO r")]
+    [InlineData("UPDATE t SET a = 1 RETURNING a BULK COLLECT INTO v")]
+    public void IntoRoundTrips(string sql)
+    {
+        var script = SqlParser.Parse(sql).Script;
+        var text = new SqlScriptGenerator().Generate(script);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, SqlParser.Parse(text).Script), text);
+    }
+
+    [Theory]
+    [InlineData("FETCH c1 INTO")]
+    [InlineData("FETCH c1 BULK COLLECT a")]
+    [InlineData("UPDATE t SET a = 1 RETURNING a BULK INTO v")]
+    public void AnIntoWithoutItsTargetsOrKeywordIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
     /// <summary>
     /// Each MERGE action has its own WHERE clause. The DELETE part's clause starts at its WHERE, not at the DELETE before it.
     /// </summary>
@@ -370,6 +490,7 @@ public class ClauseNodeTests
                 OrderByClause => "ORDER",
                 OffsetClause => "OFFSET",
                 WithinGroupClause => "WITHIN",
+                IntoClause into => into.BulkCollect ? "BULK" : "INTO",
                 _ => null,
             };
             if (keyword is null)

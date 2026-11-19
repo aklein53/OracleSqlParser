@@ -1054,10 +1054,8 @@ public sealed partial class FetchStatement : Statement
 {
     /// <summary>The cursor fetched from.</summary>
     public required Expression Cursor { get; set; }
-    /// <summary>True for <c>BULK COLLECT</c>.</summary>
-    public bool BulkCollect { get; set; }
-    /// <summary>The <c>INTO</c> targets, in source order.</summary>
-    public List<Expression> Into { get; set; } = [];
+    /// <summary>The <c>INTO</c> clause, with its <c>BULK COLLECT</c> flag.</summary>
+    public required IntoClause Into { get; set; }
     /// <summary>The <c>LIMIT</c> row count, or null when absent.</summary>
     public Expression? Limit { get; set; }
 }
@@ -1074,16 +1072,12 @@ public sealed partial class ExecuteImmediateStatement : Statement
 {
     /// <summary>The SQL string expression.</summary>
     public required Expression Sql { get; set; }
-    /// <summary>True for <c>BULK COLLECT INTO</c>.</summary>
-    public bool BulkCollect { get; set; }
-    /// <summary>The <c>INTO</c> targets, in source order; empty when absent.</summary>
-    public List<Expression> Into { get; set; } = [];
+    /// <summary>The <c>INTO</c> clause, or null when absent.</summary>
+    public IntoClause? Into { get; set; }
     /// <summary>The <c>USING</c> arguments, in source order; empty when absent.</summary>
     public List<UsingArgument> Using { get; set; } = [];
-    /// <summary>The <c>RETURNING ... INTO</c> targets, in source order; empty when absent.</summary>
-    public List<Expression> ReturningInto { get; set; } = [];
-    /// <summary>True for <c>RETURNING ... BULK COLLECT INTO</c>.</summary>
-    public bool ReturningBulkCollect { get; set; }
+    /// <summary>The <c>RETURNING ... INTO</c> clause, or null when absent.</summary>
+    public IntoClause? ReturningInto { get; set; }
 }
 
 /// <summary><c>FORALL i IN lower .. upper DML</c>: runs a DML statement for each index value in one call.</summary>

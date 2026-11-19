@@ -1698,6 +1698,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="IntoClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(IntoClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="IntoClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(IntoClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="IsExpression"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(IsExpression node) => Visit((SqlNode)node);
 

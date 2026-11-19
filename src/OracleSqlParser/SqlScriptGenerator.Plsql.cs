@@ -545,19 +545,19 @@ public sealed partial class SqlScriptGenerator
                     break;
                 case FetchStatement f:
                     Add("FETCH "); Expr(f.Cursor);
-                    Add(f.BulkCollect ? " BULK COLLECT INTO " : " INTO ");
-                    Sep(f.Into, x => Expr(x));
+                    Add(f.Into.BulkCollect ? " BULK COLLECT INTO " : " INTO ");
+                    Sep(f.Into.Targets, x => Expr(x));
                     if (f.Limit != null) { Add(" LIMIT "); Expr(f.Limit); }
                     break;
                 case CloseStatement cl: Add("CLOSE "); Expr(cl.Cursor); break;
                 case ExecuteImmediateStatement ei:
                     Add("EXECUTE IMMEDIATE "); Expr(ei.Sql);
-                    if (ei.Into.Count > 0) { Add(ei.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(ei.Into, x => Expr(x)); }
+                    if (ei.Into is { } intoClause) { Add(intoClause.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(intoClause.Targets, x => Expr(x)); }
                     if (ei.Using.Count > 0) UsingList(ei.Using);
-                    if (ei.ReturningInto.Count > 0)
+                    if (ei.ReturningInto is { } returningInto)
                     {
-                        Add(ei.ReturningBulkCollect ? " RETURNING BULK COLLECT INTO " : " RETURNING INTO ");
-                        Sep(ei.ReturningInto, x => Expr(x));
+                        Add(returningInto.BulkCollect ? " RETURNING BULK COLLECT INTO " : " RETURNING INTO ");
+                        Sep(returningInto.Targets, x => Expr(x));
                     }
                     break;
                 case ForallStatement fa:

@@ -1140,10 +1140,8 @@ public sealed partial class SqlParser
     private Statement ParseFetch()
     {
         var start = Next();
-        var st = new FetchStatement { Cursor = ParsePostfix() };
-        if (IsKw("BULK") && IsKwAt(1, "COLLECT")) { Next(); Next(); st.BulkCollect = true; }
-        ExpectKw("INTO");
-        ParseIntoTargets(st.Into);
+        var cursor = ParsePostfix();
+        var st = new FetchStatement { Cursor = cursor, Into = ParseInto() };
         if (AcceptKw("LIMIT")) st.Limit = ParseExpr();
         return Fin(st, start);
     }
@@ -1155,15 +1153,12 @@ public sealed partial class SqlParser
         int prog38 = -1;
         while (Progress(ref prog38))
         {
-            if (IsKw("BULK") && IsKwAt(1, "COLLECT")) { Next(); Next(); st.BulkCollect = true; ExpectKw("INTO"); ParseIntoTargets(st.Into); }
-            else if (AcceptKw("INTO")) ParseIntoTargets(st.Into);
+            if (st.Into is null && IsIntoStart()) st.Into = ParseInto();
             else if (AcceptKw("USING")) st.Using = ParseUsingList();
-            else if (IsKw("RETURNING") || IsKw("RETURN"))
+            else if (st.ReturningInto is null && (IsKw("RETURNING") || IsKw("RETURN")))
             {
                 Next();
-                if (IsKw("BULK") && IsKwAt(1, "COLLECT")) { Next(); Next(); st.ReturningBulkCollect = true; }
-                ExpectKw("INTO");
-                ParseIntoTargets(st.ReturningInto);
+                st.ReturningInto = ParseInto();
             }
             else break;
         }

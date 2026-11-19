@@ -1490,9 +1490,6 @@ OracleSqlParser.DmlStatement.Hint.get -> OracleSqlParser.HintClause?
 OracleSqlParser.DmlStatement.Hint.set -> void
 OracleSqlParser.DmlStatement.Returning.get -> System.Collections.Generic.List<OracleSqlParser.ReturningItem!>!
 OracleSqlParser.DmlStatement.Returning.set -> void
-OracleSqlParser.DmlStatement.ReturningBulkCollect.get -> bool
-OracleSqlParser.DmlStatement.ReturningBulkCollect.set -> void
-OracleSqlParser.DmlStatement.ReturningInto.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.DmlStatement.ReturningInto.set -> void
 OracleSqlParser.DropStatement
 OracleSqlParser.DropStatement.AndDatafiles.get -> bool
@@ -1584,14 +1581,8 @@ OracleSqlParser.ExecStatement.Body.get -> OracleSqlParser.Statement!
 OracleSqlParser.ExecStatement.Body.set -> void
 OracleSqlParser.ExecStatement.ExecStatement() -> void
 OracleSqlParser.ExecuteImmediateStatement
-OracleSqlParser.ExecuteImmediateStatement.BulkCollect.get -> bool
-OracleSqlParser.ExecuteImmediateStatement.BulkCollect.set -> void
 OracleSqlParser.ExecuteImmediateStatement.ExecuteImmediateStatement() -> void
-OracleSqlParser.ExecuteImmediateStatement.Into.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.ExecuteImmediateStatement.Into.set -> void
-OracleSqlParser.ExecuteImmediateStatement.ReturningBulkCollect.get -> bool
-OracleSqlParser.ExecuteImmediateStatement.ReturningBulkCollect.set -> void
-OracleSqlParser.ExecuteImmediateStatement.ReturningInto.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.ExecuteImmediateStatement.ReturningInto.set -> void
 OracleSqlParser.ExecuteImmediateStatement.Sql.get -> OracleSqlParser.Expression!
 OracleSqlParser.ExecuteImmediateStatement.Sql.set -> void
@@ -1721,12 +1712,9 @@ OracleSqlParser.FetchClause.TargetAccuracy.set -> void
 OracleSqlParser.FetchClause.WithTies.get -> bool
 OracleSqlParser.FetchClause.WithTies.set -> void
 OracleSqlParser.FetchStatement
-OracleSqlParser.FetchStatement.BulkCollect.get -> bool
-OracleSqlParser.FetchStatement.BulkCollect.set -> void
 OracleSqlParser.FetchStatement.Cursor.get -> OracleSqlParser.Expression!
 OracleSqlParser.FetchStatement.Cursor.set -> void
 OracleSqlParser.FetchStatement.FetchStatement() -> void
-OracleSqlParser.FetchStatement.Into.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.FetchStatement.Into.set -> void
 OracleSqlParser.FetchStatement.Limit.get -> OracleSqlParser.Expression?
 OracleSqlParser.FetchStatement.Limit.set -> void
@@ -3174,10 +3162,7 @@ OracleSqlParser.QuerySpecification.Having.get -> OracleSqlParser.HavingClause?
 OracleSqlParser.QuerySpecification.Having.set -> void
 OracleSqlParser.QuerySpecification.Hint.get -> OracleSqlParser.HintClause?
 OracleSqlParser.QuerySpecification.Hint.set -> void
-OracleSqlParser.QuerySpecification.Into.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.QuerySpecification.Into.set -> void
-OracleSqlParser.QuerySpecification.IntoBulkCollect.get -> bool
-OracleSqlParser.QuerySpecification.IntoBulkCollect.set -> void
 OracleSqlParser.QuerySpecification.Model.get -> OracleSqlParser.ModelClause?
 OracleSqlParser.QuerySpecification.Model.set -> void
 OracleSqlParser.QuerySpecification.Quantifier.get -> OracleSqlParser.QuantifierKind?
@@ -6056,3 +6041,21 @@ override OracleSqlParser.WithinGroupClause.GetChildren() -> System.Collections.G
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.WithinGroupClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.WithinGroupClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WithinGroupClause! node) -> void
+
+OracleSqlParser.DmlStatement.ReturningInto.get -> OracleSqlParser.IntoClause?
+OracleSqlParser.ExecuteImmediateStatement.Into.get -> OracleSqlParser.IntoClause?
+OracleSqlParser.ExecuteImmediateStatement.ReturningInto.get -> OracleSqlParser.IntoClause?
+OracleSqlParser.FetchStatement.Into.get -> OracleSqlParser.IntoClause!
+OracleSqlParser.IntoClause
+OracleSqlParser.IntoClause.BulkCollect.get -> bool
+OracleSqlParser.IntoClause.BulkCollect.set -> void
+OracleSqlParser.IntoClause.IntoClause() -> void
+OracleSqlParser.IntoClause.Targets.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
+OracleSqlParser.IntoClause.Targets.set -> void
+OracleSqlParser.QuerySpecification.Into.get -> OracleSqlParser.IntoClause?
+override OracleSqlParser.IntoClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.IntoClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.IntoClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.IntoClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.IntoClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.IntoClause! node) -> void

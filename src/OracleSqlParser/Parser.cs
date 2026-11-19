@@ -666,8 +666,7 @@ public sealed partial class SqlParser
 
         do qs.SelectList.Add(ParseSelectItem()); while (AcceptOp(","));
 
-        if (IsKw("BULK") && IsKwAt(1, "COLLECT")) { Next(); Next(); qs.IntoBulkCollect = true; ExpectKw("INTO"); ParseIntoTargets(qs.Into); }
-        else if (AcceptKw("INTO")) ParseIntoTargets(qs.Into);
+        if (IsIntoStart()) qs.Into = ParseInto();
 
         if (IsKw("FROM"))
         {
@@ -728,9 +727,21 @@ public sealed partial class SqlParser
         return Fin(list, start);
     }
 
-    private void ParseIntoTargets(List<Expression> into)
+    /// <summary>True when the next tokens are <c>INTO</c> or <c>BULK COLLECT INTO</c>.</summary>
+    private bool IsIntoStart() => IsKw("INTO") || (IsKw("BULK") && IsKwAt(1, "COLLECT"));
+
+    /// <summary>
+    /// An <c>INTO</c> or <c>BULK COLLECT INTO</c> clause with its targets. The span starts at <c>BULK</c> or <c>INTO</c>.
+    /// </summary>
+    private IntoClause ParseInto()
     {
-        do into.Add(ParsePostfix()); while (AcceptOp(","));
+        var start = Cur;
+        bool bulk = IsKw("BULK") && IsKwAt(1, "COLLECT");
+        if (bulk) { Next(); Next(); }
+        ExpectKw("INTO");
+        var into = new IntoClause { BulkCollect = bulk };
+        do into.Targets.Add(ParsePostfix()); while (AcceptOp(","));
+        return Fin(into, start);
     }
 
     private Expression ParseGroupByItem()
@@ -1090,9 +1101,7 @@ public sealed partial class SqlParser
         if (AcceptKw("RETURNING") || AcceptKw("RETURN"))
         {
             do st.Returning.Add(ParseReturningItem()); while (AcceptOp(","));
-            if (IsKw("BULK") && IsKwAt(1, "COLLECT")) { Next(); Next(); st.ReturningBulkCollect = true; }
-            ExpectKw("INTO");
-            do st.ReturningInto.Add(ParsePostfix()); while (AcceptOp(","));
+            st.ReturningInto = ParseInto();
         }
         ParseErrorLogging(st);
     }

@@ -419,7 +419,7 @@ public static class SqlAnalysis
                 _hierarchical = savedHierarchical;
                 _versionsQuery = savedVersions;
             }
-            WalkVariables(node.Into);
+            WalkVariables(node.Into?.Targets ?? []);
         }
 
         public override void ExplicitVisit(SubqueryTable node)
@@ -629,7 +629,7 @@ public static class SqlAnalysis
             {
                 foreach (var item in node.Returning) item.Accept(this);
             });
-            WalkVariables(node.ReturningInto);
+            WalkVariables(node.ReturningInto?.Targets ?? []);
         }
 
         /// <summary>

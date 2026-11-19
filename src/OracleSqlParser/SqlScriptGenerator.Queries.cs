@@ -154,7 +154,7 @@ public sealed partial class SqlScriptGenerator
             if (qs.Quantifier != null) Add(" " + qs.Quantifier.ToString()!.ToUpperInvariant());
             if (_o.MultilineSelectElementsList) Indent(() => SepLines(qs.SelectList, Item));
             else ClauseBody(() => Sep(qs.SelectList, Item));
-            if (qs.Into.Count > 0) { Add(qs.IntoBulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(qs.Into, e => Expr(e)); }
+            if (qs.Into is { } into) { Add(into.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(into.Targets, e => Expr(e)); }
             if (qs.From is { } from) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM"); ClauseBody(() => Sep(from.Tables, Table)); }
             if (qs.Where is { } where) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE"); ClauseBody(() => Expr(where.Condition)); }
             if (qs.StartWith is { } startWith) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add("START WITH "); Expr(startWith.Condition); }

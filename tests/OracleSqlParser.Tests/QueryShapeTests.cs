@@ -100,8 +100,8 @@ public class QueryShapeTests
         "groupBy=(GroupByClause items=[(FunctionCall name=[GROUPING SETS] arguments=[(Argument value=(ExpressionList items=[A B])) (Argument value=(ExpressionList items=[A])) (Argument value=(ExpressionList))])])")]
     [InlineData("SELECT empno FROM emp START WITH mgr IS NULL CONNECT BY NOCYCLE PRIOR empno = mgr",
         "startWith=(StartWithClause condition=(IsExpression value=MGR test=Null)) connectBy=(ConnectByClause noCycle condition=(Equals (Prior EMPNO) MGR))")]
-    [InlineData("SELECT a INTO x, y FROM t", "into=[X Y]")]
-    [InlineData("SELECT a BULK COLLECT INTO tab FROM t", "into=[TAB] intoBulkCollect")]
+    [InlineData("SELECT a INTO x, y FROM t", "into=(IntoClause targets=[X Y])")]
+    [InlineData("SELECT a BULK COLLECT INTO tab FROM t", "into=(IntoClause bulkCollect targets=[TAB])")]
     public void QuerySpecificationClauses(string sql, string expectedFragment) =>
         Assert.Contains(expectedFragment, Shape.Of<QuerySpecification>(sql));
 

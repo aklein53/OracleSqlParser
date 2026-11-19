@@ -156,10 +156,8 @@ public abstract partial class DmlStatement : Statement
     public HintClause? Hint { get; set; }
     /// <summary>The items of the <c>RETURNING</c> clause, in source order; empty when absent.</summary>
     public List<ReturningItem> Returning { get; set; } = [];
-    /// <summary>True when <c>RETURNING ... BULK COLLECT INTO</c> is written.</summary>
-    public bool ReturningBulkCollect { get; set; }
-    /// <summary>The PL/SQL targets after <c>INTO</c> in <c>RETURNING ... INTO</c>; empty when absent.</summary>
-    public List<Expression> ReturningInto { get; set; } = [];
+    /// <summary>The <c>INTO</c> clause of <c>RETURNING ... INTO</c> in PL/SQL, or null when absent.</summary>
+    public IntoClause? ReturningInto { get; set; }
     /// <summary>The <c>LOG ERRORS</c> clause, or null when absent.</summary>
     public ErrorLogging? ErrorLogging { get; set; }
 }
@@ -277,10 +275,8 @@ public sealed partial class QuerySpecification : QueryExpression
     public GroupByClause? GroupBy { get; set; }
     /// <summary>The <c>HAVING</c> clause, or null when absent.</summary>
     public HavingClause? Having { get; set; }
-    /// <summary>The PL/SQL variables of <c>SELECT ... INTO</c>; empty when absent.</summary>
-    public List<Expression> Into { get; set; } = [];
-    /// <summary>True when <c>BULK COLLECT INTO</c> is written in a PL/SQL query.</summary>
-    public bool IntoBulkCollect { get; set; }
+    /// <summary>The <c>INTO</c> clause of <c>SELECT ... INTO</c> in a PL/SQL block, or null when absent.</summary>
+    public IntoClause? Into { get; set; }
     /// <summary>The <c>MODEL</c> clause, or null when absent.</summary>
     public ModelClause? Model { get; set; }
 }
@@ -392,6 +388,22 @@ public sealed partial class GroupByClause : SqlNode
 {
     /// <summary>The grouping expressions, in source order. <c>ROLLUP</c>, <c>CUBE</c> and <c>GROUPING SETS</c> are function calls.</summary>
     public List<Expression> Items { get; set; } = [];
+}
+
+/// <summary>
+/// The PL/SQL <c>INTO</c> targets of a query, a <c>FETCH</c>, an <c>EXECUTE IMMEDIATE</c> or a DML <c>RETURNING</c>, such as
+/// <c>INTO a, b</c> or <c>BULK COLLECT INTO l</c>.
+/// </summary>
+/// <remarks>
+/// Spans the <c>INTO</c> keyword, or the <c>BULK</c> keyword of <c>BULK COLLECT INTO</c>, through the last target; see
+/// <see cref="FromClause"/>. The <c>RETURNING</c> keyword before a DML's <c>INTO</c> is not part of it.
+/// </remarks>
+public sealed partial class IntoClause : SqlNode
+{
+    /// <summary>True for <c>BULK COLLECT INTO</c>.</summary>
+    public bool BulkCollect { get; set; }
+    /// <summary>The variables that receive the values, in source order.</summary>
+    public List<Expression> Targets { get; set; } = [];
 }
 
 /// <summary>The <c>HAVING</c> clause, such as <c>HAVING COUNT(*) > 1</c>.</summary>
