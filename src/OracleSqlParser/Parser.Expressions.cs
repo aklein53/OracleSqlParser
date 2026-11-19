@@ -593,11 +593,12 @@ public sealed partial class SqlParser
         {
             if (IsKw("WITHIN") && IsKwAt(1, "GROUP"))
             {
-                Next(); Next(); ExpectOp("(");
-                var kw = Cur;
+                var withinKeyword = Next(); Next(); ExpectOp("(");
+                var orderKeyword = Cur;
                 ExpectKw("ORDER"); ExpectKw("BY");
-                fc.WithinGroup = Fin(new OrderByClause { Items = ParseOrderByList() }, kw);
+                var orderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, orderKeyword);
                 ExpectOp(")");
+                fc.WithinGroup = Fin(new WithinGroupClause { OrderBy = orderBy }, withinKeyword);
             }
             else if (IsKw("KEEP") && IsOpAt(1, "("))
             {

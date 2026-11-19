@@ -415,6 +415,16 @@ public sealed partial class OrderByClause : SqlNode
     public List<OrderByItem> Items { get; set; } = [];
 }
 
+/// <summary>
+/// The <c>WITHIN GROUP (ORDER BY ...)</c> clause of an ordered-set aggregate, such as <c>LISTAGG(n, ',') WITHIN GROUP (ORDER BY n)</c>.
+/// </summary>
+/// <remarks>Spans the <c>WITHIN</c> keyword through the closing parenthesis; see <see cref="FromClause"/>.</remarks>
+public sealed partial class WithinGroupClause : SqlNode
+{
+    /// <summary>The <c>ORDER BY</c> inside the parentheses.</summary>
+    public required OrderByClause OrderBy { get; set; }
+}
+
 /// <summary>One item of an <c>ORDER BY</c> list, such as <c>sal DESC NULLS LAST</c>.</summary>
 public sealed partial class OrderByItem : SqlNode
 {
@@ -1279,8 +1289,8 @@ public sealed partial class FunctionCall : Expression
     public bool IgnoreNulls { get; set; }
     /// <summary>True for <c>RESPECT NULLS</c>.</summary>
     public bool RespectNulls { get; set; }
-    /// <summary>The <c>ORDER BY</c> of <c>WITHIN GROUP (ORDER BY ...)</c>, as in <c>LISTAGG</c>; null when absent.</summary>
-    public OrderByClause? WithinGroup { get; set; }
+    /// <summary>The <c>WITHIN GROUP (ORDER BY ...)</c> clause, as in <c>LISTAGG</c>; null when absent.</summary>
+    public WithinGroupClause? WithinGroup { get; set; }
     /// <summary>KEEP (DENSE_RANK FIRST|LAST ORDER BY ...)</summary>
     public KeepClause? Keep { get; set; }
     /// <summary>The <c>OVER</c> window of an analytic call, or null when absent.</summary>

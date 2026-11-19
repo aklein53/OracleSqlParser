@@ -3088,6 +3088,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="WithinGroupClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(WithinGroupClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="WithinGroupClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(WithinGroupClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="WordItem"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(WordItem node) => Visit((SqlNode)node);
 

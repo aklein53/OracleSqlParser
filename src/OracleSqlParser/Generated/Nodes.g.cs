@@ -18711,6 +18711,52 @@ public partial class WindowSpec
     }
 }
 
+public partial class WithinGroupClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (OrderBy is not null) yield return OrderBy;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        OrderBy?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        OrderBy = SqlNodeRewriter.RewriteRequired(rewriter, OrderBy, "WithinGroupClause.OrderBy");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("OrderBy", OrderBy),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new WithinGroupClause
+        {
+            OrderBy = CloneChild(OrderBy)!,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (WithinGroupClause)other;
+        return Pair(OrderBy, o.OrderBy, pending);
+    }
+}
+
 public partial class WordItem
 {
     internal override NodeProperty[] NodeProperties() =>

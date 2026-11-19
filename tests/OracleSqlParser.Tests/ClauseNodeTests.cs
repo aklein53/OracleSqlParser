@@ -217,6 +217,52 @@ public class ClauseNodeTests
         Assert.False(SqlParser.Parse(sql).Success);
     }
 
+    /// <summary>The WITHIN GROUP clause starts at WITHIN and ends at its closing parenthesis; the ORDER BY inside is its child.</summary>
+    [Fact]
+    public void WithinGroupSpansWithinThroughItsParenthesis()
+    {
+        const string sql = "SELECT LISTAGG(n, ',') WITHIN /*c*/ GROUP (ORDER BY n DESC) FROM t";
+        var call = Assert.IsType<FunctionCall>(Assert.IsType<ExpressionSelectItem>(Query(sql).SelectList[0]).Expression);
+
+        Assert.Equal("WITHIN /*c*/ GROUP (ORDER BY n DESC)", Text(sql, call.WithinGroup!));
+        Assert.Equal("ORDER BY n DESC", Text(sql, call.WithinGroup!.OrderBy));
+    }
+
+    /// <summary>The generator writes WITHIN GROUP back, and the output parses to the same tree.</summary>
+    [Fact]
+    public void WithinGroupRoundTrips()
+    {
+        const string text = "SELECT LISTAGG(n, ',') WITHIN GROUP (ORDER BY n DESC) FROM t;";
+        var script = SqlParser.Parse(text).Script;
+
+        Assert.Equal(text, new SqlScriptGenerator().Generate(script).Trim());
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, SqlParser.Parse(new SqlScriptGenerator().Generate(script)).Script));
+    }
+
+    /// <summary>A rewriter removes the whole WITHIN GROUP clause by returning null for it.</summary>
+    [Fact]
+    public void ARewriterCanDropWithinGroup()
+    {
+        var script = SqlParser.Parse("SELECT LISTAGG(n, ',') WITHIN GROUP (ORDER BY n) FROM t").Script;
+        new DropWithinGroup().RewriteTree(script);
+
+        Assert.Equal("SELECT LISTAGG(n, ',') FROM t;", new SqlScriptGenerator().Generate(script).Trim());
+    }
+
+    private sealed class DropWithinGroup : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(WithinGroupClause node) => null;
+    }
+
+    [Theory]
+    [InlineData("SELECT LISTAGG(n, ',') WITHIN GROUP (ORDER BY) FROM t")]
+    [InlineData("SELECT LISTAGG(n, ',') WITHIN GROUP FROM t")]
+    [InlineData("SELECT LISTAGG(n, ',') WITHIN GROUP (ORDER BY n FROM t")]
+    public void AWithinGroupWithoutAnOrderByIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
     /// <summary>
     /// Each MERGE action has its own WHERE clause. The DELETE part's clause starts at its WHERE, not at the DELETE before it.
     /// </summary>
@@ -323,6 +369,7 @@ public class ClauseNodeTests
                 HavingClause => "HAVING",
                 OrderByClause => "ORDER",
                 OffsetClause => "OFFSET",
+                WithinGroupClause => "WITHIN",
                 _ => null,
             };
             if (keyword is null)
