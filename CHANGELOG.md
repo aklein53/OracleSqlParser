@@ -58,6 +58,19 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | Property | Was | Is |
   |---|---|---|
   | `ErrorLogging` (class; `DmlStatement.ErrorLogging` keeps its name) | `ErrorLogging` | `ErrorLoggingClause` |
+
+- Pairs of flags that are one choice are enums:
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `FunctionCall.IgnoreNulls`, `FunctionCall.RespectNulls` | `bool`, `bool` | `NullTreatment?` (`enum NullTreatment { Ignore, Respect }`) |
+  | `FunctionCall.FromLast` | `bool?` | `NthValueFrom?` `NthFrom` (`enum NthValueFrom { First, Last }`) |
+  | `ForUpdateClause.NoWait`, `ForUpdateClause.SkipLocked` | `bool`, `bool` | removed; `ForUpdateClause.Wait` is `LockWait?` (`enum LockWait { NoWait, Wait, SkipLocked }`) |
+  | `ForUpdateClause.Wait` (seconds) | `Expression?` | `Expression?` as `WaitSeconds`, set with `LockWait.Wait` |
+  | `LockTableStatement.NoWait` | `bool` | removed; `LockTableStatement.Wait` is `LockWait?` |
+  | `LockTableStatement.Wait` (seconds) | `Expression?` | `Expression?` as `WaitSeconds`, set with `LockWait.Wait` |
+
+  `CommitWrite.Wait` keeps its `WaitMode` (`Wait`, `NoWait`), which is unchanged.
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).

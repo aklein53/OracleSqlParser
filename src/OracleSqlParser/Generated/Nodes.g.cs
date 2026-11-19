@@ -8321,28 +8321,27 @@ public partial class ForUpdateClause
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Of is not null) foreach (var x in Of) yield return x;
-        if (Wait is not null) yield return Wait;
+        if (WaitSeconds is not null) yield return WaitSeconds;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Of is not null) foreach (var x in Of) x.Accept(visitor);
-        Wait?.Accept(visitor);
+        WaitSeconds?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Of, "ForUpdateClause.Of");
-        Wait = SqlNodeRewriter.RewriteOptional(rewriter, Wait, "ForUpdateClause.Wait");
+        WaitSeconds = SqlNodeRewriter.RewriteOptional(rewriter, WaitSeconds, "ForUpdateClause.WaitSeconds");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
         new("Of", Of),
-        new("NoWait", NoWait),
-        new("SkipLocked", SkipLocked),
         new("Wait", Wait),
+        new("WaitSeconds", WaitSeconds),
     ];
 
     /// <inheritdoc/>
@@ -8355,9 +8354,8 @@ public partial class ForUpdateClause
         var c = new ForUpdateClause
         {
             Of = CloneList(Of),
-            NoWait = NoWait,
-            SkipLocked = SkipLocked,
-            Wait = CloneChild(Wait),
+            Wait = Wait,
+            WaitSeconds = CloneChild(WaitSeconds),
         };
         CopySpan(this, c);
         return c;
@@ -8367,9 +8365,8 @@ public partial class ForUpdateClause
     {
         var o = (ForUpdateClause)other;
         return PairList(Of, o.Of, pending)
-            && NoWait == o.NoWait
-            && SkipLocked == o.SkipLocked
-            && Pair(Wait, o.Wait, pending);
+            && Wait == o.Wait
+            && Pair(WaitSeconds, o.WaitSeconds, pending);
     }
 }
 
@@ -8789,9 +8786,8 @@ public partial class FunctionCall
         new("Operations", Operations),
         new("Quantifier", Quantifier),
         new("Arguments", Arguments),
-        new("FromLast", FromLast, NullableBool: true),
-        new("IgnoreNulls", IgnoreNulls),
-        new("RespectNulls", RespectNulls),
+        new("NthFrom", NthFrom),
+        new("NullTreatment", NullTreatment),
         new("WithinGroup", WithinGroup),
         new("Keep", Keep),
         new("Over", Over),
@@ -8815,9 +8811,8 @@ public partial class FunctionCall
             Operations = CloneList(Operations),
             Quantifier = Quantifier,
             Arguments = CloneList(Arguments),
-            FromLast = FromLast,
-            IgnoreNulls = IgnoreNulls,
-            RespectNulls = RespectNulls,
+            NthFrom = NthFrom,
+            NullTreatment = NullTreatment,
             WithinGroup = CloneChild(WithinGroup),
             Keep = CloneChild(Keep),
             Over = CloneChild(Over),
@@ -8838,9 +8833,8 @@ public partial class FunctionCall
             && PairList(Operations, o.Operations, pending)
             && Quantifier == o.Quantifier
             && PairList(Arguments, o.Arguments, pending)
-            && FromLast == o.FromLast
-            && IgnoreNulls == o.IgnoreNulls
-            && RespectNulls == o.RespectNulls
+            && NthFrom == o.NthFrom
+            && NullTreatment == o.NullTreatment
             && Pair(WithinGroup, o.WithinGroup, pending)
             && Pair(Keep, o.Keep, pending)
             && Pair(Over, o.Over, pending)
@@ -11751,28 +11745,28 @@ public partial class LockTableStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Tables is not null) foreach (var x in Tables) yield return x;
-        if (Wait is not null) yield return Wait;
+        if (WaitSeconds is not null) yield return WaitSeconds;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Tables is not null) foreach (var x in Tables) x.Accept(visitor);
-        Wait?.Accept(visitor);
+        WaitSeconds?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Tables, "LockTableStatement.Tables");
-        Wait = SqlNodeRewriter.RewriteOptional(rewriter, Wait, "LockTableStatement.Wait");
+        WaitSeconds = SqlNodeRewriter.RewriteOptional(rewriter, WaitSeconds, "LockTableStatement.WaitSeconds");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
         new("Tables", Tables),
         new("Mode", Mode),
-        new("NoWait", NoWait),
         new("Wait", Wait),
+        new("WaitSeconds", WaitSeconds),
         new("Labels", Labels),
     ];
 
@@ -11787,8 +11781,8 @@ public partial class LockTableStatement
         {
             Tables = CloneList(Tables),
             Mode = Mode,
-            NoWait = NoWait,
-            Wait = CloneChild(Wait),
+            Wait = Wait,
+            WaitSeconds = CloneChild(WaitSeconds),
             Labels = CloneStrings(Labels),
         };
         CopySpan(this, c);
@@ -11800,8 +11794,8 @@ public partial class LockTableStatement
         var o = (LockTableStatement)other;
         return PairList(Tables, o.Tables, pending)
             && Mode == o.Mode
-            && NoWait == o.NoWait
-            && Pair(Wait, o.Wait, pending)
+            && Wait == o.Wait
+            && Pair(WaitSeconds, o.WaitSeconds, pending)
             && SameStrings(Labels, o.Labels);
     }
 }

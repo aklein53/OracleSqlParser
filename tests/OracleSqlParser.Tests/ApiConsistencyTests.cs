@@ -337,6 +337,73 @@ public class ApiConsistencyTests
         Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
     }
 
+    /// <summary>IGNORE NULLS and RESPECT NULLS are one enum-valued option, and absent means null.</summary>
+    [Theory]
+    [InlineData("SELECT LAG(x, 1) IGNORE NULLS OVER (ORDER BY y) FROM t", NullTreatment.Ignore)]
+    [InlineData("SELECT LAG(x, 1) RESPECT NULLS OVER (ORDER BY y) FROM t", NullTreatment.Respect)]
+    public void NullTreatmentIsAnEnum(string sql, NullTreatment expected)
+    {
+        var call = Assert.Single(Parsed(sql).Descendants().OfType<FunctionCall>());
+
+        Assert.Equal(expected, call.NullTreatment);
+        Assert.True(SqlNodeComparer.StructurallyEqual(Parsed(sql), Parsed(Generate(Parsed(sql)))));
+    }
+
+    [Fact]
+    public void AFunctionWithoutNullTreatmentHasNone()
+    {
+        var call = Assert.Single(Parsed("SELECT LAG(x, 1) OVER (ORDER BY y) FROM t").Descendants().OfType<FunctionCall>());
+
+        Assert.Null(call.NullTreatment);
+    }
+
+    /// <summary>NTH_VALUE's FROM FIRST or FROM LAST is an enum, and the direction round trips.</summary>
+    [Theory]
+    [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY y) FROM t", NthValueFrom.Last)]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY y) FROM t", NthValueFrom.First)]
+    public void NthValueFromIsAnEnum(string sql, NthValueFrom expected)
+    {
+        var call = Assert.Single(Parsed(sql).Descendants().OfType<FunctionCall>());
+
+        Assert.Equal(expected, call.NthFrom);
+        Assert.True(SqlNodeComparer.StructurallyEqual(Parsed(sql), Parsed(Generate(Parsed(sql)))));
+    }
+
+    /// <summary>FOR UPDATE and LOCK TABLE share one lock-wait enum; the seconds of WAIT are a separate expression.</summary>
+    [Theory]
+    [InlineData("SELECT 1 FROM a FOR UPDATE NOWAIT", LockWait.NoWait, null)]
+    [InlineData("SELECT 1 FROM a FOR UPDATE WAIT 5", LockWait.Wait, "5")]
+    [InlineData("SELECT 1 FROM a FOR UPDATE SKIP LOCKED", LockWait.SkipLocked, null)]
+    public void ForUpdateLockWait(string sql, LockWait wait, string? seconds)
+    {
+        var forUpdate = Assert.IsType<SelectStatement>(Parsed(sql).Statements[0]).ForUpdate!;
+
+        Assert.Equal(wait, forUpdate.Wait);
+        Assert.Equal(seconds, forUpdate.WaitSeconds is null ? null : Text(sql, forUpdate.WaitSeconds));
+        Assert.True(SqlNodeComparer.StructurallyEqual(Parsed(sql), Parsed(Generate(Parsed(sql)))));
+    }
+
+    [Theory]
+    [InlineData("BEGIN LOCK TABLE a IN SHARE MODE NOWAIT; END;", LockWait.NoWait, null)]
+    [InlineData("BEGIN LOCK TABLE a IN SHARE MODE WAIT 5; END;", LockWait.Wait, "5")]
+    public void LockTableWait(string sql, LockWait wait, string? seconds)
+    {
+        var lock_ = Assert.Single(Parsed(sql).Descendants().OfType<LockTableStatement>());
+
+        Assert.Equal(wait, lock_.Wait);
+        Assert.Equal(seconds, lock_.WaitSeconds is null ? null : Text(sql, lock_.WaitSeconds));
+        Assert.True(SqlNodeComparer.StructurallyEqual(Parsed(sql), Parsed(Generate(Parsed(sql)))));
+    }
+
+    /// <summary>WAIT takes its seconds; without them Oracle rejects the statement.</summary>
+    [Theory]
+    [InlineData("SELECT 1 FROM a FOR UPDATE WAIT")]
+    [InlineData("BEGIN LOCK TABLE a IN SHARE MODE WAIT; END;")]
+    public void WaitWithoutSecondsIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

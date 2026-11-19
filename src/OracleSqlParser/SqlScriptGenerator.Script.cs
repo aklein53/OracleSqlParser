@@ -96,7 +96,7 @@ public sealed partial class SqlScriptGenerator
                         LockMode.RowShare => "ROW SHARE", LockMode.RowExclusive => "ROW EXCLUSIVE", LockMode.ShareUpdate => "SHARE UPDATE",
                         LockMode.Share => "SHARE", LockMode.ShareRowExclusive => "SHARE ROW EXCLUSIVE", _ => "EXCLUSIVE",
                     } + " MODE");
-                    if (lk.NoWait) Add(" NOWAIT"); else if (lk.Wait != null) { Add(" WAIT "); Expr(lk.Wait); }
+                    if (lk.Wait is { } lockWait) LockWaitText(lockWait, lk.WaitSeconds);
                     break;
                 case TruncateStatement tr:
                     Add(tr.Target == TruncateTarget.Cluster ? "TRUNCATE CLUSTER " : "TRUNCATE TABLE "); Name(tr.Name);

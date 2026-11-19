@@ -204,9 +204,9 @@ public class ExpertStressTests(OracleFixture db)
         var fns = Find<FunctionCall>(s);
         var sum = fns.Single(f => Str(f).StartsWith("(FunctionCall name=[SUM]"));
         Assert.Contains("(WindowFrame unit=Range", Str(sum));
-        Assert.DoesNotContain("ignoreNulls", Str(sum));
+        Assert.DoesNotContain("nullTreatment=Ignore", Str(sum));
         var lag = fns.Single(f => Str(f).StartsWith("(FunctionCall name=[LAG]"));
-        Assert.Contains("ignoreNulls", Str(lag));
+        Assert.Contains("nullTreatment=Ignore", Str(lag));
         Assert.DoesNotContain("(WindowFrame", Str(lag));
         var keep = Find<KeepClause>(s).Single();
         Assert.False(keep.First);
@@ -911,7 +911,7 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var lv = Find<FunctionCall>(s).Single(f => Str(f).StartsWith("(FunctionCall name=[LAST_VALUE]"));
-        Assert.Contains("ignoreNulls", Str(lv));
+        Assert.Contains("nullTreatment=Ignore", Str(lv));
         Assert.Equal(2, Find<CommonTableExpression>(s).Count());
         await VerifyAsync(sql, []);
     }

@@ -569,11 +569,11 @@ public sealed partial class SqlParser
             }
 
             // NTH_VALUE(x, n FROM LAST): the direction written inside the parentheses (printed after the call)
-            if (fc.FromLast == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST")) && IsOpAt(2, ")")
+            if (fc.NthFrom == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST")) && IsOpAt(2, ")")
                 && fc.Name.Count > 0 && fc.Name[^1].Value == "NTH_VALUE" && !fc.Name[^1].Quoted)
             {
                 Next();
-                fc.FromLast = Next().Value == "LAST";
+                fc.NthFrom = Next().Value == "LAST" ? NthValueFrom.Last : NthValueFrom.First;
             }
             ParseNullTreatment(fc);
             if (IsKw("ORDER") && IsKwAt(1, "BY"))
@@ -612,12 +612,12 @@ public sealed partial class SqlParser
                 fc.Keep = Fin(new KeepClause { First = first, OrderBy = orderBy }, ks);
             }
             // NTH_VALUE(x, n) FROM FIRST|LAST: only when an analytic tail follows, so FROM <table named FIRST/LAST> is never taken
-            else if (fc.FromLast == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST"))
+            else if (fc.NthFrom == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST"))
                      && (IsKwAt(2, "OVER") || IsKwAt(2, "IGNORE") || IsKwAt(2, "RESPECT"))
                      && fc.Name.Count > 0 && fc.Name[^1].Value == "NTH_VALUE" && !fc.Name[^1].Quoted)
             {
                 Next();
-                fc.FromLast = Next().Value == "LAST";
+                fc.NthFrom = Next().Value == "LAST" ? NthValueFrom.Last : NthValueFrom.First;
             }
             else if (IsKw("IGNORE") || IsKw("RESPECT")) ParseNullTreatment(fc);
             else if (IsKw("OVER") && (IsOpAt(1, "(") || PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier))
@@ -702,7 +702,7 @@ public sealed partial class SqlParser
         {
             bool ignore = Next().Value == "IGNORE";
             ExpectKw("NULLS");
-            if (ignore) fc.IgnoreNulls = true; else fc.RespectNulls = true;
+            fc.NullTreatment = ignore ? NullTreatment.Ignore : NullTreatment.Respect;
         }
     }
 

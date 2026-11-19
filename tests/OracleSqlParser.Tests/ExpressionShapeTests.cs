@@ -89,7 +89,7 @@ public class ExpressionShapeTests
     [InlineData("ROW_NUMBER() OVER (PARTITION BY d ORDER BY s DESC)", "(FunctionCall name=[ROW_NUMBER] over=(WindowSpec partitionBy=(PartitionByClause items=[D]) orderBy=(OrderByClause items=[(OrderByItem expression=S descending)])))")]
     [InlineData("SUM(x) OVER (ORDER BY y ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec orderBy=(OrderByClause items=[(OrderByItem expression=Y)]) frame=(WindowFrame unit=Rows startBound=(FrameBound kind=UnboundedPreceding) endBound=(FrameBound kind=CurrentRow))))")]
     [InlineData("SUM(x) OVER (RANGE 5 PRECEDING)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec frame=(WindowFrame unit=Range startBound=(FrameBound kind=Preceding offset=5))))")]
-    [InlineData("LAG(x, 1) IGNORE NULLS OVER w", "(FunctionCall name=[LAG] arguments=[(Argument value=X) (Argument value=1)] ignoreNulls over=(WindowSpec name=W))")]
+    [InlineData("LAG(x, 1) IGNORE NULLS OVER w", "(FunctionCall name=[LAG] arguments=[(Argument value=X) (Argument value=1)] nullTreatment=Ignore over=(WindowSpec name=W))")]
     [InlineData("MAX(sal) KEEP (DENSE_RANK FIRST ORDER BY hire)", "(FunctionCall name=[MAX] arguments=[(Argument value=SAL)] keep=(KeepClause first orderBy=(OrderByClause items=[(OrderByItem expression=HIRE)])))")]
     [InlineData("LISTAGG(n, ',') WITHIN GROUP (ORDER BY n)", "(FunctionCall name=[LISTAGG] arguments=[(Argument value=N) (Argument value=',')] withinGroup=(WithinGroupClause orderBy=(OrderByClause items=[(OrderByItem expression=N)])))")]
     [InlineData("LISTAGG(n, ',' ON OVERFLOW TRUNCATE '...' WITH COUNT)", "(FunctionCall name=[LISTAGG] clauses=[(OverflowClause truncate indicator='...' withCount=true)] arguments=[(Argument value=N) (Argument value=',')])")]
@@ -245,8 +245,8 @@ public class ExpertStressRegressionTests
 
     // NTH_VALUE(x, n FROM LAST) puts the direction inside the parentheses; Oracle accepts it there (checked on Oracle 23).
     [Theory]
-    [InlineData("SELECT NTH_VALUE(x, 2 FROM LAST) OVER (ORDER BY x) FROM t", "fromLast=true")]
-    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY x) FROM t", "fromLast=false")]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM LAST) OVER (ORDER BY x) FROM t", "nthFrom=Last")]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY x) FROM t", "nthFrom=First")]
     public void NthValue_FromInsideParentheses(string sql, string fragment) =>
         Assert.Contains(fragment, Shape.Of(sql));
 
@@ -276,8 +276,8 @@ public class ExpertStressRegressionTests
         Assert.Contains(fragment, Shape.Of(sql));
 
     [Theory]
-    [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY x) FROM t", "fromLast=true")]
-    [InlineData("SELECT NTH_VALUE(x, 2) FROM FIRST RESPECT NULLS OVER (ORDER BY x) FROM t", "fromLast=false respectNulls")]
+    [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY x) FROM t", "nthFrom=Last")]
+    [InlineData("SELECT NTH_VALUE(x, 2) FROM FIRST RESPECT NULLS OVER (ORDER BY x) FROM t", "nthFrom=First nullTreatment=Respect")]
     public void NthValue_FromFirstLast(string sql, string fragment) =>
         Assert.Contains(fragment, Shape.Of<FunctionCall>(sql));
 

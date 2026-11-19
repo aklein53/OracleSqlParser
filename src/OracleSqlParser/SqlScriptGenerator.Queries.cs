@@ -103,9 +103,7 @@ public sealed partial class SqlScriptGenerator
                 ClauseStart(_o.NewLineBeforeOrderByClause);
                 Add("FOR UPDATE");
                 if (s.ForUpdate.Of.Count > 0) { Add(" OF "); Sep(s.ForUpdate.Of, c => Expr(c)); }
-                if (s.ForUpdate.NoWait) Add(" NOWAIT");
-                else if (s.ForUpdate.Wait != null) { Add(" WAIT "); Expr(s.ForUpdate.Wait); }
-                else if (s.ForUpdate.SkipLocked) Add(" SKIP LOCKED");
+                if (s.ForUpdate.Wait is { } lockWait) LockWaitText(lockWait, s.ForUpdate.WaitSeconds);
             }
         }
 

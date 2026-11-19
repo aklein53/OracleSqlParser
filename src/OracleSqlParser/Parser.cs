@@ -618,9 +618,9 @@ public sealed partial class SqlParser
             {
                 do fu.Of.Add(ParseColumnReferenceOnly()); while (AcceptOp(","));
             }
-            if (AcceptKw("NOWAIT")) fu.NoWait = true;
-            else if (AcceptKw("WAIT")) fu.Wait = ParseAdditive();
-            else if (AcceptKw("SKIP")) { ExpectKw("LOCKED"); fu.SkipLocked = true; }
+            if (AcceptKw("NOWAIT")) fu.Wait = LockWait.NoWait;
+            else if (AcceptKw("WAIT")) { fu.Wait = LockWait.Wait; fu.WaitSeconds = ParseAdditive(); }
+            else if (AcceptKw("SKIP")) { ExpectKw("LOCKED"); fu.Wait = LockWait.SkipLocked; }
             stmt.ForUpdate = Fin(fu, us);
         }
         return Fin(stmt, start);

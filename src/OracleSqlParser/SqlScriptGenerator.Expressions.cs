@@ -362,9 +362,8 @@ public sealed partial class SqlScriptGenerator
             Add(")");
             if (fc.WithinGroup is { } withinGroup) { Add(" WITHIN GROUP (ORDER BY "); Sep(withinGroup.OrderBy.Items, OrderItem); Add(")"); }
             if (fc.Keep is { } keep) { Add(" KEEP (DENSE_RANK " + (keep.First ? "FIRST" : "LAST") + " ORDER BY "); Sep(keep.OrderBy.Items, OrderItem); Add(")"); }
-            if (fc.FromLast != null) Add(fc.FromLast.Value ? " FROM LAST" : " FROM FIRST");
-            if (fc.IgnoreNulls) Add(" IGNORE NULLS");
-            if (fc.RespectNulls) Add(" RESPECT NULLS");
+            if (fc.NthFrom is { } nthFrom) Add(nthFrom == NthValueFrom.Last ? " FROM LAST" : " FROM FIRST");
+            if (fc.NullTreatment is { } nullTreatment) Add(nullTreatment == NullTreatment.Ignore ? " IGNORE NULLS" : " RESPECT NULLS");
             if (fc.Over != null) { Add(" OVER "); Window(fc.Over); }
         }
 
@@ -449,6 +448,17 @@ public sealed partial class SqlScriptGenerator
                 case UsingCharsetClause u: Add("USING "); Id(u.Charset); break;
                 case UsingListClause ul: Add("USING "); Sep(ul.Items, Item); break;
                 default: throw Unsupported(c);
+            }
+        }
+
+        /// <summary>The lock wait of <c>FOR UPDATE</c> or <c>LOCK TABLE</c>: NOWAIT, WAIT n or SKIP LOCKED.</summary>
+        private void LockWaitText(LockWait wait, Expression? seconds)
+        {
+            switch (wait)
+            {
+                case LockWait.NoWait: Add(" NOWAIT"); break;
+                case LockWait.Wait: Add(" WAIT"); if (seconds != null) { Add(" "); Expr(seconds); } break;
+                case LockWait.SkipLocked: Add(" SKIP LOCKED"); break;
             }
         }
 

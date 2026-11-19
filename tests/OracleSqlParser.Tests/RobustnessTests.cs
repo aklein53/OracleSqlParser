@@ -59,8 +59,8 @@ public class RobustnessTests
     [Fact]
     public void Ignore_Nulls_StillParses()
     {
-        Assert.Contains("ignoreNulls", Shape.Of("SELECT LAG(x, 1) IGNORE NULLS OVER w FROM t"));
-        Assert.Contains("respectNulls", Shape.Of("SELECT LAG(x, 1) RESPECT NULLS OVER w FROM t"));
+        Assert.Contains("nullTreatment=Ignore", Shape.Of("SELECT LAG(x, 1) IGNORE NULLS OVER w FROM t"));
+        Assert.Contains("nullTreatment=Respect", Shape.Of("SELECT LAG(x, 1) RESPECT NULLS OVER w FROM t"));
     }
 
     // ---------- 2. nesting depth ----------

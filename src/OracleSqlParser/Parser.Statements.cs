@@ -221,8 +221,8 @@ public sealed partial class SqlParser
         }
         else { ExpectKw("EXCLUSIVE"); st.Mode = LockMode.Exclusive; }
         ExpectKw("MODE");
-        if (AcceptKw("NOWAIT")) st.NoWait = true;
-        else if (AcceptKw("WAIT")) st.Wait = ParseAdditive();
+        if (AcceptKw("NOWAIT")) st.Wait = LockWait.NoWait;
+        else if (AcceptKw("WAIT")) { st.Wait = LockWait.Wait; st.WaitSeconds = ParseAdditive(); }
         return Fin(st, start);
     }
 

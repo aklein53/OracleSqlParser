@@ -114,8 +114,8 @@ public class QueryShapeTests
     [InlineData("SELECT 1 FROM a ORDER BY b FETCH APPROXIMATE NEXT 20 ROWS ONLY", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) orderBy=(OrderByClause items=[(OrderByItem expression=B)]) fetch=(FetchClause count=20 accuracy=Approximate))")]
     [InlineData("SELECT 1 FROM a ORDER BY b FETCH EXACT FIRST 20 ROWS ONLY", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) orderBy=(OrderByClause items=[(OrderByItem expression=B)]) fetch=(FetchClause count=20 accuracy=Exact))")]
     [InlineData("SELECT 1 FROM a FETCH FIRST ROW ONLY","(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) fetch=(FetchClause))")]
-    [InlineData("SELECT 1 FROM a FOR UPDATE OF a.x, y SKIP LOCKED", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) forUpdate=(ForUpdateClause of=[A.X Y] skipLocked))")]
-    [InlineData("SELECT 1 FROM a FOR UPDATE WAIT 5", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) forUpdate=(ForUpdateClause wait=5))")]
+    [InlineData("SELECT 1 FROM a FOR UPDATE OF a.x, y SKIP LOCKED", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) forUpdate=(ForUpdateClause of=[A.X Y] wait=SkipLocked))")]
+    [InlineData("SELECT 1 FROM a FOR UPDATE WAIT 5", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[A])])) forUpdate=(ForUpdateClause wait=Wait waitSeconds=5))")]
     public void OrderingAndLocking(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]

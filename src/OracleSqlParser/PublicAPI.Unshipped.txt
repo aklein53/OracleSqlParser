@@ -1788,13 +1788,8 @@ OracleSqlParser.FormatKind
 OracleSqlParser.FormatKind.Json = 0 -> OracleSqlParser.FormatKind
 OracleSqlParser.ForUpdateClause
 OracleSqlParser.ForUpdateClause.ForUpdateClause() -> void
-OracleSqlParser.ForUpdateClause.NoWait.get -> bool
-OracleSqlParser.ForUpdateClause.NoWait.set -> void
 OracleSqlParser.ForUpdateClause.Of.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
 OracleSqlParser.ForUpdateClause.Of.set -> void
-OracleSqlParser.ForUpdateClause.SkipLocked.get -> bool
-OracleSqlParser.ForUpdateClause.SkipLocked.set -> void
-OracleSqlParser.ForUpdateClause.Wait.get -> OracleSqlParser.Expression?
 OracleSqlParser.ForUpdateClause.Wait.set -> void
 OracleSqlParser.FrameBound
 OracleSqlParser.FrameBound.FrameBound() -> void
@@ -1826,11 +1821,7 @@ OracleSqlParser.FunctionCall.Attribute.get -> string?
 OracleSqlParser.FunctionCall.Attribute.set -> void
 OracleSqlParser.FunctionCall.Clauses.get -> System.Collections.Generic.List<OracleSqlParser.FunctionClause!>!
 OracleSqlParser.FunctionCall.Clauses.set -> void
-OracleSqlParser.FunctionCall.FromLast.get -> bool?
-OracleSqlParser.FunctionCall.FromLast.set -> void
 OracleSqlParser.FunctionCall.FunctionCall() -> void
-OracleSqlParser.FunctionCall.IgnoreNulls.get -> bool
-OracleSqlParser.FunctionCall.IgnoreNulls.set -> void
 OracleSqlParser.FunctionCall.Keep.get -> OracleSqlParser.KeepClause?
 OracleSqlParser.FunctionCall.Keep.set -> void
 OracleSqlParser.FunctionCall.Name.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
@@ -1845,8 +1836,6 @@ OracleSqlParser.FunctionCall.Over.get -> OracleSqlParser.WindowSpec?
 OracleSqlParser.FunctionCall.Over.set -> void
 OracleSqlParser.FunctionCall.Quantifier.get -> OracleSqlParser.QuantifierKind?
 OracleSqlParser.FunctionCall.Quantifier.set -> void
-OracleSqlParser.FunctionCall.RespectNulls.get -> bool
-OracleSqlParser.FunctionCall.RespectNulls.set -> void
 OracleSqlParser.FunctionCall.WithinGroup.set -> void
 OracleSqlParser.FunctionClause
 OracleSqlParser.FunctionClause.FunctionClause() -> void
@@ -2414,11 +2403,8 @@ OracleSqlParser.LockTableStatement
 OracleSqlParser.LockTableStatement.LockTableStatement() -> void
 OracleSqlParser.LockTableStatement.Mode.get -> OracleSqlParser.LockMode
 OracleSqlParser.LockTableStatement.Mode.set -> void
-OracleSqlParser.LockTableStatement.NoWait.get -> bool
-OracleSqlParser.LockTableStatement.NoWait.set -> void
 OracleSqlParser.LockTableStatement.Tables.get -> System.Collections.Generic.List<OracleSqlParser.TableReference!>!
 OracleSqlParser.LockTableStatement.Tables.set -> void
-OracleSqlParser.LockTableStatement.Wait.get -> OracleSqlParser.Expression?
 OracleSqlParser.LockTableStatement.Wait.set -> void
 OracleSqlParser.LoggingAttribute
 OracleSqlParser.LoggingAttribute.Logging.get -> bool
@@ -6208,3 +6194,23 @@ override OracleSqlParser.ErrorLoggingClause.GetChildren() -> System.Collections.
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ErrorLoggingClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ErrorLoggingClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ErrorLoggingClause! node) -> void
+OracleSqlParser.ForUpdateClause.Wait.get -> OracleSqlParser.LockWait?
+OracleSqlParser.ForUpdateClause.WaitSeconds.get -> OracleSqlParser.Expression?
+OracleSqlParser.ForUpdateClause.WaitSeconds.set -> void
+OracleSqlParser.FunctionCall.NthFrom.get -> OracleSqlParser.NthValueFrom?
+OracleSqlParser.FunctionCall.NthFrom.set -> void
+OracleSqlParser.FunctionCall.NullTreatment.get -> OracleSqlParser.NullTreatment?
+OracleSqlParser.FunctionCall.NullTreatment.set -> void
+OracleSqlParser.LockTableStatement.Wait.get -> OracleSqlParser.LockWait?
+OracleSqlParser.LockTableStatement.WaitSeconds.get -> OracleSqlParser.Expression?
+OracleSqlParser.LockTableStatement.WaitSeconds.set -> void
+OracleSqlParser.LockWait
+OracleSqlParser.LockWait.NoWait = 0 -> OracleSqlParser.LockWait
+OracleSqlParser.LockWait.SkipLocked = 2 -> OracleSqlParser.LockWait
+OracleSqlParser.LockWait.Wait = 1 -> OracleSqlParser.LockWait
+OracleSqlParser.NthValueFrom
+OracleSqlParser.NthValueFrom.First = 0 -> OracleSqlParser.NthValueFrom
+OracleSqlParser.NthValueFrom.Last = 1 -> OracleSqlParser.NthValueFrom
+OracleSqlParser.NullTreatment
+OracleSqlParser.NullTreatment.Ignore = 0 -> OracleSqlParser.NullTreatment
+OracleSqlParser.NullTreatment.Respect = 1 -> OracleSqlParser.NullTreatment

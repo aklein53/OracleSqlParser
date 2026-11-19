@@ -582,12 +582,39 @@ public sealed partial class ForUpdateClause : SqlNode
 {
     /// <summary>The columns after <c>OF</c>; empty when the lock applies to every table.</summary>
     public List<ColumnReference> Of { get; set; } = [];
-    /// <summary>True for <c>NOWAIT</c>.</summary>
-    public bool NoWait { get; set; }
-    /// <summary>True for <c>SKIP LOCKED</c>.</summary>
-    public bool SkipLocked { get; set; }
-    /// <summary>The number of seconds after <c>WAIT</c>, or null when absent.</summary>
-    public Expression? Wait { get; set; }
+    /// <summary>How a locked row is handled: <see cref="LockWait.NoWait"/>, <see cref="LockWait.Wait"/> or <see cref="LockWait.SkipLocked"/>; null when absent (wait forever).</summary>
+    public LockWait? Wait { get; set; }
+    /// <summary>The number of seconds after <c>WAIT</c> (<see cref="Wait"/> is <see cref="LockWait.Wait"/>), or null otherwise.</summary>
+    public Expression? WaitSeconds { get; set; }
+}
+
+/// <summary>How a lock request handles a row that another session holds: in <c>FOR UPDATE</c> and <c>LOCK TABLE</c>.</summary>
+public enum LockWait
+{
+    /// <summary><c>NOWAIT</c>: fail at once.</summary>
+    NoWait,
+    /// <summary><c>WAIT n</c>: wait up to n seconds, given by the statement's <c>WaitSeconds</c>.</summary>
+    Wait,
+    /// <summary><c>SKIP LOCKED</c>: leave out the locked rows (<c>FOR UPDATE</c> only).</summary>
+    SkipLocked,
+}
+
+/// <summary>The direction of <c>NTH_VALUE</c>: <c>FROM FIRST</c> or <c>FROM LAST</c>.</summary>
+public enum NthValueFrom
+{
+    /// <summary><c>FROM FIRST</c>.</summary>
+    First,
+    /// <summary><c>FROM LAST</c>.</summary>
+    Last,
+}
+
+/// <summary>The <c>IGNORE NULLS</c> or <c>RESPECT NULLS</c> option of a window function such as <c>LAG</c>.</summary>
+public enum NullTreatment
+{
+    /// <summary><c>IGNORE NULLS</c>.</summary>
+    Ignore,
+    /// <summary><c>RESPECT NULLS</c>.</summary>
+    Respect,
 }
 
 // ---------- DML ----------
@@ -1423,12 +1450,10 @@ public sealed partial class FunctionCall : Expression
     public QuantifierKind? Quantifier { get; set; }
     /// <summary>The arguments, in source order; empty for a call without arguments.</summary>
     public List<Argument> Arguments { get; set; } = [];
-    /// <summary><c>NTH_VALUE</c>'s <c>FROM FIRST</c> (false) or <c>FROM LAST</c> (true), or null when absent.</summary>
-    public bool? FromLast { get; set; }
-    /// <summary>True for <c>IGNORE NULLS</c>.</summary>
-    public bool IgnoreNulls { get; set; }
-    /// <summary>True for <c>RESPECT NULLS</c>.</summary>
-    public bool RespectNulls { get; set; }
+    /// <summary><c>NTH_VALUE</c>'s <c>FROM FIRST</c> or <c>FROM LAST</c>, or null when absent.</summary>
+    public NthValueFrom? NthFrom { get; set; }
+    /// <summary>The <c>IGNORE NULLS</c> or <c>RESPECT NULLS</c> option of a window function, or null when absent.</summary>
+    public NullTreatment? NullTreatment { get; set; }
     /// <summary>The <c>WITHIN GROUP (ORDER BY ...)</c> clause, as in <c>LISTAGG</c>; null when absent.</summary>
     public WithinGroupClause? WithinGroup { get; set; }
     /// <summary>KEEP (DENSE_RANK FIRST|LAST ORDER BY ...)</summary>
