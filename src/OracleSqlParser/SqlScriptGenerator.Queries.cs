@@ -67,7 +67,7 @@ public sealed partial class SqlScriptGenerator
 
         private void Select(SelectStatement s)
         {
-            if (s.With is { } with)
+            if (s.With is { } with && (with.Declarations.Count > 0 || with.Ctes.Count > 0))
             {
                 Add("WITH");
                 foreach (var d in with.Declarations) { Sp(); Declaration(d); Add(";"); }

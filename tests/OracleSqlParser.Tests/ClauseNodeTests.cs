@@ -464,6 +464,21 @@ public class ClauseNodeTests
         public override SqlNode? Rewrite(WithClause node) => null;
     }
 
+    private sealed class DropEveryCte : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(CommonTableExpression node) => null;
+    }
+
+    /// <summary>A rewriter that removes every CTE leaves an empty WITH clause, which prints nothing (not a bare WITH).</summary>
+    [Fact]
+    public void AnEmptyWithClausePrintsNothing()
+    {
+        var script = SqlParser.Parse("WITH x AS (SELECT 1 FROM dual) SELECT a FROM x").Script;
+        new DropEveryCte().RewriteTree(script);
+
+        Assert.Equal("SELECT a FROM x;", new SqlScriptGenerator().Generate(script).Trim());
+    }
+
     [Theory]
     [InlineData("WITH x AS (SELECT 1 FROM dual) SELECT * FROM x")]
     [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; SELECT f FROM dual")]
