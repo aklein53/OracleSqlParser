@@ -430,6 +430,29 @@ public class ApiConsistencyTests
         Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
     }
 
+    /// <summary>An anchored type is a TypeAnchor, and the declaration keeps its anchor through a round trip.</summary>
+    [Theory]
+    [InlineData("DECLARE x t.a%TYPE; BEGIN NULL; END;", TypeAnchor.Type)]
+    [InlineData("DECLARE y t%ROWTYPE; BEGIN NULL; END;", TypeAnchor.RowType)]
+    public void TypeAnchorIsAnEnum(string sql, TypeAnchor expected)
+    {
+        var anchored = Assert.Single(Parsed(sql).Descendants().OfType<DataType>());
+
+        Assert.Equal(expected, anchored.Anchor);
+        Assert.True(SqlNodeComparer.StructurallyEqual(Parsed(sql), Parsed(Generate(Parsed(sql)))));
+    }
+
+    /// <summary>SQL%FOUND and c%ROWCOUNT are column references with an attribute, so they are not reported as columns.</summary>
+    [Fact]
+    public void CursorAttributesAreNotReportedAsColumns()
+    {
+        var script = Parsed("BEGIN IF SQL%FOUND AND c%ROWCOUNT > 0 THEN NULL; END IF; END;");
+
+        var attributes = script.Descendants().OfType<ColumnReference>().Where(c => c.Attribute is not null).Select(c => c.Attribute).ToList();
+        Assert.Equal(["FOUND", "ROWCOUNT"], attributes);
+        Assert.Empty(SqlAnalysis.GetColumns(script));
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

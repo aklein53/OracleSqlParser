@@ -29,14 +29,14 @@ BEGIN NULL; END;");
         Assert.Equal(
             "[(VariableDeclaration name=V_N type=(DataType name=NUMBER) default=0) " +
             "(VariableDeclaration name=C_MAX constant type=(DataType name=PLS_INTEGER) default=10) " +
-            "(VariableDeclaration name=V_NAME type=(DataType name=EMP.ENAME attribute=TYPE nameParts=[EMP ENAME])) " +
-            "(VariableDeclaration name=R type=(DataType name=EMP attribute=ROWTYPE nameParts=[EMP])) " +
+            "(VariableDeclaration name=V_NAME type=(DataType name=EMP.ENAME anchor=Type nameParts=[EMP ENAME])) " +
+            "(VariableDeclaration name=R type=(DataType name=EMP anchor=RowType nameParts=[EMP])) " +
             "(ExceptionDeclaration name=E_BAD) " +
             "(PragmaDeclaration name=EXCEPTION_INIT arguments=[E_BAD (Minus 20001)]) " +
             "(CursorDeclaration name=C1 parameters=[(Parameter name=P type=(DataType name=NUMBER))] query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])])))) " +
             "(CollectionTypeDeclaration name=T_TAB kind=Table elementType=(DataType name=NUMBER) indexBy=(DataType name=PLS_INTEGER)) " +
             "(RecordTypeDeclaration name=T_REC fields=[(VariableDeclaration name=A type=(DataType name=NUMBER)) (VariableDeclaration name=B type=(DataType name=VARCHAR2 arguments=[10]) notNull default='x')]) " +
-            "(RefCursorTypeDeclaration name=T_CUR returnType=(DataType name=EMP attribute=ROWTYPE nameParts=[EMP])) " +
+            "(RefCursorTypeDeclaration name=T_CUR returnType=(DataType name=EMP anchor=RowType nameParts=[EMP])) " +
             "(CollectionTypeDeclaration name=T_VA kind=Varray limit=5 elementType=(DataType name=VARCHAR2 arguments=[3]) notNull) " +
             "(SubtypeDeclaration name=SMALL baseType=(DataType name=NUMBER arguments=[3]) rangeLow=1 rangeHigh=10 notNull)]",
             AstPrinter.Print(b.Declarations));

@@ -1116,7 +1116,7 @@ public sealed partial class SqlParser
         if (IsOp("%") && (IsKwAt(1, "TYPE") || IsKwAt(1, "ROWTYPE")))
         {
             Next();
-            dt.Attribute = Next().Value;
+            dt.Anchor = Next().Value.Equals("ROWTYPE", StringComparison.OrdinalIgnoreCase) ? TypeAnchor.RowType : TypeAnchor.Type;
             dt.Name = words[0];
             dt.NameParts = parts;
             return Fin(dt, start);

@@ -6767,7 +6767,7 @@ public partial class DataType
         new("Name", Name),
         new("Arguments", Arguments),
         new("Semantics", Semantics),
-        new("Attribute", Attribute),
+        new("Anchor", Anchor),
         new("Ref", Ref),
         new("NameParts", NameParts),
     ];
@@ -6784,7 +6784,7 @@ public partial class DataType
             Name = Name,
             Arguments = CloneList(Arguments),
             Semantics = Semantics,
-            Attribute = Attribute,
+            Anchor = Anchor,
             Ref = Ref,
             NameParts = CloneList(NameParts),
         };
@@ -6798,7 +6798,7 @@ public partial class DataType
         return Name == o.Name
             && PairList(Arguments, o.Arguments, pending)
             && Semantics == o.Semantics
-            && Attribute == o.Attribute
+            && Anchor == o.Anchor
             && Ref == o.Ref
             && PairList(NameParts, o.NameParts, pending);
     }

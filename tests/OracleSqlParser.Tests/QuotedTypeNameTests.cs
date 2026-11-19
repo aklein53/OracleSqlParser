@@ -20,7 +20,7 @@ public class QuotedTypeNameTests
     [InlineData("DECLARE x \"ab\"; BEGIN NULL; END;", "(DataType name=ab nameParts=[\"ab\"])")]
     [InlineData("DECLARE x hr.\"my type\"; BEGIN NULL; END;", "(DataType name=HR.my type nameParts=[HR \"my type\"])")]
     [InlineData("DECLARE x \"a.b\".t; BEGIN NULL; END;", "(DataType name=a.b.T nameParts=[\"a.b\" T])")]
-    [InlineData("DECLARE x t.\"c\"%TYPE; BEGIN NULL; END;", "(DataType name=T.c attribute=TYPE nameParts=[T \"c\"])")]
+    [InlineData("DECLARE x t.\"c\"%TYPE; BEGIN NULL; END;", "(DataType name=T.c anchor=Type nameParts=[T \"c\"])")]
     [InlineData("DECLARE x emp_t; BEGIN NULL; END;", "(DataType name=EMP_T nameParts=[EMP_T])")]
     [InlineData("DECLARE x REF \"t\"; BEGIN NULL; END;", "(DataType name=t ref nameParts=[\"t\"])")]
     public void UserDefinedNamesCarryTheirParts(string sql, string expected) =>

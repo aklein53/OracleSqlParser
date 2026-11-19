@@ -1460,8 +1460,6 @@ OracleSqlParser.DatafileSpec.Tempfile.set -> void
 OracleSqlParser.DataType
 OracleSqlParser.DataType.Arguments.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.DataType.Arguments.set -> void
-OracleSqlParser.DataType.Attribute.get -> string?
-OracleSqlParser.DataType.Attribute.set -> void
 OracleSqlParser.DataType.DataType() -> void
 OracleSqlParser.DataType.Name.get -> string!
 OracleSqlParser.DataType.Name.set -> void
@@ -6216,3 +6214,8 @@ OracleSqlParser.BlockStatement.EndLabel.set -> void
 OracleSqlParser.Statement.Labels.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 override OracleSqlParser.NullStatement.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.NullStatement.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+OracleSqlParser.DataType.Anchor.get -> OracleSqlParser.TypeAnchor?
+OracleSqlParser.DataType.Anchor.set -> void
+OracleSqlParser.TypeAnchor
+OracleSqlParser.TypeAnchor.RowType = 1 -> OracleSqlParser.TypeAnchor
+OracleSqlParser.TypeAnchor.Type = 0 -> OracleSqlParser.TypeAnchor

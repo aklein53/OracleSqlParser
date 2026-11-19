@@ -869,7 +869,15 @@ public sealed partial class ColumnReference : Expression
     public List<Identifier> Parts { get; set; } = [];
     /// <summary>Oracle (+) outer-join marker.</summary>
     public bool OuterJoin { get; set; }
-    /// <summary>PL/SQL attribute after '%', e.g. FOUND, NOTFOUND, ROWCOUNT, TYPE, ROWTYPE.</summary>
+    /// <summary>
+    /// The attribute written after <c>%</c>, as spelled, or null when there is none. Common values: <c>FOUND</c>,
+    /// <c>NOTFOUND</c>, <c>ROWCOUNT</c> and <c>ISOPEN</c> for a cursor (<c>SQL%FOUND</c>, <c>c%ROWCOUNT</c>), and
+    /// <c>BULK_ROWCOUNT</c> and <c>BULK_EXCEPTIONS</c> for <c>SQL%BULK_EXCEPTIONS</c>.
+    /// </summary>
+    /// <remarks>
+    /// Caution: <c>SQL%FOUND</c> and <c>c%ROWCOUNT</c> parse as a <see cref="ColumnReference"/> with this property set. Code
+    /// that treats every column reference as a column must check <c>Attribute is null</c>; <see cref="SqlAnalysis"/> does.
+    /// </remarks>
     public string? Attribute { get; set; }
 }
 
@@ -1387,6 +1395,15 @@ public sealed partial class ForIterationSubscript : Expression
     public bool Decrement { get; set; }
 }
 
+/// <summary>The attribute that anchors a declared type: <c>%TYPE</c> or <c>%ROWTYPE</c>.</summary>
+public enum TypeAnchor
+{
+    /// <summary><c>%TYPE</c>: the type of a column or variable.</summary>
+    Type,
+    /// <summary><c>%ROWTYPE</c>: the row type of a table, view or cursor.</summary>
+    RowType,
+}
+
 /// <summary>The unit of a length in a character type.</summary>
 public enum CharSemantics
 {
@@ -1409,8 +1426,8 @@ public sealed partial class DataType : SqlNode
     public List<Expression> Arguments { get; set; } = [];
     /// <summary>The <c>CHAR</c> or <c>BYTE</c> length semantics, or null when absent.</summary>
     public CharSemantics? Semantics { get; set; }
-    /// <summary>"TYPE" or "ROWTYPE" for anchored declarations (tbl.col%TYPE).</summary>
-    public string? Attribute { get; set; }
+    /// <summary>The anchor of an anchored declaration, such as <c>tbl.col%TYPE</c>, or null when the type is not anchored.</summary>
+    public TypeAnchor? Anchor { get; set; }
     /// <summary>True for <c>REF object_type</c>: a reference to a row of <see cref="Name"/>.</summary>
     public bool Ref { get; set; }
     /// <summary>
@@ -1440,7 +1457,11 @@ public sealed partial class FunctionCall : Expression
     public List<Identifier> Name { get; set; } = [];
     /// <summary>NEW type(...) constructor call.</summary>
     public bool New { get; set; }
-    /// <summary>For SQL%BULK_ROWCOUNT(i): the attribute after '%'.</summary>
+    /// <summary>
+    /// The attribute after <c>%</c> of a call, as spelled, or null when there is none. The common value is <c>BULK_ROWCOUNT</c>
+    /// in <c>SQL%BULK_ROWCOUNT(i)</c>. Like <see cref="ColumnReference.Attribute"/>, it is a spelling of the attribute, not a
+    /// member of an enum, because the set of cursor attributes is open.
+    /// </summary>
     public string? Attribute { get; set; }
     /// <summary>Trailing clauses: RETURNING, ON ERROR, FORMAT JSON, ON OVERFLOW, PASSING, ...</summary>
     public List<FunctionClause> Clauses { get; set; } = [];

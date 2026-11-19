@@ -81,6 +81,16 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
   `CreatePackageStatement.EndName` and `CreatePackageBodyStatement.EndName` keep their names: they repeat the package name,
   which is not a label.
+
+- Anchored types take an enum:
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `DataType.Attribute` (`"TYPE"` or `"ROWTYPE"`) | `string?` | `TypeAnchor?` `Anchor` (`enum TypeAnchor { Type, RowType }`) |
+
+  `ColumnReference.Attribute` and `FunctionCall.Attribute` stay strings, because cursor attributes (`%FOUND`, `%ROWCOUNT`,
+  `%BULK_EXCEPTIONS`) are an open set. Their XML docs list the common values and say that `SQL%FOUND` parses as a
+  `ColumnReference` with `Attribute` set. `SqlAnalysis.GetColumns` already leaves those out, so its output is unchanged.
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).

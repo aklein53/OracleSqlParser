@@ -36,11 +36,11 @@ public sealed partial class SqlScriptGenerator
             if (dt.NameParts.Count > 0)
             {
                 Name(dt.NameParts);
-                if (dt.Attribute != null) { Add("%").Add(dt.Attribute); return; }
+                if (dt.Anchor is { } anchor) { Add("%").Add(AnchorText(anchor)); return; }
                 if (dt.Arguments.Count > 0) TypeArguments(dt);
                 return;
             }
-            if (dt.Attribute != null) { Add(dt.Name).Add("%").Add(dt.Attribute); return; }
+            if (dt.Anchor is { } wordAnchor) { Add(dt.Name).Add("%").Add(AnchorText(wordAnchor)); return; }
             // name words: the parenthesized arguments follow the first word group that precedes WITH/TO/etc.
             var words = dt.Name.Split(' ');
             int argAt = words.Length;
@@ -461,6 +461,9 @@ public sealed partial class SqlScriptGenerator
                 case LockWait.SkipLocked: Add(" SKIP LOCKED"); break;
             }
         }
+
+        /// <summary>The attribute keyword of an anchored type: TYPE or ROWTYPE.</summary>
+        private static string AnchorText(TypeAnchor anchor) => anchor == TypeAnchor.RowType ? "ROWTYPE" : "TYPE";
 
         /// <summary>A <c>PARTITION BY</c> list: the keyword and its expressions, unparenthesized.</summary>
         private void PartitionByText(PartitionByClause p) { Add("PARTITION BY "); Sep(p.Items, e => Expr(e)); }
