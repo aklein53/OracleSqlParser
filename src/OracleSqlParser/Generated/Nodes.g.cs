@@ -6730,8 +6730,7 @@ public partial class DeleteStatement
         if (From is not null) yield return From;
         if (Where is not null) yield return Where;
         if (Hint is not null) yield return Hint;
-        if (Returning is not null) foreach (var x in Returning) yield return x;
-        if (ReturningInto is not null) yield return ReturningInto;
+        if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
     }
 
@@ -6742,8 +6741,7 @@ public partial class DeleteStatement
         From?.Accept(visitor);
         Where?.Accept(visitor);
         Hint?.Accept(visitor);
-        if (Returning is not null) foreach (var x in Returning) x.Accept(visitor);
-        ReturningInto?.Accept(visitor);
+        Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
     }
 
@@ -6753,8 +6751,7 @@ public partial class DeleteStatement
         From = SqlNodeRewriter.RewriteOptional(rewriter, From, "DeleteStatement.From");
         Where = SqlNodeRewriter.RewriteOptional(rewriter, Where, "DeleteStatement.Where");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "DeleteStatement.Hint");
-        SqlNodeRewriter.RewriteList(rewriter, Returning, "DeleteStatement.Returning");
-        ReturningInto = SqlNodeRewriter.RewriteOptional(rewriter, ReturningInto, "DeleteStatement.ReturningInto");
+        Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "DeleteStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "DeleteStatement.ErrorLogging");
     }
 
@@ -6765,7 +6762,6 @@ public partial class DeleteStatement
         new("Where", Where),
         new("Hint", Hint),
         new("Returning", Returning),
-        new("ReturningInto", ReturningInto),
         new("ErrorLogging", ErrorLogging),
         new("Labels", Labels),
     ];
@@ -6783,8 +6779,7 @@ public partial class DeleteStatement
             From = CloneChild(From),
             Where = CloneChild(Where),
             Hint = CloneChild(Hint),
-            Returning = CloneList(Returning),
-            ReturningInto = CloneChild(ReturningInto),
+            Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
             Labels = CloneStrings(Labels),
         };
@@ -6799,8 +6794,7 @@ public partial class DeleteStatement
             && Pair(From, o.From, pending)
             && Pair(Where, o.Where, pending)
             && Pair(Hint, o.Hint, pending)
-            && PairList(Returning, o.Returning, pending)
-            && Pair(ReturningInto, o.ReturningInto, pending)
+            && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
             && SameStrings(Labels, o.Labels);
     }
@@ -10696,8 +10690,7 @@ public partial class InsertStatement
         if (RecordValue is not null) yield return RecordValue;
         if (Query is not null) yield return Query;
         if (Hint is not null) yield return Hint;
-        if (Returning is not null) foreach (var x in Returning) yield return x;
-        if (ReturningInto is not null) yield return ReturningInto;
+        if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
     }
 
@@ -10710,8 +10703,7 @@ public partial class InsertStatement
         RecordValue?.Accept(visitor);
         Query?.Accept(visitor);
         Hint?.Accept(visitor);
-        if (Returning is not null) foreach (var x in Returning) x.Accept(visitor);
-        ReturningInto?.Accept(visitor);
+        Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
     }
 
@@ -10723,8 +10715,7 @@ public partial class InsertStatement
         RecordValue = SqlNodeRewriter.RewriteOptional(rewriter, RecordValue, "InsertStatement.RecordValue");
         Query = SqlNodeRewriter.RewriteOptional(rewriter, Query, "InsertStatement.Query");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "InsertStatement.Hint");
-        SqlNodeRewriter.RewriteList(rewriter, Returning, "InsertStatement.Returning");
-        ReturningInto = SqlNodeRewriter.RewriteOptional(rewriter, ReturningInto, "InsertStatement.ReturningInto");
+        Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "InsertStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "InsertStatement.ErrorLogging");
     }
 
@@ -10737,7 +10728,6 @@ public partial class InsertStatement
         new("Query", Query),
         new("Hint", Hint),
         new("Returning", Returning),
-        new("ReturningInto", ReturningInto),
         new("ErrorLogging", ErrorLogging),
         new("Labels", Labels),
     ];
@@ -10757,8 +10747,7 @@ public partial class InsertStatement
             RecordValue = CloneChild(RecordValue),
             Query = CloneChild(Query),
             Hint = CloneChild(Hint),
-            Returning = CloneList(Returning),
-            ReturningInto = CloneChild(ReturningInto),
+            Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
             Labels = CloneStrings(Labels),
         };
@@ -10775,8 +10764,7 @@ public partial class InsertStatement
             && Pair(RecordValue, o.RecordValue, pending)
             && Pair(Query, o.Query, pending)
             && Pair(Hint, o.Hint, pending)
-            && PairList(Returning, o.Returning, pending)
-            && Pair(ReturningInto, o.ReturningInto, pending)
+            && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
             && SameStrings(Labels, o.Labels);
     }
@@ -12057,8 +12045,7 @@ public partial class MergeStatement
         if (On is not null) yield return On;
         if (Clauses is not null) foreach (var x in Clauses) yield return x;
         if (Hint is not null) yield return Hint;
-        if (Returning is not null) foreach (var x in Returning) yield return x;
-        if (ReturningInto is not null) yield return ReturningInto;
+        if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
     }
 
@@ -12070,8 +12057,7 @@ public partial class MergeStatement
         On?.Accept(visitor);
         if (Clauses is not null) foreach (var x in Clauses) x.Accept(visitor);
         Hint?.Accept(visitor);
-        if (Returning is not null) foreach (var x in Returning) x.Accept(visitor);
-        ReturningInto?.Accept(visitor);
+        Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
     }
 
@@ -12082,8 +12068,7 @@ public partial class MergeStatement
         On = SqlNodeRewriter.RewriteRequired(rewriter, On, "MergeStatement.On");
         SqlNodeRewriter.RewriteList(rewriter, Clauses, "MergeStatement.Clauses");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "MergeStatement.Hint");
-        SqlNodeRewriter.RewriteList(rewriter, Returning, "MergeStatement.Returning");
-        ReturningInto = SqlNodeRewriter.RewriteOptional(rewriter, ReturningInto, "MergeStatement.ReturningInto");
+        Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "MergeStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "MergeStatement.ErrorLogging");
     }
 
@@ -12095,7 +12080,6 @@ public partial class MergeStatement
         new("Clauses", Clauses),
         new("Hint", Hint),
         new("Returning", Returning),
-        new("ReturningInto", ReturningInto),
         new("ErrorLogging", ErrorLogging),
         new("Labels", Labels),
     ];
@@ -12114,8 +12098,7 @@ public partial class MergeStatement
             On = CloneChild(On)!,
             Clauses = CloneList(Clauses),
             Hint = CloneChild(Hint),
-            Returning = CloneList(Returning),
-            ReturningInto = CloneChild(ReturningInto),
+            Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
             Labels = CloneStrings(Labels),
         };
@@ -12131,8 +12114,7 @@ public partial class MergeStatement
             && Pair(On, o.On, pending)
             && PairList(Clauses, o.Clauses, pending)
             && Pair(Hint, o.Hint, pending)
-            && PairList(Returning, o.Returning, pending)
-            && Pair(ReturningInto, o.ReturningInto, pending)
+            && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
             && SameStrings(Labels, o.Labels);
     }
@@ -12427,8 +12409,7 @@ public partial class MultiTableInsertStatement
         if (Else is not null) yield return Else;
         if (Query is not null) yield return Query;
         if (Hint is not null) yield return Hint;
-        if (Returning is not null) foreach (var x in Returning) yield return x;
-        if (ReturningInto is not null) yield return ReturningInto;
+        if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
     }
 
@@ -12439,8 +12420,7 @@ public partial class MultiTableInsertStatement
         Else?.Accept(visitor);
         Query?.Accept(visitor);
         Hint?.Accept(visitor);
-        if (Returning is not null) foreach (var x in Returning) x.Accept(visitor);
-        ReturningInto?.Accept(visitor);
+        Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
     }
 
@@ -12450,8 +12430,7 @@ public partial class MultiTableInsertStatement
         Else = SqlNodeRewriter.RewriteOptional(rewriter, Else, "MultiTableInsertStatement.Else");
         Query = SqlNodeRewriter.RewriteRequired(rewriter, Query, "MultiTableInsertStatement.Query");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "MultiTableInsertStatement.Hint");
-        SqlNodeRewriter.RewriteList(rewriter, Returning, "MultiTableInsertStatement.Returning");
-        ReturningInto = SqlNodeRewriter.RewriteOptional(rewriter, ReturningInto, "MultiTableInsertStatement.ReturningInto");
+        Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "MultiTableInsertStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "MultiTableInsertStatement.ErrorLogging");
     }
 
@@ -12464,7 +12443,6 @@ public partial class MultiTableInsertStatement
         new("Query", Query),
         new("Hint", Hint),
         new("Returning", Returning),
-        new("ReturningInto", ReturningInto),
         new("ErrorLogging", ErrorLogging),
         new("Labels", Labels),
     ];
@@ -12484,8 +12462,7 @@ public partial class MultiTableInsertStatement
             Else = CloneChild(Else),
             Query = CloneChild(Query)!,
             Hint = CloneChild(Hint),
-            Returning = CloneList(Returning),
-            ReturningInto = CloneChild(ReturningInto),
+            Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
             Labels = CloneStrings(Labels),
         };
@@ -12502,8 +12479,7 @@ public partial class MultiTableInsertStatement
             && Pair(Else, o.Else, pending)
             && Pair(Query, o.Query, pending)
             && Pair(Hint, o.Hint, pending)
-            && PairList(Returning, o.Returning, pending)
-            && Pair(ReturningInto, o.ReturningInto, pending)
+            && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
             && SameStrings(Labels, o.Labels);
     }
@@ -15755,24 +15731,27 @@ public partial class ReturningClause
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (Type is not null) yield return Type;
+        if (Items is not null) foreach (var x in Items) yield return x;
+        if (Into is not null) yield return Into;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        Type?.Accept(visitor);
+        if (Items is not null) foreach (var x in Items) x.Accept(visitor);
+        Into?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        Type = SqlNodeRewriter.RewriteOptional(rewriter, Type, "ReturningClause.Type");
+        SqlNodeRewriter.RewriteList(rewriter, Items, "ReturningClause.Items");
+        Into = SqlNodeRewriter.RewriteOptional(rewriter, Into, "ReturningClause.Into");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
-        new("Type", Type),
-        new("Content", Content),
+        new("Items", Items),
+        new("Into", Into),
     ];
 
     /// <inheritdoc/>
@@ -15784,8 +15763,8 @@ public partial class ReturningClause
     {
         var c = new ReturningClause
         {
-            Type = CloneChild(Type),
-            Content = Content,
+            Items = CloneList(Items),
+            Into = CloneChild(Into),
         };
         CopySpan(this, c);
         return c;
@@ -15794,8 +15773,8 @@ public partial class ReturningClause
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (ReturningClause)other;
-        return Pair(Type, o.Type, pending)
-            && Content == o.Content;
+        return PairList(Items, o.Items, pending)
+            && Pair(Into, o.Into, pending);
     }
 }
 
@@ -15845,6 +15824,55 @@ public partial class ReturningItem
         var o = (ReturningItem)other;
         return Image == o.Image
             && Pair(Expression, o.Expression, pending);
+    }
+}
+
+public partial class ReturningTypeClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Type is not null) yield return Type;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Type?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Type = SqlNodeRewriter.RewriteOptional(rewriter, Type, "ReturningTypeClause.Type");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Type", Type),
+        new("Content", Content),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ReturningTypeClause
+        {
+            Type = CloneChild(Type),
+            Content = Content,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ReturningTypeClause)other;
+        return Pair(Type, o.Type, pending)
+            && Content == o.Content;
     }
 }
 
@@ -18024,8 +18052,7 @@ public partial class UpdateStatement
         if (From is not null) yield return From;
         if (Where is not null) yield return Where;
         if (Hint is not null) yield return Hint;
-        if (Returning is not null) foreach (var x in Returning) yield return x;
-        if (ReturningInto is not null) yield return ReturningInto;
+        if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
     }
 
@@ -18037,8 +18064,7 @@ public partial class UpdateStatement
         From?.Accept(visitor);
         Where?.Accept(visitor);
         Hint?.Accept(visitor);
-        if (Returning is not null) foreach (var x in Returning) x.Accept(visitor);
-        ReturningInto?.Accept(visitor);
+        Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
     }
 
@@ -18049,8 +18075,7 @@ public partial class UpdateStatement
         From = SqlNodeRewriter.RewriteOptional(rewriter, From, "UpdateStatement.From");
         Where = SqlNodeRewriter.RewriteOptional(rewriter, Where, "UpdateStatement.Where");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "UpdateStatement.Hint");
-        SqlNodeRewriter.RewriteList(rewriter, Returning, "UpdateStatement.Returning");
-        ReturningInto = SqlNodeRewriter.RewriteOptional(rewriter, ReturningInto, "UpdateStatement.ReturningInto");
+        Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "UpdateStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "UpdateStatement.ErrorLogging");
     }
 
@@ -18062,7 +18087,6 @@ public partial class UpdateStatement
         new("Where", Where),
         new("Hint", Hint),
         new("Returning", Returning),
-        new("ReturningInto", ReturningInto),
         new("ErrorLogging", ErrorLogging),
         new("Labels", Labels),
     ];
@@ -18081,8 +18105,7 @@ public partial class UpdateStatement
             From = CloneChild(From),
             Where = CloneChild(Where),
             Hint = CloneChild(Hint),
-            Returning = CloneList(Returning),
-            ReturningInto = CloneChild(ReturningInto),
+            Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
             Labels = CloneStrings(Labels),
         };
@@ -18098,8 +18121,7 @@ public partial class UpdateStatement
             && Pair(From, o.From, pending)
             && Pair(Where, o.Where, pending)
             && Pair(Hint, o.Hint, pending)
-            && PairList(Returning, o.Returning, pending)
-            && Pair(ReturningInto, o.ReturningInto, pending)
+            && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
             && SameStrings(Labels, o.Labels);
     }

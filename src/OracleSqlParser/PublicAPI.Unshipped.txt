@@ -1488,9 +1488,7 @@ OracleSqlParser.DmlStatement.ErrorLogging.get -> OracleSqlParser.ErrorLogging?
 OracleSqlParser.DmlStatement.ErrorLogging.set -> void
 OracleSqlParser.DmlStatement.Hint.get -> OracleSqlParser.HintClause?
 OracleSqlParser.DmlStatement.Hint.set -> void
-OracleSqlParser.DmlStatement.Returning.get -> System.Collections.Generic.List<OracleSqlParser.ReturningItem!>!
 OracleSqlParser.DmlStatement.Returning.set -> void
-OracleSqlParser.DmlStatement.ReturningInto.set -> void
 OracleSqlParser.DropStatement
 OracleSqlParser.DropStatement.AndDatafiles.get -> bool
 OracleSqlParser.DropStatement.AndDatafiles.set -> void
@@ -3266,11 +3264,7 @@ OracleSqlParser.RepeatControl.RepeatControl() -> void
 OracleSqlParser.RepeatControl.Value.get -> OracleSqlParser.Expression!
 OracleSqlParser.RepeatControl.Value.set -> void
 OracleSqlParser.ReturningClause
-OracleSqlParser.ReturningClause.Content.get -> bool
-OracleSqlParser.ReturningClause.Content.set -> void
 OracleSqlParser.ReturningClause.ReturningClause() -> void
-OracleSqlParser.ReturningClause.Type.get -> OracleSqlParser.DataType?
-OracleSqlParser.ReturningClause.Type.set -> void
 OracleSqlParser.ReturningImage
 OracleSqlParser.ReturningImage.New = 1 -> OracleSqlParser.ReturningImage
 OracleSqlParser.ReturningImage.Old = 0 -> OracleSqlParser.ReturningImage
@@ -6033,7 +6027,6 @@ override OracleSqlParser.WithinGroupClause.GetChildren() -> System.Collections.G
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.WithinGroupClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.WithinGroupClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WithinGroupClause! node) -> void
-OracleSqlParser.DmlStatement.ReturningInto.get -> OracleSqlParser.IntoClause?
 OracleSqlParser.ExecuteImmediateStatement.Into.get -> OracleSqlParser.IntoClause?
 OracleSqlParser.ExecuteImmediateStatement.ReturningInto.get -> OracleSqlParser.IntoClause?
 OracleSqlParser.FetchStatement.Into.get -> OracleSqlParser.IntoClause!
@@ -6122,3 +6115,20 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ExpressionGrouping!
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.GrandTotalGrouping! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.GroupingSetsGrouping! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.RollupGrouping! node) -> void
+OracleSqlParser.DmlStatement.Returning.get -> OracleSqlParser.ReturningClause?
+OracleSqlParser.ReturningClause.Into.get -> OracleSqlParser.IntoClause?
+OracleSqlParser.ReturningClause.Into.set -> void
+OracleSqlParser.ReturningClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.ReturningItem!>!
+OracleSqlParser.ReturningClause.Items.set -> void
+OracleSqlParser.ReturningTypeClause
+OracleSqlParser.ReturningTypeClause.Content.get -> bool
+OracleSqlParser.ReturningTypeClause.Content.set -> void
+OracleSqlParser.ReturningTypeClause.ReturningTypeClause() -> void
+OracleSqlParser.ReturningTypeClause.Type.get -> OracleSqlParser.DataType?
+OracleSqlParser.ReturningTypeClause.Type.set -> void
+override OracleSqlParser.ReturningTypeClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ReturningTypeClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ReturningTypeClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ReturningTypeClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ReturningTypeClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ReturningTypeClause! node) -> void

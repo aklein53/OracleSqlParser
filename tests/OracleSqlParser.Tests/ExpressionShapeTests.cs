@@ -103,7 +103,7 @@ public class ExpressionShapeTests
 
     [Theory]
     [InlineData("JSON_VALUE(j, '$.a' RETURNING NUMBER ERROR ON ERROR)",
-        "(FunctionCall name=[JSON_VALUE] clauses=[(ReturningClause type=(DataType name=NUMBER)) (OnBehaviorClause behavior=Error event=Error)] arguments=[(Argument value=J) (Argument value='$.a')])")]
+        "(FunctionCall name=[JSON_VALUE] clauses=[(ReturningTypeClause type=(DataType name=NUMBER)) (OnBehaviorClause behavior=Error event=Error)] arguments=[(Argument value=J) (Argument value='$.a')])")]
     [InlineData("JSON_VALUE(j, '$.a' DEFAULT 0 ON EMPTY NULL ON MISMATCH)",
         "(FunctionCall name=[JSON_VALUE] clauses=[(OnBehaviorClause behavior=Default value=0 event=Empty) (OnBehaviorClause behavior=Null event=Mismatch)] arguments=[(Argument value=J) (Argument value='$.a')])")]
     [InlineData("JSON_QUERY(j, '$' WITH CONDITIONAL ARRAY WRAPPER KEEP QUOTES ON SCALAR STRING EMPTY ARRAY ON ERROR)",
@@ -111,9 +111,9 @@ public class ExpressionShapeTests
     [InlineData("JSON_OBJECT(KEY 'a' VALUE 1, 'b' VALUE x FORMAT JSON NULL ON NULL)",
         "(FunctionCall name=[JSON_OBJECT] clauses=[(NullOnClause)] arguments=[(Argument keyword=Key value='a' mappedValue=1) (Argument value='b' mappedValue=X format=(FormatClause kind=Json))])")]
     [InlineData("JSON_ARRAYAGG(x ORDER BY y ABSENT ON NULL RETURNING CLOB)",
-        "(FunctionCall name=[JSON_ARRAYAGG] clauses=[(NullOnClause absent) (ReturningClause type=(DataType name=CLOB))] arguments=[(Argument value=X)] orderBy=(OrderByClause items=[(OrderByItem expression=Y)]))")]
+        "(FunctionCall name=[JSON_ARRAYAGG] clauses=[(NullOnClause absent) (ReturningTypeClause type=(DataType name=CLOB))] arguments=[(Argument value=X)] orderBy=(OrderByClause items=[(OrderByItem expression=Y)]))")]
     [InlineData("JSON_SERIALIZE(x RETURNING VARCHAR2(100) PRETTY ASCII TRUNCATE)",
-        "(FunctionCall name=[JSON_SERIALIZE] clauses=[(ReturningClause type=(DataType name=VARCHAR2 arguments=[100])) (FlagClause flag=Pretty) (FlagClause flag=Ascii) (FlagClause flag=Truncate)] arguments=[(Argument value=X)])")]
+        "(FunctionCall name=[JSON_SERIALIZE] clauses=[(ReturningTypeClause type=(DataType name=VARCHAR2 arguments=[100])) (FlagClause flag=Pretty) (FlagClause flag=Ascii) (FlagClause flag=Truncate)] arguments=[(Argument value=X)])")]
     [InlineData("JSON_TRANSFORM(j, SET '$.a' = 1 IGNORE ON MISSING, REMOVE '$.b', RENAME '$.c' WITH 'd', SORT '$.e' DESC)",
         "(FunctionCall name=[JSON_TRANSFORM] operations=[(JsonTransformOperation op=Set path='$.a' value=1 clauses=[(OnBehaviorClause behavior=Ignore event=Missing)]) (JsonTransformOperation op=Remove path='$.b') (JsonTransformOperation op=Rename path='$.c' value='d') (JsonTransformOperation op=Sort path='$.e' descending)] arguments=[(Argument value=J)])")]
     [InlineData("TO_NUMBER(x DEFAULT 0 ON CONVERSION ERROR, 'fmt')",
@@ -121,7 +121,7 @@ public class ExpressionShapeTests
     [InlineData("XMLELEMENT(NAME \"e\", XMLATTRIBUTES(a AS \"x\"), b)",
         "(FunctionCall name=[XMLELEMENT] arguments=[(Argument keyword=Name value=\"e\") (Argument value=(FunctionCall name=[XMLATTRIBUTES] arguments=[(Argument value=A alias=\"x\")])) (Argument value=B)])")]
     [InlineData("XMLQUERY('/a' PASSING BY VALUE x AS \"v\" RETURNING CONTENT NULL ON EMPTY)",
-        "(FunctionCall name=[XMLQUERY] clauses=[(PassingClause byValue items=[(ExpressionSelectItem expression=X alias=\"v\")]) (ReturningClause content) (OnBehaviorClause behavior=Null event=Empty)] arguments=[(Argument value='/a')])")]
+        "(FunctionCall name=[XMLQUERY] clauses=[(PassingClause byValue items=[(ExpressionSelectItem expression=X alias=\"v\")]) (ReturningTypeClause content) (OnBehaviorClause behavior=Null event=Empty)] arguments=[(Argument value='/a')])")]
     [InlineData("TRANSLATE(x USING NCHAR_CS)", "(FunctionCall name=[TRANSLATE] clauses=[(UsingCharsetClause charset=NCHAR_CS)] arguments=[(Argument value=X)])")]
     // 'key':value with no space: ':' right after a string key is the separator, not the start of a bind :1
     [InlineData("JSON_OBJECT('a':1)", "(FunctionCall name=[JSON_OBJECT] arguments=[(Argument value='a' mappedValue=1)])")]

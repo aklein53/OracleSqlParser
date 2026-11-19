@@ -1076,7 +1076,10 @@ public sealed partial class ExecuteImmediateStatement : Statement
     public IntoClause? Into { get; set; }
     /// <summary>The <c>USING</c> arguments, in source order; empty when absent.</summary>
     public List<UsingArgument> Using { get; set; } = [];
-    /// <summary>The <c>RETURNING ... INTO</c> clause, or null when absent.</summary>
+    /// <summary>
+    /// The RETURNING INTO of the dynamic SQL: the <c>INTO</c> that receives the values the dynamic statement returns, or null
+    /// when absent. It is not the <see cref="ReturningClause"/> of a DML statement, and it has no <c>RETURNING</c> keyword in its span.
+    /// </summary>
     public IntoClause? ReturningInto { get; set; }
 }
 

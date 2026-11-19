@@ -759,7 +759,7 @@ public sealed partial class SqlParser
             case "RETURNING":
             {
                 Next();
-                var rc = new ReturningClause();
+                var rc = new ReturningTypeClause();
                 if (AcceptKw("CONTENT")) rc.Content = true; else rc.Type = ParseDataType();
                 return Fin(rc, s);
             }

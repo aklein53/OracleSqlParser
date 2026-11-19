@@ -62,11 +62,11 @@ public sealed partial class SqlScriptGenerator
 
         private void DmlTail(DmlStatement d)
         {
-            if (d.Returning.Count > 0)
+            if (d.Returning is { } returning)
             {
                 ClauseStart(_o.NewLineBeforeReturningClause);
-                Add("RETURNING "); Sep(d.Returning, ReturningItemText);
-                if (d.ReturningInto is { } returningInto) { Add(returningInto.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(returningInto.Targets, e => Expr(e)); }
+                Add("RETURNING "); Sep(returning.Items, ReturningItemText);
+                if (returning.Into is { } returningInto) { Add(returningInto.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(returningInto.Targets, e => Expr(e)); }
             }
             if (d.ErrorLogging != null) { ClauseStart(_o.NewLineBeforeReturningClause); ErrorLoggingText(d.ErrorLogging); }
         }

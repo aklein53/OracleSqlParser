@@ -154,12 +154,25 @@ public abstract partial class DmlStatement : Statement
 {
     /// <summary>The optimizer hint comment after the keyword, such as <c>/*+ APPEND */</c>, or null when absent.</summary>
     public HintClause? Hint { get; set; }
-    /// <summary>The items of the <c>RETURNING</c> clause, in source order; empty when absent.</summary>
-    public List<ReturningItem> Returning { get; set; } = [];
-    /// <summary>The <c>INTO</c> clause of <c>RETURNING ... INTO</c> in PL/SQL, or null when absent.</summary>
-    public IntoClause? ReturningInto { get; set; }
+    /// <summary>The <c>RETURNING</c> clause, such as <c>RETURNING a, b INTO x, y</c>, or null when absent.</summary>
+    public ReturningClause? Returning { get; set; }
     /// <summary>The <c>LOG ERRORS</c> clause, or null when absent.</summary>
     public ErrorLogging? ErrorLogging { get; set; }
+}
+
+/// <summary>
+/// The <c>RETURNING</c> clause of a DML statement: the returned items and the <c>INTO</c> that receives them.
+/// </summary>
+/// <remarks>
+/// Spans the <c>RETURNING</c> (or <c>RETURN</c>) keyword through the last target of <see cref="Into"/>; see
+/// <see cref="FromClause"/>. <see cref="IntoClause"/> keeps its own span, from <c>INTO</c> or <c>BULK</c>.
+/// </remarks>
+public sealed partial class ReturningClause : SqlNode
+{
+    /// <summary>The returned items, in source order.</summary>
+    public required List<ReturningItem> Items { get; set; }
+    /// <summary>The <c>INTO</c> clause that receives the returned values, or null when absent.</summary>
+    public IntoClause? Into { get; set; }
 }
 
 /// <summary>One item of a RETURNING list: a column or expression, optionally qualified with the row image OLD or NEW (23ai).</summary>

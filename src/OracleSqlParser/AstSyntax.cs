@@ -85,7 +85,7 @@ public sealed partial class HintItem : SqlNode
 public abstract partial class FunctionClause : SqlNode { }
 
 /// <summary><c>RETURNING type</c> in a JSON or XML function, such as <c>JSON_VALUE(... RETURNING NUMBER)</c>.</summary>
-public sealed partial class ReturningClause : FunctionClause
+public sealed partial class ReturningTypeClause : FunctionClause
 {
     /// <summary>The return type, or null when the clause has no type.</summary>
     public DataType? Type { get; set; }

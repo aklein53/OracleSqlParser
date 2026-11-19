@@ -367,7 +367,7 @@ public class ClauseNodeTests
     {
         var r = SqlParser.Parse(sql);
         Assert.True(r.Success, string.Join("; ", r.Errors));
-        var into = Assert.IsAssignableFrom<DmlStatement>(r.Script.Statements[0]).ReturningInto!;
+        var into = Assert.IsAssignableFrom<DmlStatement>(r.Script.Statements[0]).Returning!.Into!;
 
         Assert.Equal(expected, Text(sql, into));
         Assert.Equal(bulk, into.BulkCollect);

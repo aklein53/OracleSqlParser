@@ -11,6 +11,17 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 ### Added
 - README: a "Versioning and compatibility" section stating what counts as a breaking change from 1.0.0 on.
 
+### Changed (breaking)
+- The DML `RETURNING` clause is a node that spans its keyword through its `INTO` target, as the other clauses do. The
+  JSON and XML `RETURNING type` clause, which was also called `ReturningClause`, is renamed.
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `ReturningClause` (JSON/XML `RETURNING type`) | class `ReturningClause` | class `ReturningTypeClause` (same members) |
+  | `DmlStatement.Returning` | `List<ReturningItem>` | `ReturningClause?` (`.Items`, `.Into`) |
+  | `DmlStatement.ReturningInto` | `IntoClause?` | removed; use `Returning.Into` |
+  | `ExecuteImmediateStatement.ReturningInto` | `IntoClause?` | unchanged; documented as the `RETURNING INTO` of the dynamic SQL |
+
 ## [1.0.0-rc.3] - 2026-11-18
 
 Third release candidate. `OracleSqlParser.Guard` 0.10.0-preview.1 is released alongside it: Guard 0.9 reads the clause

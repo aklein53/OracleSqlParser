@@ -1152,10 +1152,13 @@ public sealed partial class SqlParser
     /// <summary>RETURNING ... INTO ... and LOG ERRORS.</summary>
     private void ParseDmlTail(DmlStatement st)
     {
-        if (AcceptKw("RETURNING") || AcceptKw("RETURN"))
+        if (IsKw("RETURNING") || IsKw("RETURN"))
         {
-            do st.Returning.Add(ParseReturningItem()); while (AcceptOp(","));
-            st.ReturningInto = ParseInto();
+            var start = Next();
+            var returning = new ReturningClause { Items = [] };
+            do returning.Items.Add(ParseReturningItem()); while (AcceptOp(","));
+            returning.Into = ParseInto();
+            st.Returning = Fin(returning, start);
         }
         ParseErrorLogging(st);
     }

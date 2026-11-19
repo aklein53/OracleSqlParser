@@ -627,9 +627,9 @@ public static class SqlAnalysis
             // RETURNING expressions read the row of the DML target.
             InScope(target, () =>
             {
-                foreach (var item in node.Returning) item.Accept(this);
+                foreach (var item in node.Returning?.Items ?? []) item.Accept(this);
             });
-            WalkVariables(node.ReturningInto?.Targets ?? []);
+            WalkVariables(node.Returning?.Into?.Targets ?? []);
         }
 
         /// <summary>

@@ -401,7 +401,7 @@ public sealed partial class SqlScriptGenerator
         {
             switch (c)
             {
-                case ReturningClause r: Add("RETURNING "); if (r.Content) Add("CONTENT"); else Type(r.Type!); break;
+                case ReturningTypeClause r: Add("RETURNING "); if (r.Content) Add("CONTENT"); else Type(r.Type!); break;
                 case FormatClause f: Add("FORMAT JSON"); if (f.Encoding != null) { Add(" ENCODING "); Id(f.Encoding); } break;
                 case NullOnClause n: Add(n.Absent ? "ABSENT ON NULL" : "NULL ON NULL"); break;
                 case OnBehaviorClause b:
