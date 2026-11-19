@@ -16,9 +16,9 @@ public class DmlAndSessionShapeTests
     [InlineData("INSERT INTO t (a) (SELECT 1 FROM dual)",
         "(InsertStatement target=(NamedTable name=[T]) columns=[A] query=(SelectStatement body=(ParenthesizedQuery query=" + SelDual + ")))")]
     [InlineData("INSERT INTO t SELECT 1 FROM dual LOG ERRORS INTO err_t ('tag') REJECT LIMIT UNLIMITED",
-        "(InsertStatement target=(NamedTable name=[T]) query=" + SelDual + " errorLogging=(ErrorLogging table=[ERR_T] tag='tag' rejectUnlimited))")]
+        "(InsertStatement target=(NamedTable name=[T]) query=" + SelDual + " errorLogging=(ErrorLoggingClause table=[ERR_T] tag='tag' rejectUnlimited))")]
     [InlineData("INSERT INTO t SELECT 1 FROM dual LOG ERRORS REJECT LIMIT 10",
-        "(InsertStatement target=(NamedTable name=[T]) query=" + SelDual + " errorLogging=(ErrorLogging rejectLimit=10))")]
+        "(InsertStatement target=(NamedTable name=[T]) query=" + SelDual + " errorLogging=(ErrorLoggingClause rejectLimit=10))")]
     [InlineData("INSERT INTO t VALUES (1) RETURNING a, b BULK COLLECT INTO v1, v2",
         "(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause rows=[(RowValue values=[1])]) returning=(ReturningClause items=[(ReturningItem expression=A) (ReturningItem expression=B)] into=(IntoClause bulkCollect targets=[V1 V2])))")]
     public void Inserts(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
@@ -67,7 +67,7 @@ public class DmlAndSessionShapeTests
     public void Merge_LogErrors_Shape() =>
         Assert.Equal(
             "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
-            "(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]))] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
+            "(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]))] errorLogging=(ErrorLoggingClause table=[ERR_T] tag='x' rejectLimit=5))",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v LOG ERRORS INTO err_t ('x') REJECT LIMIT 5"));
 
     [Theory]

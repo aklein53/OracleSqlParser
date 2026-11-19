@@ -27,7 +27,7 @@ public sealed class TableUse
 {
     /// <summary>
     /// The <see cref="NamedTable"/> for a FROM, JOIN or DML reference; the DDL statement (or <see cref="TableConstraint"/>)
-    /// for <see cref="TableAccess.Ddl"/>; the <see cref="ErrorLogging"/> clause for the error log table (<see cref="TableAccess.Insert"/>).
+    /// for <see cref="TableAccess.Ddl"/>; the <see cref="ErrorLoggingClause"/> clause for the error log table (<see cref="TableAccess.Insert"/>).
     /// </summary>
     public required SqlNode Node { get; init; }
     /// <summary>How the statement uses the name.</summary>
@@ -455,7 +455,7 @@ public static class SqlAnalysis
 
         public override void ExplicitVisit(ForallStatement node) => WithDeclared([node.Index.Value], () => base.ExplicitVisit(node));
 
-        public override void ExplicitVisit(ErrorLogging node)
+        public override void ExplicitVisit(ErrorLoggingClause node)
         {
             // The error log table is written by the DML that has the LOG ERRORS clause.
             if (node.Table.Count > 0) AddTable(node, node.Table, TableAccess.Insert, cte: null, dbLink: null, alias: null);

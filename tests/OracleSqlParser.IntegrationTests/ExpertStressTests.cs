@@ -1128,7 +1128,7 @@ public class ExpertStressTests(OracleFixture db)
         var clauses = Find<MergeClause>(s).ToList();
         Assert.Equal(2, clauses.Count);
         Assert.NotNull(((MergeMatchedClause)clauses[0]).DeleteWhere);
-        Assert.Contains("STOCK_ERR", Str(Find<ErrorLogging>(s).Single()));
+        Assert.Contains("STOCK_ERR", Str(Find<ErrorLoggingClause>(s).Single()));
         await VerifyAsync(sql, ["SELECT sku, qty, price FROM stock ORDER BY sku", "SELECT COUNT(*) FROM stock_err"]);
     }
 

@@ -179,7 +179,7 @@ public sealed partial class SqlScriptGenerator
                 case UserClause uc: UserClauseText(uc); break;
                 case SequenceOption so: SeqOption(so); break;
                 case ConstraintState cs: ConstraintStateText(cs); break;
-                case ErrorLogging el: ErrorLoggingText(el); break;
+                case ErrorLoggingClause el: ErrorLoggingText(el); break;
                 default: throw Unsupported(n);
             }
         }

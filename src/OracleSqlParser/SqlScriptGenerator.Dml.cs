@@ -77,7 +77,7 @@ public sealed partial class SqlScriptGenerator
             Expr(r.Expression);
         }
 
-        private void ErrorLoggingText(ErrorLogging el)
+        private void ErrorLoggingText(ErrorLoggingClause el)
         {
             Add("LOG ERRORS");
             if (el.Table.Count > 0) { Add(" INTO "); Name(el.Table); }

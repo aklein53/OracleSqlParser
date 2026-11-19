@@ -7045,7 +7045,7 @@ public partial class EncryptClause
     }
 }
 
-public partial class ErrorLogging
+public partial class ErrorLoggingClause
 {
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
@@ -7065,9 +7065,9 @@ public partial class ErrorLogging
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteList(rewriter, Table, "ErrorLogging.Table");
-        Tag = SqlNodeRewriter.RewriteOptional(rewriter, Tag, "ErrorLogging.Tag");
-        RejectLimit = SqlNodeRewriter.RewriteOptional(rewriter, RejectLimit, "ErrorLogging.RejectLimit");
+        SqlNodeRewriter.RewriteList(rewriter, Table, "ErrorLoggingClause.Table");
+        Tag = SqlNodeRewriter.RewriteOptional(rewriter, Tag, "ErrorLoggingClause.Tag");
+        RejectLimit = SqlNodeRewriter.RewriteOptional(rewriter, RejectLimit, "ErrorLoggingClause.RejectLimit");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -7085,7 +7085,7 @@ public partial class ErrorLogging
 
     internal override SqlNode CloneCore()
     {
-        var c = new ErrorLogging
+        var c = new ErrorLoggingClause
         {
             Table = CloneList(Table),
             Tag = CloneChild(Tag),
@@ -7098,7 +7098,7 @@ public partial class ErrorLogging
 
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
-        var o = (ErrorLogging)other;
+        var o = (ErrorLoggingClause)other;
         return PairList(Table, o.Table, pending)
             && Pair(Tag, o.Tag, pending)
             && Pair(RejectLimit, o.RejectLimit, pending)

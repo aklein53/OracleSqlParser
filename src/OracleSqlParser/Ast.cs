@@ -157,7 +157,7 @@ public abstract partial class DmlStatement : Statement
     /// <summary>The <c>RETURNING</c> clause, such as <c>RETURNING a, b INTO x, y</c>, or null when absent.</summary>
     public ReturningClause? Returning { get; set; }
     /// <summary>The <c>LOG ERRORS</c> clause, or null when absent.</summary>
-    public ErrorLogging? ErrorLogging { get; set; }
+    public ErrorLoggingClause? ErrorLogging { get; set; }
 }
 
 /// <summary>
@@ -194,7 +194,7 @@ public enum ReturningImage
 }
 
 /// <summary>A <c>LOG ERRORS [INTO t] [('tag')] [REJECT LIMIT n]</c> clause, which sends row errors of a DML statement to an error table.</summary>
-public sealed partial class ErrorLogging : SqlNode
+public sealed partial class ErrorLoggingClause : SqlNode
 {
     /// <summary>The error table name parts from <c>INTO</c>; empty when absent.</summary>
     public List<Identifier> Table { get; set; } = [];

@@ -1214,7 +1214,7 @@ public sealed partial class SqlParser
         if (IsKw("LOG") && IsKwAt(1, "ERRORS"))
         {
             var s = Next(); Next();
-            var el = new ErrorLogging();
+            var el = new ErrorLoggingClause();
             if (AcceptKw("INTO")) el.Table = ParseDottedName();
             if (IsOp("(")) { Next(); el.Tag = ParseExpr(); ExpectOp(")"); }
             if (AcceptKw("REJECT")) { ExpectKw("LIMIT"); if (AcceptKw("UNLIMITED")) el.RejectUnlimited = true; else el.RejectLimit = ParseAdditive(); }

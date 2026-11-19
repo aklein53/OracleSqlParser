@@ -757,8 +757,8 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
-    /// <summary>Rewrites a <see cref="ErrorLogging"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
-    public virtual SqlNode? Rewrite(ErrorLogging node)
+    /// <summary>Rewrites a <see cref="ErrorLoggingClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(ErrorLoggingClause node)
     {
         node.RewriteChildren(this);
         return node;

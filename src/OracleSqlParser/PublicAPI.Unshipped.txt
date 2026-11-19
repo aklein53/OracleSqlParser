@@ -1483,7 +1483,6 @@ OracleSqlParser.DeleteStatement.Where.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.DeleteStatement.Where.set -> void
 OracleSqlParser.DmlStatement
 OracleSqlParser.DmlStatement.DmlStatement() -> void
-OracleSqlParser.DmlStatement.ErrorLogging.get -> OracleSqlParser.ErrorLogging?
 OracleSqlParser.DmlStatement.ErrorLogging.set -> void
 OracleSqlParser.DmlStatement.Hint.get -> OracleSqlParser.HintClause?
 OracleSqlParser.DmlStatement.Hint.set -> void
@@ -1551,16 +1550,6 @@ OracleSqlParser.EncryptClause.NoSalt.get -> bool
 OracleSqlParser.EncryptClause.NoSalt.set -> void
 OracleSqlParser.EncryptClause.Salt.get -> bool
 OracleSqlParser.EncryptClause.Salt.set -> void
-OracleSqlParser.ErrorLogging
-OracleSqlParser.ErrorLogging.ErrorLogging() -> void
-OracleSqlParser.ErrorLogging.RejectLimit.get -> OracleSqlParser.Expression?
-OracleSqlParser.ErrorLogging.RejectLimit.set -> void
-OracleSqlParser.ErrorLogging.RejectUnlimited.get -> bool
-OracleSqlParser.ErrorLogging.RejectUnlimited.set -> void
-OracleSqlParser.ErrorLogging.Table.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
-OracleSqlParser.ErrorLogging.Table.set -> void
-OracleSqlParser.ErrorLogging.Tag.get -> OracleSqlParser.Expression?
-OracleSqlParser.ErrorLogging.Tag.set -> void
 OracleSqlParser.ExceptionDeclaration
 OracleSqlParser.ExceptionDeclaration.ExceptionDeclaration() -> void
 OracleSqlParser.ExceptionDeclaration.Name.get -> OracleSqlParser.Identifier!
@@ -4379,9 +4368,6 @@ override OracleSqlParser.DynamicSqlControl.GetChildren() -> System.Collections.G
 override OracleSqlParser.EncryptClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.EncryptClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.EncryptClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
-override OracleSqlParser.ErrorLogging.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
-override OracleSqlParser.ErrorLogging.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
-override OracleSqlParser.ErrorLogging.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
 override OracleSqlParser.ExceptionDeclaration.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.ExceptionDeclaration.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.ExceptionDeclaration.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
@@ -5047,7 +5033,6 @@ virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.DropStatement! n
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.DualityAnnotationItem! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.DynamicSqlControl! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.EncryptClause! node) -> OracleSqlParser.SqlNode?
-virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ErrorLogging! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ExceptionDeclaration! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ExceptionHandler! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ExecStatement! node) -> OracleSqlParser.SqlNode?
@@ -5347,7 +5332,6 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.DropStateme
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.DualityAnnotationItem! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.DynamicSqlControl! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.EncryptClause! node) -> void
-virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ErrorLogging! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ExceptionDeclaration! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ExceptionHandler! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ExecStatement! node) -> void
@@ -5647,7 +5631,6 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.DropStatement! node
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.DualityAnnotationItem! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.DynamicSqlControl! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.EncryptClause! node) -> void
-virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ErrorLogging! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ExceptionDeclaration! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ExceptionHandler! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ExecStatement! node) -> void
@@ -6208,3 +6191,20 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallIndicesOf! no
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallRange! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallValuesOf! node) -> void
 OracleSqlParser.CallStatement.Into.get -> OracleSqlParser.IntoClause?
+OracleSqlParser.DmlStatement.ErrorLogging.get -> OracleSqlParser.ErrorLoggingClause?
+OracleSqlParser.ErrorLoggingClause
+OracleSqlParser.ErrorLoggingClause.ErrorLoggingClause() -> void
+OracleSqlParser.ErrorLoggingClause.RejectLimit.get -> OracleSqlParser.Expression?
+OracleSqlParser.ErrorLoggingClause.RejectLimit.set -> void
+OracleSqlParser.ErrorLoggingClause.RejectUnlimited.get -> bool
+OracleSqlParser.ErrorLoggingClause.RejectUnlimited.set -> void
+OracleSqlParser.ErrorLoggingClause.Table.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
+OracleSqlParser.ErrorLoggingClause.Table.set -> void
+OracleSqlParser.ErrorLoggingClause.Tag.get -> OracleSqlParser.Expression?
+OracleSqlParser.ErrorLoggingClause.Tag.set -> void
+override OracleSqlParser.ErrorLoggingClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ErrorLoggingClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ErrorLoggingClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ErrorLoggingClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ErrorLoggingClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ErrorLoggingClause! node) -> void
