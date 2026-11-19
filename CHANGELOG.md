@@ -35,6 +35,15 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `JoinTable.LeftPartitionBy`, `JoinTable.RightPartitionBy` | `List<Expression>` | `PartitionByClause?` (`.Items`, spanning `PARTITION BY (...)`) |
 
   `ModelClause.PartitionBy` stays a list of select items, since a model's partitioning takes aliased expressions.
+
+- `FORALL` has one `Bounds` property, whose type says which form is written.
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `ForallStatement.Lower`, `ForallStatement.Upper` | `Expression?` | removed; `ForallRange` (`.Lower`, `.Upper`, both required) |
+  | `ForallStatement.IndicesOf`, `BetweenLow`, `BetweenHigh` | `Expression?` | removed; `ForallIndicesOf` (`.Collection`, `.Low`, `.High`) |
+  | `ForallStatement.ValuesOf` | `Expression?` | removed; `ForallValuesOf` (`.Collection`) |
+  | `ForallStatement.Bounds` (new) | n/a | `required ForallBounds`, the base of the three forms |
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).

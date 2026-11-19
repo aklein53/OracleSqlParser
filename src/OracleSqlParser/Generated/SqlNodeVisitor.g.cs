@@ -1308,11 +1308,41 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="ForallIndicesOf"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(ForallIndicesOf node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="ForallIndicesOf"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(ForallIndicesOf node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="ForallRange"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(ForallRange node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="ForallRange"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(ForallRange node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="ForallStatement"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(ForallStatement node) => Visit((SqlNode)node);
 
     /// <summary>Entry point for a <see cref="ForallStatement"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
     public virtual void ExplicitVisit(ForallStatement node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="ForallValuesOf"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(ForallValuesOf node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="ForallValuesOf"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(ForallValuesOf node)
     {
         Visit(node);
         node.AcceptChildren(this);

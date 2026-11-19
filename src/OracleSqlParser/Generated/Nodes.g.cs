@@ -8373,18 +8373,123 @@ public partial class ForUpdateClause
     }
 }
 
+public partial class ForallIndicesOf
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Collection is not null) yield return Collection;
+        if (Low is not null) yield return Low;
+        if (High is not null) yield return High;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Collection?.Accept(visitor);
+        Low?.Accept(visitor);
+        High?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Collection = SqlNodeRewriter.RewriteRequired(rewriter, Collection, "ForallIndicesOf.Collection");
+        Low = SqlNodeRewriter.RewriteOptional(rewriter, Low, "ForallIndicesOf.Low");
+        High = SqlNodeRewriter.RewriteOptional(rewriter, High, "ForallIndicesOf.High");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Collection", Collection),
+        new("Low", Low),
+        new("High", High),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ForallIndicesOf
+        {
+            Collection = CloneChild(Collection)!,
+            Low = CloneChild(Low),
+            High = CloneChild(High),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ForallIndicesOf)other;
+        return Pair(Collection, o.Collection, pending)
+            && Pair(Low, o.Low, pending)
+            && Pair(High, o.High, pending);
+    }
+}
+
+public partial class ForallRange
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Lower is not null) yield return Lower;
+        if (Upper is not null) yield return Upper;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Lower?.Accept(visitor);
+        Upper?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Lower = SqlNodeRewriter.RewriteRequired(rewriter, Lower, "ForallRange.Lower");
+        Upper = SqlNodeRewriter.RewriteRequired(rewriter, Upper, "ForallRange.Upper");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Lower", Lower),
+        new("Upper", Upper),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ForallRange
+        {
+            Lower = CloneChild(Lower)!,
+            Upper = CloneChild(Upper)!,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ForallRange)other;
+        return Pair(Lower, o.Lower, pending)
+            && Pair(Upper, o.Upper, pending);
+    }
+}
+
 public partial class ForallStatement
 {
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Index is not null) yield return Index;
-        if (Lower is not null) yield return Lower;
-        if (Upper is not null) yield return Upper;
-        if (IndicesOf is not null) yield return IndicesOf;
-        if (ValuesOf is not null) yield return ValuesOf;
-        if (BetweenLow is not null) yield return BetweenLow;
-        if (BetweenHigh is not null) yield return BetweenHigh;
+        if (Bounds is not null) yield return Bounds;
         if (Body is not null) yield return Body;
     }
 
@@ -8392,36 +8497,21 @@ public partial class ForallStatement
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Index?.Accept(visitor);
-        Lower?.Accept(visitor);
-        Upper?.Accept(visitor);
-        IndicesOf?.Accept(visitor);
-        ValuesOf?.Accept(visitor);
-        BetweenLow?.Accept(visitor);
-        BetweenHigh?.Accept(visitor);
+        Bounds?.Accept(visitor);
         Body?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Index = SqlNodeRewriter.RewriteRequired(rewriter, Index, "ForallStatement.Index");
-        Lower = SqlNodeRewriter.RewriteOptional(rewriter, Lower, "ForallStatement.Lower");
-        Upper = SqlNodeRewriter.RewriteOptional(rewriter, Upper, "ForallStatement.Upper");
-        IndicesOf = SqlNodeRewriter.RewriteOptional(rewriter, IndicesOf, "ForallStatement.IndicesOf");
-        ValuesOf = SqlNodeRewriter.RewriteOptional(rewriter, ValuesOf, "ForallStatement.ValuesOf");
-        BetweenLow = SqlNodeRewriter.RewriteOptional(rewriter, BetweenLow, "ForallStatement.BetweenLow");
-        BetweenHigh = SqlNodeRewriter.RewriteOptional(rewriter, BetweenHigh, "ForallStatement.BetweenHigh");
+        Bounds = SqlNodeRewriter.RewriteRequired(rewriter, Bounds, "ForallStatement.Bounds");
         Body = SqlNodeRewriter.RewriteRequired(rewriter, Body, "ForallStatement.Body");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
         new("Index", Index),
-        new("Lower", Lower),
-        new("Upper", Upper),
-        new("IndicesOf", IndicesOf),
-        new("ValuesOf", ValuesOf),
-        new("BetweenLow", BetweenLow),
-        new("BetweenHigh", BetweenHigh),
+        new("Bounds", Bounds),
         new("SaveExceptions", SaveExceptions),
         new("Body", Body),
         new("Labels", Labels),
@@ -8437,12 +8527,7 @@ public partial class ForallStatement
         var c = new ForallStatement
         {
             Index = CloneChild(Index)!,
-            Lower = CloneChild(Lower),
-            Upper = CloneChild(Upper),
-            IndicesOf = CloneChild(IndicesOf),
-            ValuesOf = CloneChild(ValuesOf),
-            BetweenLow = CloneChild(BetweenLow),
-            BetweenHigh = CloneChild(BetweenHigh),
+            Bounds = CloneChild(Bounds)!,
             SaveExceptions = SaveExceptions,
             Body = CloneChild(Body)!,
             Labels = CloneStrings(Labels),
@@ -8455,15 +8540,56 @@ public partial class ForallStatement
     {
         var o = (ForallStatement)other;
         return Pair(Index, o.Index, pending)
-            && Pair(Lower, o.Lower, pending)
-            && Pair(Upper, o.Upper, pending)
-            && Pair(IndicesOf, o.IndicesOf, pending)
-            && Pair(ValuesOf, o.ValuesOf, pending)
-            && Pair(BetweenLow, o.BetweenLow, pending)
-            && Pair(BetweenHigh, o.BetweenHigh, pending)
+            && Pair(Bounds, o.Bounds, pending)
             && SaveExceptions == o.SaveExceptions
             && Pair(Body, o.Body, pending)
             && SameStrings(Labels, o.Labels);
+    }
+}
+
+public partial class ForallValuesOf
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Collection is not null) yield return Collection;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Collection?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Collection = SqlNodeRewriter.RewriteRequired(rewriter, Collection, "ForallValuesOf.Collection");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Collection", Collection),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ForallValuesOf
+        {
+            Collection = CloneChild(Collection)!,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ForallValuesOf)other;
+        return Pair(Collection, o.Collection, pending);
     }
 }
 

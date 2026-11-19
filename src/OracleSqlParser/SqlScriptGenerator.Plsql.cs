@@ -562,13 +562,16 @@ public sealed partial class SqlScriptGenerator
                     break;
                 case ForallStatement fa:
                     Add("FORALL "); Id(fa.Index); Add(" IN ");
-                    if (fa.IndicesOf != null)
+                    switch (fa.Bounds)
                     {
-                        Add("INDICES OF "); Expr(fa.IndicesOf);
-                        if (fa.BetweenLow != null) { Add(" BETWEEN "); Expr(fa.BetweenLow); Add(" AND "); Expr(fa.BetweenHigh!); }
+                        case ForallIndicesOf indices:
+                            Add("INDICES OF "); Expr(indices.Collection);
+                            if (indices.Low != null) { Add(" BETWEEN "); Expr(indices.Low); Add(" AND "); Expr(indices.High!); }
+                            break;
+                        case ForallValuesOf values: Add("VALUES OF "); Expr(values.Collection); break;
+                        case ForallRange range: Expr(range.Lower); Add(" .. "); Expr(range.Upper); break;
+                        default: throw Unsupported(fa.Bounds);
                     }
-                    else if (fa.ValuesOf != null) { Add("VALUES OF "); Expr(fa.ValuesOf); }
-                    else { Expr(fa.Lower!); Add(" .. "); Expr(fa.Upper!); }
                     if (fa.SaveExceptions) Add(" SAVE EXCEPTIONS");
                     Sp(); Statement(fa.Body);
                     break;

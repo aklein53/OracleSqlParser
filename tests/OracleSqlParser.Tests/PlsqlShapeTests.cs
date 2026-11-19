@@ -162,10 +162,10 @@ BEGIN NULL; END;");
         "[(ExecuteImmediateStatement sql=V_SQL using=[(UsingArgument mode=In value=A) (UsingArgument mode=Out value=B) (UsingArgument mode=InOut value=C)] returningInto=(IntoClause targets=[R]))]")]
     [InlineData("EXECUTE IMMEDIATE 'x' BULK COLLECT INTO tab;", "[(ExecuteImmediateStatement sql='x' into=(IntoClause bulkCollect targets=[TAB]))]")]
     [InlineData("FORALL i IN 1..tab.COUNT SAVE EXCEPTIONS INSERT INTO t VALUES (tab(i));",
-        "[(ForallStatement index=I lower=1 upper=TAB.COUNT saveExceptions body=(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause rows=[(RowValue values=[(FunctionCall name=[TAB] arguments=[(Argument value=I)])])])))]")]
+        "[(ForallStatement index=I bounds=(ForallRange lower=1 upper=TAB.COUNT) saveExceptions body=(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause rows=[(RowValue values=[(FunctionCall name=[TAB] arguments=[(Argument value=I)])])])))]")]
     [InlineData("FORALL i IN INDICES OF tab BETWEEN 1 AND 5 DELETE FROM t WHERE id = tab(i);",
-        "[(ForallStatement index=I indicesOf=TAB betweenLow=1 betweenHigh=5 body=(DeleteStatement target=(NamedTable name=[T]) where=(WhereClause condition=(Equals ID (FunctionCall name=[TAB] arguments=[(Argument value=I)])))))]")]
-    [InlineData("FORALL i IN VALUES OF idx UPDATE t SET a = 1;", "[(ForallStatement index=I valuesOf=IDX body=(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1)])))]")]
+        "[(ForallStatement index=I bounds=(ForallIndicesOf collection=TAB low=1 high=5) body=(DeleteStatement target=(NamedTable name=[T]) where=(WhereClause condition=(Equals ID (FunctionCall name=[TAB] arguments=[(Argument value=I)])))))]")]
+    [InlineData("FORALL i IN VALUES OF idx UPDATE t SET a = 1;", "[(ForallStatement index=I bounds=(ForallValuesOf collection=IDX) body=(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1)])))]")]
     [InlineData("RETURN; RETURN x + 1; RAISE; RAISE my_err; GOTO done; <<done>> NULL;",
         "[(ReturnStatement) (ReturnStatement value=(Add X 1)) (RaiseStatement) (RaiseStatement exception=[MY_ERR]) (GotoStatement target=DONE) (NullStatement labels=[DONE])]")]
     [InlineData("PIPE ROW (t_rec(1, 2));", "[(PipeRowStatement value=(FunctionCall name=[T_REC] arguments=[(Argument value=1) (Argument value=2)]))]")]

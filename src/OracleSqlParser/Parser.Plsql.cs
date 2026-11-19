@@ -1170,28 +1170,31 @@ public sealed partial class SqlParser
         // Body is required and comes last, so the bounds are collected in locals and the node is built at the end.
         var index = ParseIdentifier();
         ExpectKw("IN");
-        Expression? lower = null, upper = null, indicesOf = null, valuesOf = null, betweenLow = null, betweenHigh = null;
-        bool saveExceptions = false;
+        var boundsStart = Cur;
+        ForallBounds bounds;
         if (IsKw("INDICES") && IsKwAt(1, "OF"))
         {
             Next(); Next();
-            indicesOf = ParsePostfix();
-            if (AcceptKw("BETWEEN")) { betweenLow = ParseAdditive(); ExpectKw("AND"); betweenHigh = ParseAdditive(); }
+            var indices = new ForallIndicesOf { Collection = ParsePostfix() };
+            if (AcceptKw("BETWEEN")) { indices.Low = ParseAdditive(); ExpectKw("AND"); indices.High = ParseAdditive(); }
+            bounds = Fin(indices, boundsStart);
         }
-        else if (IsKw("VALUES") && IsKwAt(1, "OF")) { Next(); Next(); valuesOf = ParsePostfix(); }
+        else if (IsKw("VALUES") && IsKwAt(1, "OF"))
+        {
+            Next(); Next();
+            bounds = Fin(new ForallValuesOf { Collection = ParsePostfix() }, boundsStart);
+        }
         else
         {
-            lower = ParseExpr();
+            var lower = ParseExpr();
             ExpectOp("..");
-            upper = ParseExpr();
+            var upper = ParseExpr();
+            bounds = Fin(new ForallRange { Lower = lower, Upper = upper }, boundsStart);
         }
+        bool saveExceptions = false;
         if (IsKw("SAVE") && IsKwAt(1, "EXCEPTIONS")) { Next(); Next(); saveExceptions = true; }
         var body = ParsePlsqlStatement();
-        var st = new ForallStatement
-        {
-            Index = index, Lower = lower, Upper = upper, IndicesOf = indicesOf, ValuesOf = valuesOf,
-            BetweenLow = betweenLow, BetweenHigh = betweenHigh, SaveExceptions = saveExceptions, Body = body,
-        };
+        var st = new ForallStatement { Index = index, Bounds = bounds, SaveExceptions = saveExceptions, Body = body };
         return Fin(st, start);
     }
 }

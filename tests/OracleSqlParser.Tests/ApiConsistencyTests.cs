@@ -271,6 +271,43 @@ public class ApiConsistencyTests
         Assert.False(SqlParser.Parse(sql).Success);
     }
 
+    /// <summary>Each FORALL bound form spans from its first bound (or its INDICES or VALUES keyword) through the last.</summary>
+    [Theory]
+    [InlineData("BEGIN FORALL i IN 1 .. n DELETE FROM t WHERE id = c(i); END;", "1 .. n", typeof(ForallRange))]
+    [InlineData("BEGIN FORALL i IN INDICES OF c BETWEEN 1 AND 5 DELETE FROM t WHERE id = c(i); END;", "INDICES OF c BETWEEN 1 AND 5", typeof(ForallIndicesOf))]
+    [InlineData("BEGIN FORALL i IN INDICES OF c DELETE FROM t WHERE id = c(i); END;", "INDICES OF c", typeof(ForallIndicesOf))]
+    [InlineData("BEGIN FORALL i IN VALUES OF idx UPDATE t SET a = 1; END;", "VALUES OF idx", typeof(ForallValuesOf))]
+    public void ForallBoundsSpanTheirForm(string sql, string expected, Type type)
+    {
+        var forall = Assert.Single(Parsed(sql).Descendants().OfType<ForallStatement>());
+
+        Assert.IsType(type, forall.Bounds);
+        Assert.Equal(expected, Text(sql, forall.Bounds));
+        Assert.True(SqlNodeComparer.StructurallyEqual(Parsed(sql), Parsed(Generate(Parsed(sql)))), Generate(Parsed(sql)));
+    }
+
+    /// <summary>Oracle has no REVERSE in FORALL (PLS-00103), and the parser does not accept it either.</summary>
+    [Fact]
+    public void ForallReverseIsRejected()
+    {
+        Assert.False(SqlParser.Parse("BEGIN FORALL i IN REVERSE 1 .. n DELETE FROM t WHERE id = c(i); END;").Success);
+    }
+
+    /// <summary>A rewriter that drops the lower bound of a FORALL range fails, as it does for any required child.</summary>
+    [Fact]
+    public void ARewriterCannotDropTheLowerBoundOfAForallRange()
+    {
+        var script = Parsed("BEGIN FORALL i IN 1 .. 2 DELETE FROM t WHERE id = i; END;");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => new DropLiterals().RewriteTree(script));
+        Assert.Contains("ForallRange.Lower", ex.Message);
+    }
+
+    private sealed class DropLiterals : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(Literal node) => null;
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

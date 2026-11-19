@@ -28,6 +28,7 @@ public class SqlScriptGeneratorTests
     [
         "SET SERVEROUTPUT ON SIZE 1000000\nSELECT 1 FROM dual;\nEXEC dbms_output.put_line('x');\n@scripts/a.sql\nPROMPT hello world\nPRINT :b\nDEFINE x = 5",
         "SELECT &x, &&y FROM t WHERE a = &1",
+        "BEGIN FORALL i IN VALUES OF idx DELETE FROM t WHERE id = i; FORALL i IN 1 .. 2 UPDATE t SET a = 1; END;",
         "SELECT a COLLATE binary_ci FROM t",
         "DECLARE CURSOR c (p NUMBER) RETURN emp%ROWTYPE IS SELECT * FROM emp WHERE id = p; e EXCEPTION; PRAGMA EXCEPTION_INIT(e, -20001); " +
             "TYPE r IS RECORD (a NUMBER, b VARCHAR2(10) NOT NULL := 'x'); TYPE rc IS REF CURSOR RETURN emp%ROWTYPE; SUBTYPE small IS NUMBER(3) NOT NULL; " +

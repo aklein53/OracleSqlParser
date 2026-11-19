@@ -1757,25 +1757,13 @@ OracleSqlParser.FlashbackUnit.Period = 2 -> OracleSqlParser.FlashbackUnit
 OracleSqlParser.FlashbackUnit.Scn = 0 -> OracleSqlParser.FlashbackUnit
 OracleSqlParser.FlashbackUnit.Timestamp = 1 -> OracleSqlParser.FlashbackUnit
 OracleSqlParser.ForallStatement
-OracleSqlParser.ForallStatement.BetweenHigh.get -> OracleSqlParser.Expression?
-OracleSqlParser.ForallStatement.BetweenHigh.set -> void
-OracleSqlParser.ForallStatement.BetweenLow.get -> OracleSqlParser.Expression?
-OracleSqlParser.ForallStatement.BetweenLow.set -> void
 OracleSqlParser.ForallStatement.Body.get -> OracleSqlParser.Statement!
 OracleSqlParser.ForallStatement.Body.set -> void
 OracleSqlParser.ForallStatement.ForallStatement() -> void
 OracleSqlParser.ForallStatement.Index.get -> OracleSqlParser.Identifier!
 OracleSqlParser.ForallStatement.Index.set -> void
-OracleSqlParser.ForallStatement.IndicesOf.get -> OracleSqlParser.Expression?
-OracleSqlParser.ForallStatement.IndicesOf.set -> void
-OracleSqlParser.ForallStatement.Lower.get -> OracleSqlParser.Expression?
-OracleSqlParser.ForallStatement.Lower.set -> void
 OracleSqlParser.ForallStatement.SaveExceptions.get -> bool
 OracleSqlParser.ForallStatement.SaveExceptions.set -> void
-OracleSqlParser.ForallStatement.Upper.get -> OracleSqlParser.Expression?
-OracleSqlParser.ForallStatement.Upper.set -> void
-OracleSqlParser.ForallStatement.ValuesOf.get -> OracleSqlParser.Expression?
-OracleSqlParser.ForallStatement.ValuesOf.set -> void
 OracleSqlParser.ForIterand
 OracleSqlParser.ForIterand.ForIterand() -> void
 OracleSqlParser.ForIterand.Mutable.get -> bool
@@ -6180,3 +6168,43 @@ override OracleSqlParser.PartitionByClause.GetChildren() -> System.Collections.G
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.PartitionByClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.PartitionByClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.PartitionByClause! node) -> void
+OracleSqlParser.ForallBounds
+OracleSqlParser.ForallBounds.ForallBounds() -> void
+OracleSqlParser.ForallIndicesOf
+OracleSqlParser.ForallIndicesOf.Collection.get -> OracleSqlParser.Expression!
+OracleSqlParser.ForallIndicesOf.Collection.set -> void
+OracleSqlParser.ForallIndicesOf.ForallIndicesOf() -> void
+OracleSqlParser.ForallIndicesOf.High.get -> OracleSqlParser.Expression?
+OracleSqlParser.ForallIndicesOf.High.set -> void
+OracleSqlParser.ForallIndicesOf.Low.get -> OracleSqlParser.Expression?
+OracleSqlParser.ForallIndicesOf.Low.set -> void
+OracleSqlParser.ForallRange
+OracleSqlParser.ForallRange.ForallRange() -> void
+OracleSqlParser.ForallRange.Lower.get -> OracleSqlParser.Expression!
+OracleSqlParser.ForallRange.Lower.set -> void
+OracleSqlParser.ForallRange.Upper.get -> OracleSqlParser.Expression!
+OracleSqlParser.ForallRange.Upper.set -> void
+OracleSqlParser.ForallStatement.Bounds.get -> OracleSqlParser.ForallBounds!
+OracleSqlParser.ForallStatement.Bounds.set -> void
+OracleSqlParser.ForallValuesOf
+OracleSqlParser.ForallValuesOf.Collection.get -> OracleSqlParser.Expression!
+OracleSqlParser.ForallValuesOf.Collection.set -> void
+OracleSqlParser.ForallValuesOf.ForallValuesOf() -> void
+override OracleSqlParser.ForallIndicesOf.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ForallIndicesOf.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ForallIndicesOf.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+override OracleSqlParser.ForallRange.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ForallRange.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ForallRange.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+override OracleSqlParser.ForallValuesOf.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ForallValuesOf.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ForallValuesOf.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ForallIndicesOf! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ForallRange! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ForallValuesOf! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ForallIndicesOf! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ForallRange! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ForallValuesOf! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallIndicesOf! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallRange! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallValuesOf! node) -> void

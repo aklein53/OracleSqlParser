@@ -1377,7 +1377,7 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[4]);
         var fa = Find<ForallStatement>(s).Single();
-        Assert.NotNull(fa.Upper);
+        Assert.NotNull(((ForallRange)fa.Bounds).Upper);
         Assert.True(fa.SaveExceptions);
         Assert.Equal("(MemberAccess target=SQL%BULK_EXCEPTIONS member=COUNT)", Str(Find<RangeControl>(s).Single().Upper));
         Assert.Single(Find<ExceptionHandler>(s));

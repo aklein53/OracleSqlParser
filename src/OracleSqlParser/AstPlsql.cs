@@ -1088,22 +1088,43 @@ public sealed partial class ForallStatement : Statement
 {
     /// <summary>The index variable.</summary>
     public required Identifier Index { get; set; }
-    /// <summary>The lower bound of an <c>IN lower .. upper</c> range, or null when absent.</summary>
-    public Expression? Lower { get; set; }
-    /// <summary>The upper bound of an <c>IN lower .. upper</c> range, or null when absent.</summary>
-    public Expression? Upper { get; set; }
-    /// <summary>The collection named after <c>INDICES OF</c>, or null when absent.</summary>
-    public Expression? IndicesOf { get; set; }
-    /// <summary>The collection named after <c>VALUES OF</c>, or null when absent.</summary>
-    public Expression? ValuesOf { get; set; }
-    /// <summary>The lower bound after <c>BETWEEN</c> in the <c>INDICES OF</c> form, or null when absent.</summary>
-    public Expression? BetweenLow { get; set; }
-    /// <summary>The upper bound after <c>AND</c> in the <c>INDICES OF</c> form, or null when absent.</summary>
-    public Expression? BetweenHigh { get; set; }
+    /// <summary>The bounds: a range, <c>INDICES OF</c> or <c>VALUES OF</c>.</summary>
+    public required ForallBounds Bounds { get; set; }
     /// <summary>True for <c>SAVE EXCEPTIONS</c>.</summary>
     public bool SaveExceptions { get; set; }
     /// <summary>The DML statement run for each index.</summary>
     public required Statement Body { get; set; }
+}
+
+/// <summary>The bounds of a <c>FORALL</c> statement: <see cref="ForallRange"/>, <see cref="ForallIndicesOf"/> or <see cref="ForallValuesOf"/>.</summary>
+/// <remarks>Spans from the first bound (the lower bound, or the <c>INDICES</c> or <c>VALUES</c> keyword) through the last; see <see cref="FromClause"/>.</remarks>
+public abstract partial class ForallBounds : SqlNode { }
+
+/// <summary>The range form of <c>FORALL</c>, such as <c>FORALL i IN 1 .. n</c>.</summary>
+public sealed partial class ForallRange : ForallBounds
+{
+    /// <summary>The lower bound.</summary>
+    public required Expression Lower { get; set; }
+    /// <summary>The upper bound.</summary>
+    public required Expression Upper { get; set; }
+}
+
+/// <summary>The <c>INDICES OF</c> form of <c>FORALL</c>, such as <c>FORALL i IN INDICES OF c BETWEEN 1 AND 5</c>.</summary>
+public sealed partial class ForallIndicesOf : ForallBounds
+{
+    /// <summary>The collection whose indices are used.</summary>
+    public required Expression Collection { get; set; }
+    /// <summary>The lower bound after <c>BETWEEN</c>, or null when the form has no <c>BETWEEN</c>.</summary>
+    public Expression? Low { get; set; }
+    /// <summary>The upper bound after <c>AND</c>, or null when the form has no <c>BETWEEN</c>.</summary>
+    public Expression? High { get; set; }
+}
+
+/// <summary>The <c>VALUES OF</c> form of <c>FORALL</c>, such as <c>FORALL i IN VALUES OF ix</c>.</summary>
+public sealed partial class ForallValuesOf : ForallBounds
+{
+    /// <summary>The collection of index values.</summary>
+    public required Expression Collection { get; set; }
 }
 
 /// <summary>A <c>PIPE ROW</c> statement in a pipelined function, such as <c>PIPE ROW (r)</c>.</summary>
