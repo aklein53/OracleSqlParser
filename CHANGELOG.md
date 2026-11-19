@@ -8,6 +8,9 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+### Added
+- README: a "Versioning and compatibility" section stating what counts as a breaking change from 1.0.0 on.
+
 ## [1.0.0-rc.3] - 2026-11-18
 
 Third release candidate. `OracleSqlParser.Guard` 0.10.0-preview.1 is released alongside it: Guard 0.9 reads the clause

@@ -17,8 +17,6 @@ The packages were renamed to match the namespace: `PlsqlParser` is now `OracleSq
 `OracleSqlParser.Guard`. To migrate, replace the package reference (`dotnet remove package PlsqlParser`, then
 `dotnet add package OracleSqlParser --prerelease`). Namespaces are unchanged, so no `using` directives change.
 
-Versions are published as pre-releases (`0.1.0-preview.N`) until the API stabilises.
-
 ## Public API changes
 
 The public API of `OracleSqlParser` and `OracleSqlParser.Guard` is checked by
@@ -37,20 +35,52 @@ fails the build with `RS0016` (a public member that is not declared in the file)
   change needs a new major version, and additions are added to the unshipped file.
 - Internal types and members are not checked. Tests see them through `InternalsVisibleTo`.
 
+## Versioning and compatibility
+
+`OracleSqlParser` and `OracleSqlParser.Cli` follow [Semantic Versioning](https://semver.org/) from 1.0.0. Within a major
+version, code that compiles and works against one release keeps compiling and working against later ones.
+
+**Breaking (only in a new major version):**
+- Removing a public type or member, or changing its type, nullability, or whether it is `required`.
+- Changing the tree produced for SQL that already parses into typed nodes: a different node type, or a value moved to
+  another property. JSON output (`AstJson`) counts too: its `type` names are the node class names and its property names
+  are the node property names.
+- Rejecting SQL that Oracle accepts and that a previous release accepted.
+
+**Not breaking (minor or patch releases):**
+- New node types, properties, enum members and methods. Code that switches over node types or enum values should have a
+  default case.
+- Typed nodes for syntax that previously parsed into a token-tree fallback (`CreateObjectStatement`,
+  `AlterObjectStatement`, `AdminStatement`, `SyntaxItem` lists such as `OtherClauses`). That syntax was never modelled,
+  so its tree was never a contract.
+- Accepting valid Oracle syntax that was rejected before, and rejecting invalid syntax that Oracle also rejects (a
+  bug fix, even when the old release accepted it).
+- Better error messages, positions of errors, and `ParseError.Expected`. Error codes (`ParseErrorCodes`) keep their meaning.
+- Changes to the generator's whitespace and layout that keep the generated SQL equivalent. Options that change the
+  output are opt-in.
+- Anything `internal`, including the tree-shape text used by the tests.
+
+`OracleSqlParser.Guard` is experimental (`[Experimental]`) and stays 0.x: any release may change it. Each Guard release
+requires the core version it was built against.
+
 ## Releasing
 
 Publishing uses nuget.org Trusted Publishing (GitHub OIDC) bound to `.github/workflows/build.yml`; no API key
 secret is required.
 
-1. Bump `<Version>` (e.g. `0.1.0-preview.2`) in all three csproj files: `src/OracleSqlParser/OracleSqlParser.csproj`,
-   `src/OracleSqlParser.Guard/OracleSqlParser.Guard.csproj` and `src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj`. Commit.
-2. Tag the commit with the matching `v`-prefixed version: `git tag vX.Y.Z-preview.N` (e.g. `v0.1.0-preview.2`).
-3. Push the tag: `git push origin vX.Y.Z-preview.N`.
+1. Bump `<Version>` in `src/OracleSqlParser/OracleSqlParser.csproj` and `src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj`
+   (they always share a version). If `OracleSqlParser.Guard` changed, or uses core API that changed, bump its own
+   `<Version>` in `src/OracleSqlParser.Guard/OracleSqlParser.Guard.csproj` too; otherwise leave it (an unchanged Guard
+   version is skipped when publishing).
+2. Rename `## [Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - date` and add a new empty `## [Unreleased]` above it.
+   The section becomes the GitHub release notes; the release fails if it is missing.
+3. Commit, then tag the commit with the matching `v`-prefixed version (`git tag -a vX.Y.Z -m ...`) and push the tag.
 
 The `Build` workflow runs on every push and pull request. It packs `OracleSqlParser`, `OracleSqlParser.Guard` and
 `OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` tags. It checks that the tag matches the
-`<Version>` of all three csproj files, then exchanges the GitHub OIDC token for a short-lived key and pushes the packages
-built by the `build` job to nuget.org.
+`<Version>` of the core and CLI csproj files, then exchanges the GitHub OIDC token for a short-lived key and pushes the packages
+built by the `build` job to nuget.org (skipping versions that already exist), and creates the GitHub release with the
+packages attached. It runs only when the unit and Oracle integration jobs pass.
 
 ## Library
 
