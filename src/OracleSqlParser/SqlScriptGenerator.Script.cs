@@ -81,7 +81,7 @@ public sealed partial class SqlScriptGenerator
                 case AlterSessionStatement a: AlterSession(a); break;
                 case CallStatement call:
                     Add("CALL "); Expr(call.Routine);
-                    if (call.Into != null) { Add(" INTO "); Expr(call.Into); }
+                    if (call.Into is { } callInto) { Add(" INTO "); Sep(callInto.Targets, x => Expr(x)); }
                     break;
                 case ExplainPlanStatement ex:
                     Add("EXPLAIN PLAN");

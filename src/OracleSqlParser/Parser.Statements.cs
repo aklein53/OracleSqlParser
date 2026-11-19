@@ -181,7 +181,14 @@ public sealed partial class SqlParser
     {
         var start = Next();
         var st = new CallStatement { Routine = ParsePostfix() };
-        if (AcceptKw("INTO")) st.Into = ParsePostfix();
+        // CALL takes a single INTO target: Oracle rejects BULK COLLECT INTO and a second target (ORA-03049, ORA-03048).
+        if (IsKw("INTO"))
+        {
+            var intoStart = Next();
+            var into = new IntoClause();
+            into.Targets.Add(ParsePostfix());
+            st.Into = Fin(into, intoStart);
+        }
         return Fin(st, start);
     }
 

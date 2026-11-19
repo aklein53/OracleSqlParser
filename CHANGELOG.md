@@ -44,6 +44,14 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `ForallStatement.IndicesOf`, `BetweenLow`, `BetweenHigh` | `Expression?` | removed; `ForallIndicesOf` (`.Collection`, `.Low`, `.High`) |
   | `ForallStatement.ValuesOf` | `Expression?` | removed; `ForallValuesOf` (`.Collection`) |
   | `ForallStatement.Bounds` (new) | n/a | `required ForallBounds`, the base of the three forms |
+
+- `CALL ... INTO` is an `IntoClause` with its one target, as the other INTO clauses are.
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `CallStatement.Into` | `Expression?` | `IntoClause?` (`.Targets`, one target; `BulkCollect` is always false) |
+
+  `CALL f() BULK COLLECT INTO :a` and `CALL f() INTO :a, :b` are rejected, as Oracle rejects them (ORA-03049, ORA-03048).
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).

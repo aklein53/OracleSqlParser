@@ -308,6 +308,35 @@ public class ApiConsistencyTests
         public override SqlNode? Rewrite(Literal node) => null;
     }
 
+    /// <summary>CALL's INTO spans its keyword through its one target, and holds exactly that target.</summary>
+    [Fact]
+    public void CallIntoSpansItsKeywordThroughItsTarget()
+    {
+        const string sql = "CALL pkg.fn(1) INTO :x";
+        var call = Assert.IsType<CallStatement>(Parsed(sql).Statements[0]);
+
+        Assert.Equal("INTO :x", Text(sql, call.Into!));
+        Assert.Single(call.Into!.Targets);
+        Assert.False(call.Into!.BulkCollect);
+    }
+
+    /// <summary>Oracle rejects BULK COLLECT and a second target in CALL (ORA-03049, ORA-03048).</summary>
+    [Theory]
+    [InlineData("CALL f() BULK COLLECT INTO :a")]
+    [InlineData("CALL f() INTO :a, :b")]
+    public void CallIntoAcceptsOneTargetOnly(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
+    [Fact]
+    public void CallIntoRoundTrips()
+    {
+        var script = Parsed("CALL f(1) INTO :x");
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

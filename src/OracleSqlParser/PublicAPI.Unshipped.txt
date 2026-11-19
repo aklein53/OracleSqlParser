@@ -592,7 +592,6 @@ OracleSqlParser.CacheAttribute.Cache.set -> void
 OracleSqlParser.CacheAttribute.CacheAttribute() -> void
 OracleSqlParser.CallStatement
 OracleSqlParser.CallStatement.CallStatement() -> void
-OracleSqlParser.CallStatement.Into.get -> OracleSqlParser.Expression?
 OracleSqlParser.CallStatement.Into.set -> void
 OracleSqlParser.CallStatement.Routine.get -> OracleSqlParser.Expression!
 OracleSqlParser.CallStatement.Routine.set -> void
@@ -6208,3 +6207,4 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ForallValue
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallIndicesOf! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallRange! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ForallValuesOf! node) -> void
+OracleSqlParser.CallStatement.Into.get -> OracleSqlParser.IntoClause?

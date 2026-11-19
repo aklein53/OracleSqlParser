@@ -208,8 +208,11 @@ public sealed partial class CallStatement : Statement
 {
     /// <summary>The routine call.</summary>
     public required Expression Routine { get; set; }
-    /// <summary>The <c>INTO</c> target, or null when absent.</summary>
-    public Expression? Into { get; set; }
+    /// <summary>
+    /// The <c>INTO</c> clause that receives the routine's value, with its single target, or null when absent.
+    /// <c>BULK COLLECT</c> and several targets are not allowed in <c>CALL</c>.
+    /// </summary>
+    public IntoClause? Into { get; set; }
 }
 
 /// <summary><c>EXPLAIN PLAN [SET STATEMENT_ID = 'x'] [INTO t] FOR statement</c>.</summary>

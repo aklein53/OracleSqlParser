@@ -105,7 +105,7 @@ public class DmlAndSessionShapeTests
 
     [Theory]
     [InlineData("CALL proc(1, 2)", "(CallStatement routine=(FunctionCall name=[PROC] arguments=[(Argument value=1) (Argument value=2)]))")]
-    [InlineData("CALL pkg.fn(1) INTO :x", "(CallStatement routine=(FunctionCall name=[PKG FN] arguments=[(Argument value=1)]) into=:x)")]
+    [InlineData("CALL pkg.fn(1) INTO :x", "(CallStatement routine=(FunctionCall name=[PKG FN] arguments=[(Argument value=1)]) into=(IntoClause targets=[:x]))")]
     [InlineData("EXPLAIN PLAN SET STATEMENT_ID = 'q' INTO plan_table FOR SELECT 1 FROM dual", "(ExplainPlanStatement statementId='q' intoTable=[PLAN_TABLE] statement=" + SelDual + ")")]
     [InlineData("LOCK TABLE a, b IN EXCLUSIVE MODE NOWAIT", "(LockTableStatement tables=[(NamedTable name=[A]) (NamedTable name=[B])] mode=Exclusive noWait)")]
     [InlineData("LOCK TABLE a IN ROW SHARE MODE WAIT 5", "(LockTableStatement tables=[(NamedTable name=[A])] mode=RowShare wait=5)")]
