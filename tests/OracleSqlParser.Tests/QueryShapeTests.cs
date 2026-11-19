@@ -34,11 +34,11 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM a LEFT OUTER JOIN b ON a.id = b.id",
         "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID))")]
     [InlineData("SELECT * FROM a PARTITION BY (a.x) RIGHT OUTER JOIN b ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Right right=(NamedTable name=[B]) on=(Equals A.ID B.ID) leftPartitionBy=[A.X])")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Right right=(NamedTable name=[B]) on=(Equals A.ID B.ID) leftPartitionBy=(PartitionByClause items=[A.X]))")]
     [InlineData("SELECT * FROM a LEFT JOIN b PARTITION BY (b.x) ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID) rightPartitionBy=[B.X])")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID) rightPartitionBy=(PartitionByClause items=[B.X]))")]
     [InlineData("SELECT * FROM a PARTITION BY (a.x, a.y) LEFT OUTER JOIN b ON a.id = b.id",
-        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID) leftPartitionBy=[A.X A.Y])")]
+        "(JoinTable left=(NamedTable name=[A]) kind=Left right=(NamedTable name=[B]) on=(Equals A.ID B.ID) leftPartitionBy=(PartitionByClause items=[A.X A.Y]))")]
     [InlineData("SELECT * FROM a JOIN b USING (id, x)",
         "(JoinTable left=(NamedTable name=[A]) kind=Inner right=(NamedTable name=[B]) using=[ID X])")]
     [InlineData("SELECT * FROM a NATURAL JOIN b",
@@ -164,7 +164,7 @@ public class QueryShapeTests
     {
         var sql = "SELECT * FROM ticker MATCH_RECOGNIZE (PARTITION BY symbol ORDER BY ts MEASURES FIRST(down.ts) AS bottom ONE ROW PER MATCH AFTER MATCH SKIP TO LAST up PATTERN (strt down+ up{2,3}? (a|b)* ^ $) SUBSET u = (strt, up) DEFINE down AS price < PREV(price), up AS price > PREV(price)) m";
         Assert.Equal(
-            "(MatchRecognizeTable source=(NamedTable name=[TICKER]) partitionBy=[SYMBOL] orderBy=(OrderByClause items=[(OrderByItem expression=TS)]) " +
+            "(MatchRecognizeTable source=(NamedTable name=[TICKER]) partitionBy=(PartitionByClause items=[SYMBOL]) orderBy=(OrderByClause items=[(OrderByItem expression=TS)]) " +
             "measures=[(ExpressionSelectItem expression=(FunctionCall name=[FIRST] arguments=[(Argument value=DOWN.TS)]) alias=BOTTOM)] " +
             "rowsPerMatch=OneRow skip=ToLast skipVariable=UP " +
             "pattern=(PatternConcat items=[(PatternVariable name=STRT) (PatternQuantified inner=(PatternVariable name=DOWN) min=1) " +

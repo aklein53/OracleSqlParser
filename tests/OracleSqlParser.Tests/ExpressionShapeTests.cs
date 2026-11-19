@@ -86,7 +86,7 @@ public class ExpressionShapeTests
     [InlineData("pkg.fn(a => 1, b => 2)", "(FunctionCall name=[PKG FN] arguments=[(Argument name=A value=1) (Argument name=B value=2)])")]
     [InlineData("SYSDATE - 1", "(Subtract SYSDATE 1)")]
     [InlineData("seq.NEXTVAL", "SEQ.NEXTVAL")]
-    [InlineData("ROW_NUMBER() OVER (PARTITION BY d ORDER BY s DESC)", "(FunctionCall name=[ROW_NUMBER] over=(WindowSpec partitionBy=[D] orderBy=(OrderByClause items=[(OrderByItem expression=S descending)])))")]
+    [InlineData("ROW_NUMBER() OVER (PARTITION BY d ORDER BY s DESC)", "(FunctionCall name=[ROW_NUMBER] over=(WindowSpec partitionBy=(PartitionByClause items=[D]) orderBy=(OrderByClause items=[(OrderByItem expression=S descending)])))")]
     [InlineData("SUM(x) OVER (ORDER BY y ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec orderBy=(OrderByClause items=[(OrderByItem expression=Y)]) frame=(WindowFrame unit=Rows startBound=(FrameBound kind=UnboundedPreceding) endBound=(FrameBound kind=CurrentRow))))")]
     [InlineData("SUM(x) OVER (RANGE 5 PRECEDING)", "(FunctionCall name=[SUM] arguments=[(Argument value=X)] over=(WindowSpec frame=(WindowFrame unit=Range startBound=(FrameBound kind=Preceding offset=5))))")]
     [InlineData("LAG(x, 1) IGNORE NULLS OVER w", "(FunctionCall name=[LAG] arguments=[(Argument value=X) (Argument value=1)] ignoreNulls over=(WindowSpec name=W))")]

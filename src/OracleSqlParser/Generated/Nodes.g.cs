@@ -8624,7 +8624,7 @@ public partial class FunctionCall
         if (Keep is not null) yield return Keep;
         if (Over is not null) yield return Over;
         if (OrderBy is not null) yield return OrderBy;
-        if (PartitionBy is not null) foreach (var x in PartitionBy) yield return x;
+        if (PartitionBy is not null) yield return PartitionBy;
     }
 
     /// <inheritdoc/>
@@ -8638,7 +8638,7 @@ public partial class FunctionCall
         Keep?.Accept(visitor);
         Over?.Accept(visitor);
         OrderBy?.Accept(visitor);
-        if (PartitionBy is not null) foreach (var x in PartitionBy) x.Accept(visitor);
+        PartitionBy?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8651,7 +8651,7 @@ public partial class FunctionCall
         Keep = SqlNodeRewriter.RewriteOptional(rewriter, Keep, "FunctionCall.Keep");
         Over = SqlNodeRewriter.RewriteOptional(rewriter, Over, "FunctionCall.Over");
         OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "FunctionCall.OrderBy");
-        SqlNodeRewriter.RewriteList(rewriter, PartitionBy, "FunctionCall.PartitionBy");
+        PartitionBy = SqlNodeRewriter.RewriteOptional(rewriter, PartitionBy, "FunctionCall.PartitionBy");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8696,7 +8696,7 @@ public partial class FunctionCall
             Keep = CloneChild(Keep),
             Over = CloneChild(Over),
             OrderBy = CloneChild(OrderBy),
-            PartitionBy = CloneList(PartitionBy),
+            PartitionBy = CloneChild(PartitionBy),
         };
         CopySpan(this, c);
         return c;
@@ -8719,7 +8719,7 @@ public partial class FunctionCall
             && Pair(Keep, o.Keep, pending)
             && Pair(Over, o.Over, pending)
             && Pair(OrderBy, o.OrderBy, pending)
-            && PairList(PartitionBy, o.PartitionBy, pending);
+            && Pair(PartitionBy, o.PartitionBy, pending);
     }
 }
 
@@ -11050,8 +11050,8 @@ public partial class JoinTable
         if (Right is not null) yield return Right;
         if (On is not null) yield return On;
         if (Using is not null) foreach (var x in Using) yield return x;
-        if (LeftPartitionBy is not null) foreach (var x in LeftPartitionBy) yield return x;
-        if (RightPartitionBy is not null) foreach (var x in RightPartitionBy) yield return x;
+        if (LeftPartitionBy is not null) yield return LeftPartitionBy;
+        if (RightPartitionBy is not null) yield return RightPartitionBy;
         if (Alias is not null) yield return Alias;
     }
 
@@ -11062,8 +11062,8 @@ public partial class JoinTable
         Right?.Accept(visitor);
         On?.Accept(visitor);
         if (Using is not null) foreach (var x in Using) x.Accept(visitor);
-        if (LeftPartitionBy is not null) foreach (var x in LeftPartitionBy) x.Accept(visitor);
-        if (RightPartitionBy is not null) foreach (var x in RightPartitionBy) x.Accept(visitor);
+        LeftPartitionBy?.Accept(visitor);
+        RightPartitionBy?.Accept(visitor);
         Alias?.Accept(visitor);
     }
 
@@ -11073,8 +11073,8 @@ public partial class JoinTable
         Right = SqlNodeRewriter.RewriteRequired(rewriter, Right, "JoinTable.Right");
         On = SqlNodeRewriter.RewriteOptional(rewriter, On, "JoinTable.On");
         SqlNodeRewriter.RewriteList(rewriter, Using, "JoinTable.Using");
-        SqlNodeRewriter.RewriteList(rewriter, LeftPartitionBy, "JoinTable.LeftPartitionBy");
-        SqlNodeRewriter.RewriteList(rewriter, RightPartitionBy, "JoinTable.RightPartitionBy");
+        LeftPartitionBy = SqlNodeRewriter.RewriteOptional(rewriter, LeftPartitionBy, "JoinTable.LeftPartitionBy");
+        RightPartitionBy = SqlNodeRewriter.RewriteOptional(rewriter, RightPartitionBy, "JoinTable.RightPartitionBy");
         Alias = SqlNodeRewriter.RewriteOptional(rewriter, Alias, "JoinTable.Alias");
     }
 
@@ -11106,8 +11106,8 @@ public partial class JoinTable
             Right = CloneChild(Right)!,
             On = CloneChild(On),
             Using = CloneList(Using),
-            LeftPartitionBy = CloneList(LeftPartitionBy),
-            RightPartitionBy = CloneList(RightPartitionBy),
+            LeftPartitionBy = CloneChild(LeftPartitionBy),
+            RightPartitionBy = CloneChild(RightPartitionBy),
             Alias = CloneChild(Alias),
         };
         CopySpan(this, c);
@@ -11123,8 +11123,8 @@ public partial class JoinTable
             && Pair(Right, o.Right, pending)
             && Pair(On, o.On, pending)
             && PairList(Using, o.Using, pending)
-            && PairList(LeftPartitionBy, o.LeftPartitionBy, pending)
-            && PairList(RightPartitionBy, o.RightPartitionBy, pending)
+            && Pair(LeftPartitionBy, o.LeftPartitionBy, pending)
+            && Pair(RightPartitionBy, o.RightPartitionBy, pending)
             && Pair(Alias, o.Alias, pending);
     }
 }
@@ -11791,7 +11791,7 @@ public partial class MatchRecognizeTable
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Source is not null) yield return Source;
-        if (PartitionBy is not null) foreach (var x in PartitionBy) yield return x;
+        if (PartitionBy is not null) yield return PartitionBy;
         if (OrderBy is not null) yield return OrderBy;
         if (Measures is not null) foreach (var x in Measures) yield return x;
         if (SkipVariable is not null) yield return SkipVariable;
@@ -11805,7 +11805,7 @@ public partial class MatchRecognizeTable
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Source?.Accept(visitor);
-        if (PartitionBy is not null) foreach (var x in PartitionBy) x.Accept(visitor);
+        PartitionBy?.Accept(visitor);
         OrderBy?.Accept(visitor);
         if (Measures is not null) foreach (var x in Measures) x.Accept(visitor);
         SkipVariable?.Accept(visitor);
@@ -11818,7 +11818,7 @@ public partial class MatchRecognizeTable
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Source = SqlNodeRewriter.RewriteRequired(rewriter, Source, "MatchRecognizeTable.Source");
-        SqlNodeRewriter.RewriteList(rewriter, PartitionBy, "MatchRecognizeTable.PartitionBy");
+        PartitionBy = SqlNodeRewriter.RewriteOptional(rewriter, PartitionBy, "MatchRecognizeTable.PartitionBy");
         OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "MatchRecognizeTable.OrderBy");
         SqlNodeRewriter.RewriteList(rewriter, Measures, "MatchRecognizeTable.Measures");
         SkipVariable = SqlNodeRewriter.RewriteOptional(rewriter, SkipVariable, "MatchRecognizeTable.SkipVariable");
@@ -11855,7 +11855,7 @@ public partial class MatchRecognizeTable
         var c = new MatchRecognizeTable
         {
             Source = CloneChild(Source)!,
-            PartitionBy = CloneList(PartitionBy),
+            PartitionBy = CloneChild(PartitionBy),
             OrderBy = CloneChild(OrderBy),
             Measures = CloneList(Measures),
             RowsPerMatch = RowsPerMatch,
@@ -11876,7 +11876,7 @@ public partial class MatchRecognizeTable
     {
         var o = (MatchRecognizeTable)other;
         return Pair(Source, o.Source, pending)
-            && PairList(PartitionBy, o.PartitionBy, pending)
+            && Pair(PartitionBy, o.PartitionBy, pending)
             && Pair(OrderBy, o.OrderBy, pending)
             && PairList(Measures, o.Measures, pending)
             && RowsPerMatch == o.RowsPerMatch
@@ -13584,6 +13584,52 @@ public partial class PartitionByAttribute
             && PairList(Partitions, o.Partitions, pending)
             && SubpartitionMethod == o.SubpartitionMethod
             && PairList(SubpartitionColumns, o.SubpartitionColumns, pending);
+    }
+}
+
+public partial class PartitionByClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Items is not null) foreach (var x in Items) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Items is not null) foreach (var x in Items) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Items, "PartitionByClause.Items");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Items", Items),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new PartitionByClause
+        {
+            Items = CloneList(Items),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (PartitionByClause)other;
+        return PairList(Items, o.Items, pending);
     }
 }
 
@@ -19116,7 +19162,7 @@ public partial class WindowSpec
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Name is not null) yield return Name;
-        if (PartitionBy is not null) foreach (var x in PartitionBy) yield return x;
+        if (PartitionBy is not null) yield return PartitionBy;
         if (OrderBy is not null) yield return OrderBy;
         if (Frame is not null) yield return Frame;
     }
@@ -19125,7 +19171,7 @@ public partial class WindowSpec
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Name?.Accept(visitor);
-        if (PartitionBy is not null) foreach (var x in PartitionBy) x.Accept(visitor);
+        PartitionBy?.Accept(visitor);
         OrderBy?.Accept(visitor);
         Frame?.Accept(visitor);
     }
@@ -19133,7 +19179,7 @@ public partial class WindowSpec
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteOptional(rewriter, Name, "WindowSpec.Name");
-        SqlNodeRewriter.RewriteList(rewriter, PartitionBy, "WindowSpec.PartitionBy");
+        PartitionBy = SqlNodeRewriter.RewriteOptional(rewriter, PartitionBy, "WindowSpec.PartitionBy");
         OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "WindowSpec.OrderBy");
         Frame = SqlNodeRewriter.RewriteOptional(rewriter, Frame, "WindowSpec.Frame");
     }
@@ -19156,7 +19202,7 @@ public partial class WindowSpec
         var c = new WindowSpec
         {
             Name = CloneChild(Name),
-            PartitionBy = CloneList(PartitionBy),
+            PartitionBy = CloneChild(PartitionBy),
             OrderBy = CloneChild(OrderBy),
             Frame = CloneChild(Frame),
         };
@@ -19168,7 +19214,7 @@ public partial class WindowSpec
     {
         var o = (WindowSpec)other;
         return Pair(Name, o.Name, pending)
-            && PairList(PartitionBy, o.PartitionBy, pending)
+            && Pair(PartitionBy, o.PartitionBy, pending)
             && Pair(OrderBy, o.OrderBy, pending)
             && Pair(Frame, o.Frame, pending);
     }

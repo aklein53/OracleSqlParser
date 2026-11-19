@@ -2306,7 +2306,6 @@ OracleSqlParser.JoinTable.Kind.get -> OracleSqlParser.JoinKind
 OracleSqlParser.JoinTable.Kind.set -> void
 OracleSqlParser.JoinTable.Left.get -> OracleSqlParser.TableReference!
 OracleSqlParser.JoinTable.Left.set -> void
-OracleSqlParser.JoinTable.LeftPartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.JoinTable.LeftPartitionBy.set -> void
 OracleSqlParser.JoinTable.Natural.get -> bool
 OracleSqlParser.JoinTable.Natural.set -> void
@@ -2314,7 +2313,6 @@ OracleSqlParser.JoinTable.On.get -> OracleSqlParser.Expression?
 OracleSqlParser.JoinTable.On.set -> void
 OracleSqlParser.JoinTable.Right.get -> OracleSqlParser.TableReference!
 OracleSqlParser.JoinTable.Right.set -> void
-OracleSqlParser.JoinTable.RightPartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.JoinTable.RightPartitionBy.set -> void
 OracleSqlParser.JoinTable.Using.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 OracleSqlParser.JoinTable.Using.set -> void
@@ -2481,7 +2479,6 @@ OracleSqlParser.MatchRecognizeTable.Measures.get -> System.Collections.Generic.L
 OracleSqlParser.MatchRecognizeTable.Measures.set -> void
 OracleSqlParser.MatchRecognizeTable.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.MatchRecognizeTable.OrderBy.set -> void
-OracleSqlParser.MatchRecognizeTable.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.MatchRecognizeTable.PartitionBy.set -> void
 OracleSqlParser.MatchRecognizeTable.Pattern.get -> OracleSqlParser.PatternNode!
 OracleSqlParser.MatchRecognizeTable.Pattern.set -> void
@@ -4003,7 +4000,6 @@ OracleSqlParser.WindowSpec.Name.get -> OracleSqlParser.Identifier?
 OracleSqlParser.WindowSpec.Name.set -> void
 OracleSqlParser.WindowSpec.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.WindowSpec.OrderBy.set -> void
-OracleSqlParser.WindowSpec.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.WindowSpec.PartitionBy.set -> void
 OracleSqlParser.WindowSpec.WindowSpec() -> void
 OracleSqlParser.WordItem
@@ -5907,7 +5903,6 @@ OracleSqlParser.CastExpression.Type.get -> OracleSqlParser.DataType?
 OracleSqlParser.CastKind.GeneralizedInvocation = 5 -> OracleSqlParser.CastKind
 OracleSqlParser.DataType.Ref.get -> bool
 OracleSqlParser.DataType.Ref.set -> void
-OracleSqlParser.FunctionCall.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.FunctionCall.PartitionBy.set -> void
 OracleSqlParser.ParseOptions.SqlPlusScript.get -> bool
 OracleSqlParser.ParseOptions.SqlPlusScript.init -> void
@@ -6170,3 +6165,18 @@ override OracleSqlParser.SetItem.GetChildren() -> System.Collections.Generic.IEn
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.SetItem! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.SetItem! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.SetItem! node) -> void
+OracleSqlParser.FunctionCall.PartitionBy.get -> OracleSqlParser.PartitionByClause?
+OracleSqlParser.JoinTable.LeftPartitionBy.get -> OracleSqlParser.PartitionByClause?
+OracleSqlParser.JoinTable.RightPartitionBy.get -> OracleSqlParser.PartitionByClause?
+OracleSqlParser.MatchRecognizeTable.PartitionBy.get -> OracleSqlParser.PartitionByClause?
+OracleSqlParser.PartitionByClause
+OracleSqlParser.PartitionByClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
+OracleSqlParser.PartitionByClause.Items.set -> void
+OracleSqlParser.PartitionByClause.PartitionByClause() -> void
+OracleSqlParser.WindowSpec.PartitionBy.get -> OracleSqlParser.PartitionByClause?
+override OracleSqlParser.PartitionByClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.PartitionByClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.PartitionByClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.PartitionByClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.PartitionByClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.PartitionByClause! node) -> void

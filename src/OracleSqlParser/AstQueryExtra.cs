@@ -295,8 +295,8 @@ public sealed partial class MatchRecognizeTable : TableReference
 {
     /// <summary>The table whose rows are matched.</summary>
     public required TableReference Source { get; set; }
-    /// <summary>The <c>PARTITION BY</c> expressions; empty when absent.</summary>
-    public List<Expression> PartitionBy { get; set; } = [];
+    /// <summary>The <c>PARTITION BY</c> clause, or null when absent.</summary>
+    public PartitionByClause? PartitionBy { get; set; }
     /// <summary>The <c>ORDER BY</c> within each partition, or null when absent.</summary>
     public OrderByClause? OrderBy { get; set; }
     /// <summary>The <c>MEASURES</c> expressions, each with an optional alias; empty when absent.</summary>
@@ -579,7 +579,7 @@ public sealed partial class ModelClause : SqlNode
     public List<ReferenceModel> References { get; set; } = [];
     /// <summary>The name of the main model, or null when absent.</summary>
     public Identifier? MainName { get; set; }
-    /// <summary>The <c>PARTITION BY</c> expressions; empty when absent.</summary>
+    /// <summary>The <c>PARTITION BY</c> select items of the model, which are expressions with optional aliases, not the grouping of a window. Empty when absent. Other PARTITION BY lists are <see cref="PartitionByClause"/>.</summary>
     public List<ExpressionSelectItem> PartitionBy { get; set; } = [];
     /// <summary>The <c>DIMENSION BY</c> expressions; empty when absent.</summary>
     public List<ExpressionSelectItem> DimensionBy { get; set; } = [];

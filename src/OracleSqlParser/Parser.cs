@@ -879,8 +879,7 @@ public sealed partial class SqlParser
             bool natural = false;
             JoinKind kind;
             // PARTITION BY before the join keyword partitions the left operand of an outer join
-            var leftPartition = new List<Expression>();
-            if (IsKw("PARTITION") && IsKwAt(1, "BY")) { Next(); Next(); leftPartition = ParsePartitionByList(); }
+            PartitionByClause? leftPartition = IsKw("PARTITION") && IsKwAt(1, "BY") ? ParseJoinPartitionBy() : null;
             if (IsKw("NATURAL")) { Next(); natural = true; }
 
             if (IsKw("CROSS") && IsKwAt(1, "APPLY")) { Next(); Next(); kind = JoinKind.CrossApply; }
@@ -894,17 +893,17 @@ public sealed partial class SqlParser
             }
             else if (IsKw("JOIN")) { Next(); kind = JoinKind.Inner; }
             else if (natural) throw FailExpected("Expected JOIN after NATURAL", "JOIN");
-            else if (leftPartition.Count > 0) throw FailExpected("Expected an outer join after PARTITION BY", "an outer join");
+            else if (leftPartition is not null) throw FailExpected("Expected an outer join after PARTITION BY", "an outer join");
             else break;
 
             var right = ParseTablePrimary(queryFrom: true);
             var join = new JoinTable { Left = left, Right = right, Kind = kind, Natural = natural, LeftPartitionBy = leftPartition };
-            if (IsKw("PARTITION") && IsKwAt(1, "BY")) { Next(); Next(); join.RightPartitionBy = ParsePartitionByList(); }
+            if (IsKw("PARTITION") && IsKwAt(1, "BY")) join.RightPartitionBy = ParseJoinPartitionBy();
             // Oracle: a partitioned outer join is a LEFT or RIGHT join (never FULL), natural or not, on one side only.
-            if (join.LeftPartitionBy.Count > 0 || join.RightPartitionBy.Count > 0)
+            if (join.LeftPartitionBy is not null || join.RightPartitionBy is not null)
             {
                 if (natural || kind is not (JoinKind.Left or JoinKind.Right)) throw Fail("PARTITION BY needs a LEFT or RIGHT outer join", ParseErrorCodes.InvalidCombination);
-                if (join.LeftPartitionBy.Count > 0 && join.RightPartitionBy.Count > 0) throw Fail("PARTITION BY may name one side of an outer join only", ParseErrorCodes.InvalidCombination);
+                if (join.LeftPartitionBy is not null && join.RightPartitionBy is not null) throw Fail("PARTITION BY may name one side of an outer join only", ParseErrorCodes.InvalidCombination);
             }
             if (kind is JoinKind.Inner or JoinKind.Left or JoinKind.Right or JoinKind.Full && !natural)
             {
@@ -947,14 +946,28 @@ public sealed partial class SqlParser
         return Fin(clause, s);
     }
 
-    /// <summary>The parenthesized list after PARTITION BY in a partitioned outer join (the parentheses are required there).</summary>
-    private List<Expression> ParsePartitionByList()
+    /// <summary>`PARTITION BY e, e` of a window, an analytic function or MATCH_RECOGNIZE: the clause spans PARTITION through its last expression.</summary>
+    private PartitionByClause ParsePartitionByClause()
     {
+        var start = Cur;
+        ExpectKw("PARTITION");
+        ExpectKw("BY");
+        var clause = new PartitionByClause { Items = [] };
+        do clause.Items.Add(ParseExpr()); while (AcceptOp(","));
+        return Fin(clause, start);
+    }
+
+    /// <summary>`PARTITION BY (e, e)` of a partitioned outer join: the parentheses are required, and the clause spans them.</summary>
+    private PartitionByClause ParseJoinPartitionBy()
+    {
+        var start = Cur;
+        ExpectKw("PARTITION");
+        ExpectKw("BY");
         ExpectOp("(");
-        var list = new List<Expression>();
-        do list.Add(ParseExpr()); while (AcceptOp(","));
+        var clause = new PartitionByClause { Items = [] };
+        do clause.Items.Add(ParseExpr()); while (AcceptOp(","));
         ExpectOp(")");
-        return list;
+        return Fin(clause, start);
     }
 
     /// <summary>

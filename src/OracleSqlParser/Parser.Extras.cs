@@ -179,7 +179,7 @@ public sealed partial class SqlParser
     {
         Next(); Next(); // MATCH_RECOGNIZE (
         // Pattern is required and parsed after the header clauses, so those are collected in locals and the node is built after PATTERN.
-        var partitionBy = new List<Expression>();
+        PartitionByClause? partitionBy = null;
         OrderByClause? orderBy = null;
         var measures = new List<ExpressionSelectItem>();
         RowsPerMatch? rowsPerMatch = null;
@@ -187,7 +187,7 @@ public sealed partial class SqlParser
         SkipKind? skip = null;
         Identifier? skipVariable = null;
         bool seek = false;
-        if (IsKw("PARTITION")) { Next(); ExpectKw("BY"); do partitionBy.Add(ParseExpr()); while (AcceptOp(",")); }
+        if (IsKw("PARTITION")) partitionBy = ParsePartitionByClause();
         if (IsKw("ORDER")) { var kw = Next(); ExpectKw("BY"); orderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, kw); }
         if (AcceptKw("MEASURES")) do measures.Add(ParseExpressionSelectItem()); while (AcceptOp(","));
         if (AcceptKw("ONE")) { ExpectKw("ROW"); ExpectKw("PER"); ExpectKw("MATCH"); rowsPerMatch = RowsPerMatch.OneRow; }

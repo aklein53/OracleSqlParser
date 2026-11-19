@@ -240,6 +240,37 @@ public class ApiConsistencyTests
         }
     }
 
+    /// <summary>A query's PARTITION BY spans its keyword through the last expression, wherever it is written.</summary>
+    [Theory]
+    [InlineData("SELECT SUM(a) OVER (PARTITION BY /* c */ b, c ORDER BY d) FROM t", "PARTITION BY /* c */ b, c")]
+    [InlineData("SELECT * FROM a PARTITION BY (a.x, a.y) LEFT OUTER JOIN b ON (a.id = b.id)", "PARTITION BY (a.x, a.y)")]
+    [InlineData("SELECT * FROM a LEFT OUTER JOIN b PARTITION BY (b.x) ON (a.id = b.id)", "PARTITION BY (b.x)")]
+    [InlineData("SELECT * FROM t MATCH_RECOGNIZE (PARTITION BY a ORDER BY b PATTERN (x) DEFINE x AS a > 0)", "PARTITION BY a")]
+    public void PartitionByClauseSpansItsKeyword(string sql, string expected)
+    {
+        var clause = Assert.Single(Parsed(sql).Descendants().OfType<PartitionByClause>());
+
+        Assert.Equal(expected, Text(sql, clause));
+    }
+
+    [Theory]
+    [InlineData("SELECT SUM(a) OVER (PARTITION BY b, c ORDER BY d) FROM t")]
+    [InlineData("SELECT * FROM a PARTITION BY (a.x) LEFT OUTER JOIN b ON (a.id = b.id)")]
+    [InlineData("SELECT * FROM t MATCH_RECOGNIZE (PARTITION BY a ORDER BY b PATTERN (x) DEFINE x AS a > 0)")]
+    public void PartitionByRoundTrips(string sql)
+    {
+        var script = Parsed(sql);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
+    [Theory]
+    [InlineData("SELECT SUM(a) OVER (PARTITION BY ORDER BY d) FROM t")]
+    public void AnEmptyPartitionByIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

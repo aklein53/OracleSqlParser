@@ -31,6 +31,10 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `ValuesQuery.Rows`, `ValuesTable.Rows` | `List<List<Expression>>` | `List<RowValue>` (`.Values`) |
   | `UpdateStatement.Set` | `List<SetClause>` | `SetClause` (required, spans `SET`; `.Items` holds the assignments) |
   | `SetClause` (one assignment, `col = expr`) | class `SetClause` | class `SetItem` (same members: `Columns`, `Value`, `Row`) |
+  | `WindowSpec.PartitionBy`, `FunctionCall.PartitionBy`, `MatchRecognizeTable.PartitionBy` | `List<Expression>` | `PartitionByClause?` (`.Items`, spanning `PARTITION BY`) |
+  | `JoinTable.LeftPartitionBy`, `JoinTable.RightPartitionBy` | `List<Expression>` | `PartitionByClause?` (`.Items`, spanning `PARTITION BY (...)`) |
+
+  `ModelClause.PartitionBy` stays a list of select items, since a model's partitioning takes aliased expressions.
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).

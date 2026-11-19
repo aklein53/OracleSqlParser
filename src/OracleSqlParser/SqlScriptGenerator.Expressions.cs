@@ -356,7 +356,7 @@ public sealed partial class SqlScriptGenerator
             {
                 foreach (var op in fc.Operations) { Add(", "); JsonOp(op); }
             }
-            if (fc.PartitionBy.Count > 0) { Add("PARTITION BY "); Sep(fc.PartitionBy, e => Expr(e)); }
+            if (fc.PartitionBy is { } functionPartition) PartitionByText(functionPartition);
             if (fc.OrderBy is { } callOrder) { Add(" ORDER BY "); Sep(callOrder.Items, OrderItem); }
             foreach (var c in fc.Clauses) { Add(" "); Clause(c); }
             Add(")");
@@ -452,13 +452,16 @@ public sealed partial class SqlScriptGenerator
             }
         }
 
+        /// <summary>A <c>PARTITION BY</c> list: the keyword and its expressions, unparenthesized.</summary>
+        private void PartitionByText(PartitionByClause p) { Add("PARTITION BY "); Sep(p.Items, e => Expr(e)); }
+
         private void Window(WindowSpec w)
         {
-            if (w.Name != null && w.PartitionBy.Count == 0 && w.OrderBy == null && w.Frame == null) { Id(w.Name); return; }
+            if (w.Name != null && w.PartitionBy is null && w.OrderBy == null && w.Frame == null) { Id(w.Name); return; }
             Add("(");
             bool any = false;
             if (w.Name != null) { Id(w.Name); any = true; }
-            if (w.PartitionBy.Count > 0) { if (any) Add(" "); Add("PARTITION BY "); Sep(w.PartitionBy, e => Expr(e)); any = true; }
+            if (w.PartitionBy is { } partitionBy) { if (any) Add(" "); PartitionByText(partitionBy); any = true; }
             if (w.OrderBy is { } windowOrder) { if (any) Add(" "); Add("ORDER BY "); Sep(windowOrder.Items, OrderItem); any = true; }
             if (w.Frame != null)
             {

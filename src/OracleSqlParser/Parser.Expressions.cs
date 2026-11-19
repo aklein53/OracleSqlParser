@@ -549,8 +549,7 @@ public sealed partial class SqlParser
             else if (IsKw("PARTITION") && IsKwAt(1, "BY"))
             {
                 // APPROX_RANK(PARTITION BY expr_list ORDER BY ...): no argument list, the ORDER BY follows below
-                Next(); Next();
-                do fc.PartitionBy.Add(ParseExpr()); while (AcceptOp(","));
+                fc.PartitionBy = ParsePartitionByClause();
             }
             else
             {
@@ -914,11 +913,7 @@ public sealed partial class SqlParser
         if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier &&
             !(IsKw("PARTITION") || IsKw("ORDER") || IsKw("ROWS") || IsKw("RANGE") || IsKw("GROUPS")))
             ws.Name = ParseIdentifier();
-        if (IsKw("PARTITION"))
-        {
-            Next(); ExpectKw("BY");
-            do ws.PartitionBy.Add(ParseExpr()); while (AcceptOp(","));
-        }
+        if (IsKw("PARTITION")) ws.PartitionBy = ParsePartitionByClause();
         if (IsKw("ORDER"))
         {
             var kw = Next(); ExpectKw("BY");

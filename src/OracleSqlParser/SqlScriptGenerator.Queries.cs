@@ -327,7 +327,7 @@ public sealed partial class SqlScriptGenerator
             {
                 var x = spine[i];
                 ClauseStart(_o.NewLineBeforeJoinClause);
-                if (x.LeftPartitionBy.Count > 0) { Add("PARTITION BY ("); Sep(x.LeftPartitionBy, e => Expr(e)); Add(") "); }
+                if (x.LeftPartitionBy is { } leftPartition) { Add("PARTITION BY ("); Sep(leftPartition.Items, e => Expr(e)); Add(") "); }
                 if (x.Natural) Add("NATURAL ");
                 Add(x.Kind switch
                 {
@@ -337,7 +337,7 @@ public sealed partial class SqlScriptGenerator
                 Add(" ");
                 Table(x.Right);
                 _aliasBeforeJoin = x.Right; // the next iteration's join keyword follows this table
-                if (x.RightPartitionBy.Count > 0) { Add(" PARTITION BY ("); Sep(x.RightPartitionBy, e => Expr(e)); Add(")"); }
+                if (x.RightPartitionBy is { } rightPartition) { Add(" PARTITION BY ("); Sep(rightPartition.Items, e => Expr(e)); Add(")"); }
                 if (x.On != null) { Add(" ON "); Expr(x.On); }
                 else if (x.Using.Count > 0) { Add(" USING ("); IdList(x.Using); Add(")"); }
             }
@@ -421,7 +421,7 @@ public sealed partial class SqlScriptGenerator
             Add(" MATCH_RECOGNIZE (");
             bool any = false;
             void Gap() { if (any) Add(" "); any = true; }
-            if (m.PartitionBy.Count > 0) { Gap(); Add("PARTITION BY "); Sep(m.PartitionBy, e => Expr(e)); }
+            if (m.PartitionBy is { } matchPartition) { Gap(); PartitionByText(matchPartition); }
             if (m.OrderBy is { } matchOrder) { Gap(); Add("ORDER BY "); Sep(matchOrder.Items, OrderItem); }
             if (m.Measures.Count > 0) { Gap(); Add("MEASURES "); Sep(m.Measures, i => Item(i)); }
             if (m.RowsPerMatch == RowsPerMatch.OneRow) { Gap(); Add("ONE ROW PER MATCH"); }

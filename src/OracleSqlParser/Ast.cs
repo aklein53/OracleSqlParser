@@ -792,10 +792,10 @@ public sealed partial class JoinTable : TableReference
     public Expression? On { get; set; }
     /// <summary>The columns of a <c>USING</c> clause; empty when absent.</summary>
     public List<Identifier> Using { get; set; } = [];
-    /// <summary>Partitioned outer join: the <c>PARTITION BY (...)</c> expressions written before the join keyword on the left operand; empty when absent.</summary>
-    public List<Expression> LeftPartitionBy { get; set; } = [];
-    /// <summary>Partitioned outer join: the <c>PARTITION BY (...)</c> expressions written after the join keyword, on the right operand; empty when absent.</summary>
-    public List<Expression> RightPartitionBy { get; set; } = [];
+    /// <summary>Partitioned outer join: the <c>PARTITION BY (...)</c> clause written before the join keyword, on the left operand; null when absent.</summary>
+    public PartitionByClause? LeftPartitionBy { get; set; }
+    /// <summary>Partitioned outer join: the <c>PARTITION BY (...)</c> clause written after the join keyword, on the right operand; null when absent.</summary>
+    public PartitionByClause? RightPartitionBy { get; set; }
 }
 
 /// <summary>The kind of a join.</summary>
@@ -1437,8 +1437,8 @@ public sealed partial class FunctionCall : Expression
     public WindowSpec? Over { get; set; }
     /// <summary>The <c>ORDER BY</c> written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; null when absent.</summary>
     public OrderByClause? OrderBy { get; set; }
-    /// <summary>The <c>PARTITION BY</c> expressions of a hypothetical-rank call, <c>APPROX_RANK(PARTITION BY owner ORDER BY n)</c>; empty when absent.</summary>
-    public List<Expression> PartitionBy { get; set; } = [];
+    /// <summary>The <c>PARTITION BY</c> clause of a hypothetical-rank call, such as <c>APPROX_RANK(PARTITION BY owner ORDER BY x)</c>; null when absent.</summary>
+    public PartitionByClause? PartitionBy { get; set; }
 }
 
 /// <summary>The keyword that introduces a special argument of an XML or JSON function.</summary>
@@ -1484,13 +1484,27 @@ public sealed partial class KeepClause : SqlNode
     public required OrderByClause OrderBy { get; set; }
 }
 
+/// <summary>
+/// A <c>PARTITION BY</c> list of a window, an analytic function, a <c>MATCH_RECOGNIZE</c> or a partitioned outer join, such as
+/// <c>PARTITION BY a, b</c>. (<see cref="ModelClause.PartitionBy"/> is a list of select items, not this.)
+/// </summary>
+/// <remarks>
+/// Spans the <c>PARTITION</c> keyword through the last expression; a partitioned outer join's list also spans its parentheses.
+/// See <see cref="FromClause"/>.
+/// </remarks>
+public sealed partial class PartitionByClause : SqlNode
+{
+    /// <summary>The partitioning expressions, in source order.</summary>
+    public required List<Expression> Items { get; set; }
+}
+
 /// <summary>An <c>OVER</c> window specification, such as <c>(PARTITION BY d ORDER BY s ROWS UNBOUNDED PRECEDING)</c>.</summary>
 public sealed partial class WindowSpec : SqlNode
 {
     /// <summary>The named window of <c>OVER window_name</c>, or null when the window is written inline.</summary>
     public Identifier? Name { get; set; }
-    /// <summary>The <c>PARTITION BY</c> expressions; empty when absent.</summary>
-    public List<Expression> PartitionBy { get; set; } = [];
+    /// <summary>The <c>PARTITION BY</c> clause, or null when absent.</summary>
+    public PartitionByClause? PartitionBy { get; set; }
     /// <summary>The <c>ORDER BY</c> clause, or null when absent.</summary>
     public OrderByClause? OrderBy { get; set; }
     /// <summary>The window frame, or null when absent.</summary>
