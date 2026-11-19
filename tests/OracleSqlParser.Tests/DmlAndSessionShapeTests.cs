@@ -32,20 +32,20 @@ public class DmlAndSessionShapeTests
 
     [Theory]
     [InlineData("UPDATE t SET a = 1, (b, c) = (SELECT 1, 2 FROM dual) WHERE id = 5",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1) (SetClause columns=[B C] value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=(FromClause tables=[(NamedTable name=[DUAL])])))))] where=(WhereClause condition=(Equals ID 5)))")]
-    [InlineData("UPDATE t SET a = 1 WHERE CURRENT OF c1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] where=(WhereClause condition=(CurrentOfExpression cursor=C1)))")]
-    [InlineData("UPDATE t SET a = DEFAULT RETURNING a INTO v", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=DEFAULT)] returning=(ReturningClause items=[(ReturningItem expression=A)] into=(IntoClause targets=[V])))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1) (SetItem columns=[B C] value=(SubqueryExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1) (ExpressionSelectItem expression=2)] from=(FromClause tables=[(NamedTable name=[DUAL])])))))]) where=(WhereClause condition=(Equals ID 5)))")]
+    [InlineData("UPDATE t SET a = 1 WHERE CURRENT OF c1", "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1)]) where=(WhereClause condition=(CurrentOfExpression cursor=C1)))")]
+    [InlineData("UPDATE t SET a = DEFAULT RETURNING a INTO v", "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=DEFAULT)]) returning=(ReturningClause items=[(ReturningItem expression=A)] into=(IntoClause targets=[V])))")]
     [InlineData("DELETE FROM t x WHERE x.a = 1 RETURNING a BULK COLLECT INTO tab",
         "(DeleteStatement target=(NamedTable name=[T] alias=X) where=(WhereClause condition=(Equals X.A 1)) returning=(ReturningClause items=[(ReturningItem expression=A)] into=(IntoClause bulkCollect targets=[TAB])))")]
     [InlineData("DELETE t", "(DeleteStatement target=(NamedTable name=[T]))")]
     [InlineData("UPDATE t SET a = 1 RETURNING OLD a, NEW a INTO :o, :n",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=(ReturningClause items=[(ReturningItem image=Old expression=A) (ReturningItem image=New expression=A)] into=(IntoClause targets=[:o :n])))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1)]) returning=(ReturningClause items=[(ReturningItem image=Old expression=A) (ReturningItem image=New expression=A)] into=(IntoClause targets=[:o :n])))")]
     [InlineData("UPDATE t SET a = 1 RETURNING old, new INTO :o, :n",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=(ReturningClause items=[(ReturningItem expression=OLD) (ReturningItem expression=NEW)] into=(IntoClause targets=[:o :n])))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1)]) returning=(ReturningClause items=[(ReturningItem expression=OLD) (ReturningItem expression=NEW)] into=(IntoClause targets=[:o :n])))")]
     [InlineData("UPDATE t SET a = 1 RETURNING NEW SUM(a) INTO :n",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[A] value=1)] returning=(ReturningClause items=[(ReturningItem image=New expression=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] into=(IntoClause targets=[:n])))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[A] value=1)]) returning=(ReturningClause items=[(ReturningItem image=New expression=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] into=(IntoClause targets=[:n])))")]
     [InlineData("UPDATE t SET t.a = u.a FROM u WHERE t.id = u.id",
-        "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause columns=[T.A] value=U.A)] from=(FromClause tables=[(NamedTable name=[U])]) where=(WhereClause condition=(Equals T.ID U.ID)))")]
+        "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem columns=[T.A] value=U.A)]) from=(FromClause tables=[(NamedTable name=[U])]) where=(WhereClause condition=(Equals T.ID U.ID)))")]
     [InlineData("DELETE FROM t FROM u WHERE t.id = u.id",
         "(DeleteStatement target=(NamedTable name=[T]) from=(FromClause tables=[(NamedTable name=[U])]) where=(WhereClause condition=(Equals T.ID U.ID)))")]
     [InlineData("DELETE FROM t x FROM t y JOIN u ON y.id = u.id WHERE x.id = y.id",
@@ -58,7 +58,7 @@ public class DmlAndSessionShapeTests
     public void Merge_Shape() =>
         Assert.Equal(
             "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
-            "(MergeMatchedClause set=[(SetClause columns=[T.V] value=S.V)] updateWhere=(WhereClause condition=(GreaterThan S.V 0)) deleteWhere=(WhereClause condition=(Equals T.V 0))) " +
+            "(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]) updateWhere=(WhereClause condition=(GreaterThan S.V 0)) deleteWhere=(WhereClause condition=(Equals T.V 0))) " +
             "(MergeNotMatchedClause columns=[ID V] values=(ValuesClause rows=[(RowValue values=[S.ID S.V])]) where=(WhereClause condition=(GreaterThan S.V 1)))])",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 DELETE WHERE t.v = 0 WHEN NOT MATCHED THEN INSERT (id, v) VALUES (s.id, s.v) WHERE s.v > 1")
                 );
@@ -67,7 +67,7 @@ public class DmlAndSessionShapeTests
     public void Merge_LogErrors_Shape() =>
         Assert.Equal(
             "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
-            "(MergeMatchedClause set=[(SetClause columns=[T.V] value=S.V)])] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
+            "(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]))] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v LOG ERRORS INTO err_t ('x') REJECT LIMIT 5"));
 
     [Theory]

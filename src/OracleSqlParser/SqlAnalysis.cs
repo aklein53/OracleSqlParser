@@ -524,7 +524,7 @@ public static class SqlAnalysis
                 InScope(new Scope(sources, _scope), () =>
                 {
                     node.From?.Accept(this);
-                    foreach (var set in node.Set)
+                    foreach (var set in node.Set.Items)
                     {
                         foreach (var column in set.Columns) AddColumn(column, column.Parts, write: true, target);
                         set.Value.Accept(this);
@@ -576,7 +576,7 @@ public static class SqlAnalysis
                         switch (clause)
                         {
                             case MergeMatchedClause matched:
-                                foreach (var set in matched.Set)
+                                foreach (var set in matched.Set.Items)
                                 {
                                     foreach (var column in set.Columns) AddColumn(column, column.Parts, write: true, target);
                                     set.Value.Accept(this);

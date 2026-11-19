@@ -163,7 +163,8 @@ public sealed partial class SqlScriptGenerator
                 case ExternalCall ec: ExternalCallClause(ec); break;
                 case CommonTableExpression cte: Cte(cte); break;
                 case WindowSpec w: Window(w); break;
-                case SetClause sc2: SetClauseText(sc2); break;
+                case SetClause sc2: SetText(sc2); break;
+                case SetItem si: SetItemText(si); break;
                 case PatternNode pn: Pattern(pn); break;
                 case Argument a: Arg(a); break;
                 case AlterTableAction ata: AlterAction(ata); break;

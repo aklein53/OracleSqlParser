@@ -185,6 +185,61 @@ public class ApiConsistencyTests
         Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
     }
 
+    /// <summary>The SET clause spans SET through its last assignment; each assignment is a SetItem.</summary>
+    [Fact]
+    public void SetClauseSpansSetThroughItsLastItem()
+    {
+        const string sql = "UPDATE t SET /* c */ a = 1, (b, c) = (SELECT 2, 3 FROM dual) WHERE x = 1";
+        var set = Assert.IsType<UpdateStatement>(Parsed(sql).Statements[0]).Set;
+
+        Assert.Equal("SET /* c */ a = 1, (b, c) = (SELECT 2, 3 FROM dual)", Text(sql, set));
+        Assert.Equal(["a = 1", "(b, c) = (SELECT 2, 3 FROM dual)"], set.Items.Select(i => Text(sql, i)));
+        Assert.Equal(2, set.Items[1].Columns.Count);
+    }
+
+    /// <summary>A MERGE update action's SET clause starts at its SET keyword, after the UPDATE keyword.</summary>
+    [Fact]
+    public void MergeUpdateSetClauseStartsAtSet()
+    {
+        const string sql = "MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v";
+        var matched = Assert.IsType<MergeMatchedClause>(Assert.Single(Assert.IsType<MergeStatement>(Parsed(sql).Statements[0]).Clauses));
+
+        Assert.Equal("SET t.v = s.v", Text(sql, matched.Set));
+        Assert.Single(matched.Set.Items);
+    }
+
+    [Theory]
+    [InlineData("UPDATE t SET a = 1, (b, c) = (SELECT 2, 3 FROM dual) WHERE x = 1")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v, t.w = 1 DELETE WHERE t.v = 0")]
+    public void SetClauseRoundTrips(string sql)
+    {
+        var script = Parsed(sql);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
+    /// <summary>A rewriter can drop one assignment of a SET clause and keep the rest.</summary>
+    [Fact]
+    public void ARewriterCanDropOneSetItem()
+    {
+        var script = Parsed("UPDATE t SET a = 1, b = 2");
+        new DropFirstSetItem().RewriteTree(script);
+
+        Assert.Equal("UPDATE t SET b = 2;", Generate(script));
+    }
+
+    private sealed class DropFirstSetItem : SqlNodeRewriter
+    {
+        private bool _dropped;
+
+        public override SqlNode? Rewrite(SetItem node)
+        {
+            if (_dropped) return node;
+            _dropped = true;
+            return null;
+        }
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

@@ -7,13 +7,13 @@ public class MiscShapeTests
 {
     [Theory]
     [InlineData("INSERT INTO t VALUES rec", "(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause record=REC))")]
-    [InlineData("UPDATE t SET ROW = rec WHERE id = 1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause row value=REC)] where=(WhereClause condition=(Equals ID 1)))")]
+    [InlineData("UPDATE t SET ROW = rec WHERE id = 1", "(UpdateStatement target=(NamedTable name=[T]) set=(SetClause items=[(SetItem row value=REC)]) where=(WhereClause condition=(Equals ID 1)))")]
     [InlineData("UPDATE t1 SET a = t2.a FROM t2 WHERE t1.id = t2.id",
-        "(UpdateStatement target=(NamedTable name=[T1]) set=[(SetClause columns=[A] value=T2.A)] from=(FromClause tables=[(NamedTable name=[T2])]) where=(WhereClause condition=(Equals T1.ID T2.ID)))")]
+        "(UpdateStatement target=(NamedTable name=[T1]) set=(SetClause items=[(SetItem columns=[A] value=T2.A)]) from=(FromClause tables=[(NamedTable name=[T2])]) where=(WhereClause condition=(Equals T1.ID T2.ID)))")]
     [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.x = 1 DELETE WHERE t.x = 1",
-        "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=[(SetClause columns=[T.X] value=1)] deleteWhere=(WhereClause condition=(Equals T.X 1)))])")]
+        "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.X] value=1)]) deleteWhere=(WhereClause condition=(Equals T.X 1)))])")]
     [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v",
-        "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=[(SetClause columns=[T.V] value=S.V)] andCondition=(GreaterThan S.V 0))])")]
+        "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]) andCondition=(GreaterThan S.V 0))])")]
     public void DmlForms(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Fact]

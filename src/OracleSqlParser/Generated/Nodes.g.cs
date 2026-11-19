@@ -11948,7 +11948,7 @@ public partial class MergeMatchedClause
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (Set is not null) foreach (var x in Set) yield return x;
+        if (Set is not null) yield return Set;
         if (UpdateWhere is not null) yield return UpdateWhere;
         if (DeleteWhere is not null) yield return DeleteWhere;
         if (AndCondition is not null) yield return AndCondition;
@@ -11957,7 +11957,7 @@ public partial class MergeMatchedClause
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        if (Set is not null) foreach (var x in Set) x.Accept(visitor);
+        Set?.Accept(visitor);
         UpdateWhere?.Accept(visitor);
         DeleteWhere?.Accept(visitor);
         AndCondition?.Accept(visitor);
@@ -11965,7 +11965,7 @@ public partial class MergeMatchedClause
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteList(rewriter, Set, "MergeMatchedClause.Set");
+        Set = SqlNodeRewriter.RewriteRequired(rewriter, Set, "MergeMatchedClause.Set");
         UpdateWhere = SqlNodeRewriter.RewriteOptional(rewriter, UpdateWhere, "MergeMatchedClause.UpdateWhere");
         DeleteWhere = SqlNodeRewriter.RewriteOptional(rewriter, DeleteWhere, "MergeMatchedClause.DeleteWhere");
         AndCondition = SqlNodeRewriter.RewriteOptional(rewriter, AndCondition, "MergeMatchedClause.AndCondition");
@@ -11988,7 +11988,7 @@ public partial class MergeMatchedClause
     {
         var c = new MergeMatchedClause
         {
-            Set = CloneList(Set),
+            Set = CloneChild(Set)!,
             UpdateWhere = CloneChild(UpdateWhere),
             DeleteWhere = CloneChild(DeleteWhere),
             AndCondition = CloneChild(AndCondition),
@@ -12000,7 +12000,7 @@ public partial class MergeMatchedClause
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (MergeMatchedClause)other;
-        return PairList(Set, o.Set, pending)
+        return Pair(Set, o.Set, pending)
             && Pair(UpdateWhere, o.UpdateWhere, pending)
             && Pair(DeleteWhere, o.DeleteWhere, pending)
             && Pair(AndCondition, o.AndCondition, pending);
@@ -16487,28 +16487,23 @@ public partial class SetClause
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (Columns is not null) foreach (var x in Columns) yield return x;
-        if (Value is not null) yield return Value;
+        if (Items is not null) foreach (var x in Items) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        if (Columns is not null) foreach (var x in Columns) x.Accept(visitor);
-        Value?.Accept(visitor);
+        if (Items is not null) foreach (var x in Items) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteList(rewriter, Columns, "SetClause.Columns");
-        Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "SetClause.Value");
+        SqlNodeRewriter.RewriteList(rewriter, Items, "SetClause.Items");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
-        new("Row", Row),
-        new("Columns", Columns),
-        new("Value", Value),
+        new("Items", Items),
     ];
 
     /// <inheritdoc/>
@@ -16520,9 +16515,7 @@ public partial class SetClause
     {
         var c = new SetClause
         {
-            Row = Row,
-            Columns = CloneList(Columns),
-            Value = CloneChild(Value)!,
+            Items = CloneList(Items),
         };
         CopySpan(this, c);
         return c;
@@ -16531,9 +16524,7 @@ public partial class SetClause
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (SetClause)other;
-        return Row == o.Row
-            && PairList(Columns, o.Columns, pending)
-            && Pair(Value, o.Value, pending);
+        return PairList(Items, o.Items, pending);
     }
 }
 
@@ -16589,6 +16580,61 @@ public partial class SetConstraintsStatement
             && PairNested(Constraints, o.Constraints, pending)
             && Deferred == o.Deferred
             && SameStrings(Labels, o.Labels);
+    }
+}
+
+public partial class SetItem
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Columns is not null) foreach (var x in Columns) yield return x;
+        if (Value is not null) yield return Value;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Columns is not null) foreach (var x in Columns) x.Accept(visitor);
+        Value?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Columns, "SetItem.Columns");
+        Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "SetItem.Value");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Row", Row),
+        new("Columns", Columns),
+        new("Value", Value),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new SetItem
+        {
+            Row = Row,
+            Columns = CloneList(Columns),
+            Value = CloneChild(Value)!,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (SetItem)other;
+        return Row == o.Row
+            && PairList(Columns, o.Columns, pending)
+            && Pair(Value, o.Value, pending);
     }
 }
 
@@ -18130,7 +18176,7 @@ public partial class UpdateStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Target is not null) yield return Target;
-        if (Set is not null) foreach (var x in Set) yield return x;
+        if (Set is not null) yield return Set;
         if (From is not null) yield return From;
         if (Where is not null) yield return Where;
         if (Hint is not null) yield return Hint;
@@ -18142,7 +18188,7 @@ public partial class UpdateStatement
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Target?.Accept(visitor);
-        if (Set is not null) foreach (var x in Set) x.Accept(visitor);
+        Set?.Accept(visitor);
         From?.Accept(visitor);
         Where?.Accept(visitor);
         Hint?.Accept(visitor);
@@ -18153,7 +18199,7 @@ public partial class UpdateStatement
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Target = SqlNodeRewriter.RewriteRequired(rewriter, Target, "UpdateStatement.Target");
-        SqlNodeRewriter.RewriteList(rewriter, Set, "UpdateStatement.Set");
+        Set = SqlNodeRewriter.RewriteRequired(rewriter, Set, "UpdateStatement.Set");
         From = SqlNodeRewriter.RewriteOptional(rewriter, From, "UpdateStatement.From");
         Where = SqlNodeRewriter.RewriteOptional(rewriter, Where, "UpdateStatement.Where");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "UpdateStatement.Hint");
@@ -18183,7 +18229,7 @@ public partial class UpdateStatement
         var c = new UpdateStatement
         {
             Target = CloneChild(Target)!,
-            Set = CloneList(Set),
+            Set = CloneChild(Set)!,
             From = CloneChild(From),
             Where = CloneChild(Where),
             Hint = CloneChild(Hint),
@@ -18199,7 +18245,7 @@ public partial class UpdateStatement
     {
         var o = (UpdateStatement)other;
         return Pair(Target, o.Target, pending)
-            && PairList(Set, o.Set, pending)
+            && Pair(Set, o.Set, pending)
             && Pair(From, o.From, pending)
             && Pair(Where, o.Where, pending)
             && Pair(Hint, o.Hint, pending)

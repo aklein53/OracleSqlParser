@@ -1084,9 +1084,8 @@ public sealed partial class SqlParser
         HintClause? hint = null;
         if (Cur.Type == TokenType.Hint) hint = ParseHint(Next());
         var target = ParseTablePrimary();
-        var st = new UpdateStatement { Hint = hint, Target = target };
-        ExpectKw("SET");
-        st.Set = ParseSetClauses();
+        var set = ParseSetClause();
+        var st = new UpdateStatement { Hint = hint, Target = target, Set = set };
         var fromKeyword = Cur;
         if (AcceptVersioned("FROM", OracleVersion.Oracle23, "UPDATE ... FROM"))
         {
@@ -1100,9 +1099,12 @@ public sealed partial class SqlParser
         return Fin(st, start);
     }
 
-    private List<SetClause> ParseSetClauses()
+    /// <summary>`SET a = 1, (b, c) = (SELECT ...)`: the SET keyword and its assignments.</summary>
+    private SetClause ParseSetClause()
     {
-        var list = new List<SetClause>();
+        var start = Cur;
+        ExpectKw("SET");
+        var clause = new SetClause();
         do
         {
             var s = Cur;
@@ -1110,7 +1112,7 @@ public sealed partial class SqlParser
             {
                 Next(); Next();
                 var rowValue = ParseExpr();
-                list.Add(Fin(new SetClause { Row = true, Value = rowValue }, s));
+                clause.Items.Add(Fin(new SetItem { Row = true, Value = rowValue }, s));
                 continue;
             }
             var columns = new List<ColumnReference>();
@@ -1122,9 +1124,9 @@ public sealed partial class SqlParser
             else columns.Add(ParseColumnReferenceOnly());
             ExpectOp("=");
             var value = ParseExpr();
-            list.Add(Fin(new SetClause { Columns = columns, Value = value }, s));
+            clause.Items.Add(Fin(new SetItem { Columns = columns, Value = value }, s));
         } while (AcceptOp(","));
-        return list;
+        return Fin(clause, start);
     }
 
     private DeleteStatement ParseDelete()
@@ -1244,9 +1246,7 @@ public sealed partial class SqlParser
             {
                 if (!IsKw("UPDATE")) throw FailExpected($"Expected UPDATE but found {Describe(Cur)}", "UPDATE");
                 Next();
-                var matchedClause = new MergeMatchedClause();
-                ExpectKw("SET");
-                matchedClause.Set = ParseSetClauses();
+                var matchedClause = new MergeMatchedClause { Set = ParseSetClause() };
                 matchedClause.UpdateWhere = ParseOptionalWhere();
                 if (AcceptKw("DELETE")) matchedClause.DeleteWhere = ParseWhere();
                 mc = matchedClause;

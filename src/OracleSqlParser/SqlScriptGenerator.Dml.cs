@@ -139,7 +139,10 @@ public sealed partial class SqlScriptGenerator
             DmlTail(m);
         }
 
-        private void SetClauseText(SetClause sc)
+        /// <summary>The SET clause: the keyword and its assignments.</summary>
+        private void SetText(SetClause s) { Add("SET "); Sep(s.Items, SetItemText); }
+
+        private void SetItemText(SetItem sc)
         {
             if (sc.Row) { Add("ROW = "); Expr(sc.Value); return; }
             if (sc.Columns.Count == 1) Expr(sc.Columns[0]);
@@ -152,7 +155,7 @@ public sealed partial class SqlScriptGenerator
         {
             Add("UPDATE"); DmlHint(u);
             Sp(); Table(u.Target);
-            ClauseStart(_o.NewLineBeforeSetClause); Add("SET "); Sep(u.Set, SetClauseText);
+            ClauseStart(_o.NewLineBeforeSetClause); SetText(u.Set);
             if (u.From is { } uFrom) { ClauseStart(_o.NewLineBeforeFromClause); Add("FROM "); Sep(uFrom.Tables, Table); }
             if (u.Where is { } uWhere) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE "); Expr(uWhere.Condition); }
             DmlTail(u);
@@ -182,7 +185,7 @@ public sealed partial class SqlScriptGenerator
                 switch (c)
                 {
                     case MergeMatchedClause matched:
-                        Add("UPDATE SET "); Sep(matched.Set, SetClauseText);
+                        Add("UPDATE "); SetText(matched.Set);
                         if (matched.UpdateWhere is { } updateWhere) { Add(" WHERE "); Expr(updateWhere.Condition); }
                         if (matched.DeleteWhere is { } deleteWhere) { Add(" DELETE WHERE "); Expr(deleteWhere.Condition); }
                         break;

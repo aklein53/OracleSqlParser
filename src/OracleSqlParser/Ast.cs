@@ -637,16 +637,24 @@ public sealed partial class UpdateStatement : DmlStatement
 {
     /// <summary>The table or view that is updated.</summary>
     public required TableReference Target { get; set; }
-    /// <summary>The <c>SET</c> assignments, in source order.</summary>
-    public List<SetClause> Set { get; set; } = [];
+    /// <summary>The <c>SET</c> clause, such as <c>SET a = 1, b = 2</c>.</summary>
+    public required SetClause Set { get; set; }
     /// <summary>23ai: UPDATE ... SET ... FROM table_references. Null when absent.</summary>
     public FromClause? From { get; set; }
     /// <summary>The <c>WHERE</c> clause, or null when absent.</summary>
     public WhereClause? Where { get; set; }
 }
 
-/// <summary>One assignment of a <c>SET</c> clause: <c>col = expr</c> or <c>(c1, c2) = (subquery)</c>.</summary>
+/// <summary>The <c>SET</c> clause of an <c>UPDATE</c> or of a <c>MERGE</c> update action: its assignments, in source order.</summary>
+/// <remarks>Spans the <c>SET</c> keyword through the last assignment; see <see cref="FromClause"/>.</remarks>
 public sealed partial class SetClause : SqlNode
+{
+    /// <summary>The assignments, in source order.</summary>
+    public List<SetItem> Items { get; set; } = [];
+}
+
+/// <summary>One assignment of a <c>SET</c> clause: <c>col = expr</c> or <c>(c1, c2) = (subquery)</c>.</summary>
+public sealed partial class SetItem : SqlNode
 {
     /// <summary>PL/SQL: SET ROW = record (Columns is empty).</summary>
     public bool Row { get; set; }
@@ -692,8 +700,8 @@ public abstract partial class MergeClause : SqlNode
 /// <remarks>Spans <c>WHEN</c> through the end of its action; see <see cref="FromClause"/>.</remarks>
 public sealed partial class MergeMatchedClause : MergeClause
 {
-    /// <summary>The <c>UPDATE SET</c> assignments.</summary>
-    public List<SetClause> Set { get; set; } = [];
+    /// <summary>The <c>UPDATE SET</c> clause of the action.</summary>
+    public required SetClause Set { get; set; }
     /// <summary>The <c>WHERE</c> clause of the update, or null when absent.</summary>
     public WhereClause? UpdateWhere { get; set; }
     /// <summary>

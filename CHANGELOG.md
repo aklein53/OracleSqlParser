@@ -29,6 +29,8 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `InsertStatement.Values` (new) | n/a | `ValuesClause?`; exactly one of `Values` and `Query` is set |
   | `InsertIntoClause.Values` | `List<Expression>` | `ValuesClause?` (one row) |
   | `ValuesQuery.Rows`, `ValuesTable.Rows` | `List<List<Expression>>` | `List<RowValue>` (`.Values`) |
+  | `UpdateStatement.Set` | `List<SetClause>` | `SetClause` (required, spans `SET`; `.Items` holds the assignments) |
+  | `SetClause` (one assignment, `col = expr`) | class `SetClause` | class `SetItem` (same members: `Columns`, `Value`, `Row`) |
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
@@ -41,6 +43,7 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `MergeClause.Matched` | `bool` | removed; the type says it (`WHEN MATCHED` is `MergeMatchedClause`) |
   | `MergeClause.Set`, `UpdateWhere`, `DeleteWhere` | on `MergeClause` | `MergeMatchedClause.Set`, `.UpdateWhere`, `.DeleteWhere` |
   | `MergeClause.InsertColumns`, `InsertValues`, `InsertWhere` | on `MergeClause` | `MergeNotMatchedClause.Columns`, `.Values` (`ValuesClause`, one row), `.Where` |
+  | `MergeMatchedClause.Set` | `List<SetClause>` | `SetClause` (required, `.Items`) |
 
 - The parser rejects `WHEN MATCHED THEN INSERT` and `WHEN NOT MATCHED THEN UPDATE`, which used to parse. Oracle rejects both
   (ORA-02000). A `DELETE` action without `UPDATE` is still rejected.

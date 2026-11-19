@@ -3353,13 +3353,7 @@ OracleSqlParser.SessionSetting.SessionSetting() -> void
 OracleSqlParser.SessionSetting.Value.get -> OracleSqlParser.Expression!
 OracleSqlParser.SessionSetting.Value.set -> void
 OracleSqlParser.SetClause
-OracleSqlParser.SetClause.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
-OracleSqlParser.SetClause.Columns.set -> void
-OracleSqlParser.SetClause.Row.get -> bool
-OracleSqlParser.SetClause.Row.set -> void
 OracleSqlParser.SetClause.SetClause() -> void
-OracleSqlParser.SetClause.Value.get -> OracleSqlParser.Expression!
-OracleSqlParser.SetClause.Value.set -> void
 OracleSqlParser.SetConstraintsStatement
 OracleSqlParser.SetConstraintsStatement.All.get -> bool
 OracleSqlParser.SetConstraintsStatement.All.set -> void
@@ -3845,7 +3839,6 @@ OracleSqlParser.UnpivotTable.ValueColumns.set -> void
 OracleSqlParser.UpdateStatement
 OracleSqlParser.UpdateStatement.From.get -> OracleSqlParser.FromClause?
 OracleSqlParser.UpdateStatement.From.set -> void
-OracleSqlParser.UpdateStatement.Set.get -> System.Collections.Generic.List<OracleSqlParser.SetClause!>!
 OracleSqlParser.UpdateStatement.Set.set -> void
 OracleSqlParser.UpdateStatement.Target.get -> OracleSqlParser.TableReference!
 OracleSqlParser.UpdateStatement.Target.set -> void
@@ -6136,7 +6129,6 @@ OracleSqlParser.MergeMatchedClause
 OracleSqlParser.MergeMatchedClause.DeleteWhere.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.MergeMatchedClause.DeleteWhere.set -> void
 OracleSqlParser.MergeMatchedClause.MergeMatchedClause() -> void
-OracleSqlParser.MergeMatchedClause.Set.get -> System.Collections.Generic.List<OracleSqlParser.SetClause!>!
 OracleSqlParser.MergeMatchedClause.Set.set -> void
 OracleSqlParser.MergeMatchedClause.UpdateWhere.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.MergeMatchedClause.UpdateWhere.set -> void
@@ -6160,3 +6152,21 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MergeMatche
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MergeNotMatchedClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MergeMatchedClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MergeNotMatchedClause! node) -> void
+OracleSqlParser.MergeMatchedClause.Set.get -> OracleSqlParser.SetClause!
+OracleSqlParser.SetClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.SetItem!>!
+OracleSqlParser.SetClause.Items.set -> void
+OracleSqlParser.SetItem
+OracleSqlParser.SetItem.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
+OracleSqlParser.SetItem.Columns.set -> void
+OracleSqlParser.SetItem.Row.get -> bool
+OracleSqlParser.SetItem.Row.set -> void
+OracleSqlParser.SetItem.SetItem() -> void
+OracleSqlParser.SetItem.Value.get -> OracleSqlParser.Expression!
+OracleSqlParser.SetItem.Value.set -> void
+OracleSqlParser.UpdateStatement.Set.get -> OracleSqlParser.SetClause!
+override OracleSqlParser.SetItem.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.SetItem.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.SetItem.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.SetItem! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.SetItem! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.SetItem! node) -> void
