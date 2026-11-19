@@ -1588,8 +1588,6 @@ OracleSqlParser.ExecuteImmediateStatement.Using.get -> System.Collections.Generi
 OracleSqlParser.ExecuteImmediateStatement.Using.set -> void
 OracleSqlParser.ExistsExpression
 OracleSqlParser.ExistsExpression.ExistsExpression() -> void
-OracleSqlParser.ExistsExpression.Subquery.get -> OracleSqlParser.SelectStatement!
-OracleSqlParser.ExistsExpression.Subquery.set -> void
 OracleSqlParser.ExitStatement
 OracleSqlParser.ExitStatement.ExitStatement() -> void
 OracleSqlParser.ExitStatement.Label.get -> OracleSqlParser.Identifier?
@@ -2196,8 +2194,6 @@ OracleSqlParser.InExpression.List.get -> System.Collections.Generic.List<OracleS
 OracleSqlParser.InExpression.List.set -> void
 OracleSqlParser.InExpression.Not.get -> bool
 OracleSqlParser.InExpression.Not.set -> void
-OracleSqlParser.InExpression.Subquery.get -> OracleSqlParser.SelectStatement?
-OracleSqlParser.InExpression.Subquery.set -> void
 OracleSqlParser.InExpression.Value.get -> OracleSqlParser.Expression!
 OracleSqlParser.InExpression.Value.set -> void
 OracleSqlParser.InquiryDirective
@@ -6132,3 +6128,7 @@ override OracleSqlParser.ReturningTypeClause.GetChildren() -> System.Collections
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ReturningTypeClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ReturningTypeClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ReturningTypeClause! node) -> void
+OracleSqlParser.ExistsExpression.Query.get -> OracleSqlParser.SelectStatement!
+OracleSqlParser.ExistsExpression.Query.set -> void
+OracleSqlParser.InExpression.Query.get -> OracleSqlParser.SelectStatement?
+OracleSqlParser.InExpression.Query.set -> void

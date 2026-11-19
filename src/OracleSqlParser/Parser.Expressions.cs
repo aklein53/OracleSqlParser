@@ -114,7 +114,7 @@ public sealed partial class SqlParser
                 var ie = new InExpression { Value = left, Not = negated };
                 if (LooksLikeQuery())
                 {
-                    ie.Subquery = ParseSelectStatement();
+                    ie.Query = ParseSelectStatement();
                     if (IsOp(",")) throw Fail("Mixed subquery and list in IN is not supported", ParseErrorCodes.UnsupportedForm);
                 }
                 else do ie.List.Add(ParseExpr()); while (AcceptOp(","));
@@ -423,7 +423,7 @@ public sealed partial class SqlParser
                     Next(); Next();
                     var sub = ParseSelectStatement();
                     ExpectOp(")");
-                    return Fin(new ExistsExpression { Subquery = sub }, start);
+                    return Fin(new ExistsExpression { Query = sub }, start);
                 }
                 case "DATE" or "TIMESTAMP" when PeekTok().Type == TokenType.String:
                 {

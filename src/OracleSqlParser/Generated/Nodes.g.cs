@@ -7328,23 +7328,23 @@ public partial class ExistsExpression
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (Subquery is not null) yield return Subquery;
+        if (Query is not null) yield return Query;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        Subquery?.Accept(visitor);
+        Query?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        Subquery = SqlNodeRewriter.RewriteRequired(rewriter, Subquery, "ExistsExpression.Subquery");
+        Query = SqlNodeRewriter.RewriteRequired(rewriter, Query, "ExistsExpression.Query");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
-        new("Subquery", Subquery),
+        new("Query", Query),
     ];
 
     /// <inheritdoc/>
@@ -7356,7 +7356,7 @@ public partial class ExistsExpression
     {
         var c = new ExistsExpression
         {
-            Subquery = CloneChild(Subquery)!,
+            Query = CloneChild(Query)!,
         };
         CopySpan(this, c);
         return c;
@@ -7365,7 +7365,7 @@ public partial class ExistsExpression
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (ExistsExpression)other;
-        return Pair(Subquery, o.Subquery, pending);
+        return Pair(Query, o.Query, pending);
     }
 }
 
@@ -10303,7 +10303,7 @@ public partial class InExpression
     {
         if (Value is not null) yield return Value;
         if (List is not null) foreach (var x in List) yield return x;
-        if (Subquery is not null) yield return Subquery;
+        if (Query is not null) yield return Query;
     }
 
     /// <inheritdoc/>
@@ -10311,14 +10311,14 @@ public partial class InExpression
     {
         Value?.Accept(visitor);
         if (List is not null) foreach (var x in List) x.Accept(visitor);
-        Subquery?.Accept(visitor);
+        Query?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "InExpression.Value");
         SqlNodeRewriter.RewriteList(rewriter, List, "InExpression.List");
-        Subquery = SqlNodeRewriter.RewriteOptional(rewriter, Subquery, "InExpression.Subquery");
+        Query = SqlNodeRewriter.RewriteOptional(rewriter, Query, "InExpression.Query");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -10326,7 +10326,7 @@ public partial class InExpression
         new("Value", Value),
         new("Not", Not),
         new("List", List),
-        new("Subquery", Subquery),
+        new("Query", Query),
     ];
 
     /// <inheritdoc/>
@@ -10341,7 +10341,7 @@ public partial class InExpression
             Value = CloneChild(Value)!,
             Not = Not,
             List = CloneList(List),
-            Subquery = CloneChild(Subquery),
+            Query = CloneChild(Query),
         };
         CopySpan(this, c);
         return c;
@@ -10353,7 +10353,7 @@ public partial class InExpression
         return Pair(Value, o.Value, pending)
             && Not == o.Not
             && PairList(List, o.List, pending)
-            && Pair(Subquery, o.Subquery, pending);
+            && Pair(Query, o.Query, pending);
     }
 }
 

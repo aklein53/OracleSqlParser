@@ -270,7 +270,7 @@ public static class QueryGuard
         if (filter.Style == AccessJoinStyle.InSubquery)
         {
             outer.From = new FromClause { Tables = [inline] };
-            outer.Where = new WhereClause { Condition = new InExpression { Value = key, Subquery = access } };
+            outer.Where = new WhereClause { Condition = new InExpression { Value = key, Query = access } };
         }
         else
         {

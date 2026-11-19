@@ -184,7 +184,7 @@ public class ExpressionShapeTests
     [InlineData("PRIOR x", "(Prior X)")]
     [InlineData("CONNECT_BY_ROOT x", "(ConnectByRoot X)")]
     [InlineData("CURSOR(SELECT 1 FROM dual)", "(CursorExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))")]
-    [InlineData("EXISTS (SELECT 1 FROM dual)", "(ExistsExpression subquery=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))")]
+    [InlineData("EXISTS (SELECT 1 FROM dual)", "(ExistsExpression query=(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=1)] from=(FromClause tables=[(NamedTable name=[DUAL])]))))")]
     public void Postfix_And_Misc(string sql, string expected) => Assert.Equal(expected, Shape.Expr(sql));
 
     [Theory]

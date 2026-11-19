@@ -150,7 +150,7 @@ public sealed partial class SqlScriptGenerator
                     break;
                 case InExpression ie:
                     Child(ie.Value, 4); Add(ie.Not ? " NOT IN " : " IN ");
-                    if (ie.Subquery != null) ParenQuery(ie.Subquery); else { Add("("); Sep(ie.List, i => Expr(i)); Add(")"); }
+                    if (ie.Query != null) ParenQuery(ie.Query); else { Add("("); Sep(ie.List, i => Expr(i)); Add(")"); }
                     break;
                 case LikeExpression lk:
                     Child(lk.Value, 4);
@@ -163,7 +163,7 @@ public sealed partial class SqlScriptGenerator
                     Child(qc.Left, 4); Add(" " + ComparisonText(qc.Operator, qc.OperatorSpelling) + " " + qc.Quantifier.ToString().ToUpperInvariant() + " ");
                     Expr(qc.Right);
                     break;
-                case ExistsExpression ex: Add("EXISTS "); ParenQuery(ex.Subquery); break;
+                case ExistsExpression ex: Add("EXISTS "); ParenQuery(ex.Query); break;
                 case SubqueryExpression sq: ParenQuery(sq.Query); break;
                 case CursorExpression cu: Add("CURSOR"); ParenQuery(cu.Query); break;
                 case CaseExpression ce:

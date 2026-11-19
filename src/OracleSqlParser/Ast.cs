@@ -1064,7 +1064,7 @@ public sealed partial class InExpression : Expression
     /// <summary>The listed values, in source order; empty when the test uses a subquery.</summary>
     public List<Expression> List { get; set; } = [];
     /// <summary>The subquery of <c>IN (SELECT ...)</c>, or null for a list.</summary>
-    public SelectStatement? Subquery { get; set; }
+    public SelectStatement? Query { get; set; }
 }
 
 /// <summary>The form of a <c>LIKE</c> operator.</summary>
@@ -1150,7 +1150,7 @@ public sealed partial class IsExpression : Expression
 public sealed partial class ExistsExpression : Expression
 {
     /// <summary>The subquery.</summary>
-    public required SelectStatement Subquery { get; set; }
+    public required SelectStatement Query { get; set; }
 }
 
 /// <summary>A scalar subquery used as an expression, such as <c>(SELECT MAX(x) FROM u)</c>.</summary>
