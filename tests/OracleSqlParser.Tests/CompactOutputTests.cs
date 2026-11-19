@@ -15,7 +15,7 @@ public class CompactOutputTests
     }
 
     public static IEnumerable<object[]> QueryCorpus() =>
-        SmokeQueries().Where(s => SqlParser.Parse(s) is { Success: true } r && r.Script.Statements.Count == 1 && r.Script.Statements[0] is SelectStatement { WithDeclarations.Count: 0 })
+        SmokeQueries().Where(s => SqlParser.Parse(s) is { Success: true } r && r.Script.Statements.Count == 1 && r.Script.Statements[0] is SelectStatement { With: null or { Declarations.Count: 0 } })
             .Select(s => new object[] { s });
 
     /// <summary>parse -> print -> parse must give an identical tree (the printed SQL means the same thing).</summary>

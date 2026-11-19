@@ -384,6 +384,71 @@ public class ClauseNodeTests
     }
 
     /// <summary>
+    /// The WITH clause spans WITH through its last common table expression. Without CTEs it ends at the <c>;</c> that
+    /// closes its last WITH FUNCTION or WITH PROCEDURE declaration.
+    /// </summary>
+    [Theory]
+    [InlineData("WITH x AS (SELECT 1 FROM dual) SELECT * FROM x", "WITH x AS (SELECT 1 FROM dual)")]
+    [InlineData("WITH /*c*/ a AS (SELECT 1 FROM dual),\n b (c) AS (SELECT 2 FROM dual) SELECT * FROM a",
+        "WITH /*c*/ a AS (SELECT 1 FROM dual),\n b (c) AS (SELECT 2 FROM dual)")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; SELECT f FROM dual",
+        "WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END;")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; x AS (SELECT 1 FROM dual) SELECT f FROM x",
+        "WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; x AS (SELECT 1 FROM dual)")]
+    public void WithSpansItsKeywordThroughItsLastItem(string sql, string expected)
+    {
+        var with = Assert.Single(Parsed(sql).Script.Descendants().OfType<WithClause>());
+
+        Assert.Equal(expected, Text(sql, with));
+    }
+
+    /// <summary>A WITH in a subquery is that subquery's own clause, so the outer query has none.</summary>
+    [Fact]
+    public void ASubqueryHasItsOwnWithClause()
+    {
+        const string sql = "SELECT * FROM (WITH x AS (SELECT 1 FROM dual) SELECT * FROM x)";
+        var with = Assert.Single(Parsed(sql).Script.Descendants().OfType<WithClause>());
+
+        Assert.Null(Assert.IsType<SelectStatement>(Parsed(sql).Script.Statements[0]).With);
+        Assert.Equal("WITH x AS (SELECT 1 FROM dual)", Text(sql, with));
+    }
+
+    /// <summary>A rewriter removes the WITH clause, the CTEs and declarations with it, by returning null for it.</summary>
+    [Fact]
+    public void ARewriterCanDropTheWithClause()
+    {
+        var script = SqlParser.Parse("WITH x AS (SELECT 1 FROM dual) SELECT * FROM x").Script;
+        new DropWith().RewriteTree(script);
+
+        Assert.Equal("SELECT * FROM x;", new SqlScriptGenerator().Generate(script).Trim());
+    }
+
+    private sealed class DropWith : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(WithClause node) => null;
+    }
+
+    [Theory]
+    [InlineData("WITH x AS (SELECT 1 FROM dual) SELECT * FROM x")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END; SELECT f FROM dual")]
+    public void WithRoundTrips(string sql)
+    {
+        var script = SqlParser.Parse(sql).Script;
+        var text = new SqlScriptGenerator().Generate(script);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, SqlParser.Parse(text).Script), text);
+    }
+
+    [Theory]
+    [InlineData("WITH SELECT 1 FROM dual")]
+    [InlineData("WITH AS (SELECT 1 FROM dual) SELECT 1 FROM dual")]
+    [InlineData("WITH x AS SELECT 1 FROM dual")]
+    public void AWithWithoutItsNameOrQueryIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
+    /// <summary>
     /// Each MERGE action has its own WHERE clause. The DELETE part's clause starts at its WHERE, not at the DELETE before it.
     /// </summary>
     [Fact]
@@ -491,6 +556,7 @@ public class ClauseNodeTests
                 OffsetClause => "OFFSET",
                 WithinGroupClause => "WITHIN",
                 IntoClause into => into.BulkCollect ? "BULK" : "INTO",
+                WithClause => "WITH",
                 _ => null,
             };
             if (keyword is null)

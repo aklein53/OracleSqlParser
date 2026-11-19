@@ -67,15 +67,15 @@ public sealed partial class SqlScriptGenerator
 
         private void Select(SelectStatement s)
         {
-            if (s.WithDeclarations.Count > 0 || s.With.Count > 0)
+            if (s.With is { } with)
             {
                 Add("WITH");
-                foreach (var d in s.WithDeclarations) { Sp(); Declaration(d); Add(";"); }
-                if (s.With.Count > 0)
+                foreach (var d in with.Declarations) { Sp(); Declaration(d); Add(";"); }
+                if (with.Ctes.Count > 0)
                 {
                     Sp();
-                    if (Multiline) { Sep(s.With, Cte, ",\n" + new string(' ', _indent * _o.IndentSize)); }
-                    else Sep(s.With, Cte);
+                    if (Multiline) { Sep(with.Ctes, Cte, ",\n" + new string(' ', _indent * _o.IndentSize)); }
+                    else Sep(with.Ctes, Cte);
                 }
                 if (Multiline) NewLine(); else Sp();
             }

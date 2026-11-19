@@ -173,7 +173,7 @@ public class ExpertStressTests(OracleFixture db)
             """,
         };
         var s = Shape.Parse(sql[0]);
-        var with = ((SelectStatement)s.Statements[0]).With;
+        var with = ((SelectStatement)s.Statements[0]).With!.Ctes;
         Assert.Equal(2, with.Count);
         Assert.True(with[0].Search is { DepthFirst: true });
         Assert.NotNull(with[0].Cycle);
@@ -726,7 +726,7 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var ss = (SelectStatement)s.Statements[0];
-        Assert.Single(ss.With);
+        Assert.Single(ss.With!.Ctes);
         Assert.Contains("(LessThanOrEqual R.DR 2)", Str(((QuerySpecification)ss.Body).Where!));
         await VerifyAsync(sql, []);
     }

@@ -15952,36 +15952,33 @@ public partial class SelectStatement
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (With is not null) foreach (var x in With) yield return x;
+        if (With is not null) yield return With;
         if (Body is not null) yield return Body;
         if (OrderBy is not null) yield return OrderBy;
         if (Offset is not null) yield return Offset;
         if (Fetch is not null) yield return Fetch;
         if (ForUpdate is not null) yield return ForUpdate;
-        if (WithDeclarations is not null) foreach (var x in WithDeclarations) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        if (With is not null) foreach (var x in With) x.Accept(visitor);
+        With?.Accept(visitor);
         Body?.Accept(visitor);
         OrderBy?.Accept(visitor);
         Offset?.Accept(visitor);
         Fetch?.Accept(visitor);
         ForUpdate?.Accept(visitor);
-        if (WithDeclarations is not null) foreach (var x in WithDeclarations) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteList(rewriter, With, "SelectStatement.With");
+        With = SqlNodeRewriter.RewriteOptional(rewriter, With, "SelectStatement.With");
         Body = SqlNodeRewriter.RewriteRequired(rewriter, Body, "SelectStatement.Body");
         OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "SelectStatement.OrderBy");
         Offset = SqlNodeRewriter.RewriteOptional(rewriter, Offset, "SelectStatement.Offset");
         Fetch = SqlNodeRewriter.RewriteOptional(rewriter, Fetch, "SelectStatement.Fetch");
         ForUpdate = SqlNodeRewriter.RewriteOptional(rewriter, ForUpdate, "SelectStatement.ForUpdate");
-        SqlNodeRewriter.RewriteList(rewriter, WithDeclarations, "SelectStatement.WithDeclarations");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -15992,7 +15989,6 @@ public partial class SelectStatement
         new("Offset", Offset),
         new("Fetch", Fetch),
         new("ForUpdate", ForUpdate),
-        new("WithDeclarations", WithDeclarations),
         new("Labels", Labels),
     ];
 
@@ -16005,13 +16001,12 @@ public partial class SelectStatement
     {
         var c = new SelectStatement
         {
-            With = CloneList(With),
+            With = CloneChild(With),
             Body = CloneChild(Body)!,
             OrderBy = CloneChild(OrderBy),
             Offset = CloneChild(Offset),
             Fetch = CloneChild(Fetch),
             ForUpdate = CloneChild(ForUpdate),
-            WithDeclarations = CloneList(WithDeclarations),
             Labels = CloneStrings(Labels),
         };
         CopySpan(this, c);
@@ -16021,13 +16016,12 @@ public partial class SelectStatement
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (SelectStatement)other;
-        return PairList(With, o.With, pending)
+        return Pair(With, o.With, pending)
             && Pair(Body, o.Body, pending)
             && Pair(OrderBy, o.OrderBy, pending)
             && Pair(Offset, o.Offset, pending)
             && Pair(Fetch, o.Fetch, pending)
             && Pair(ForUpdate, o.ForUpdate, pending)
-            && PairList(WithDeclarations, o.WithDeclarations, pending)
             && SameStrings(Labels, o.Labels);
     }
 }
@@ -18730,6 +18724,58 @@ public partial class WindowSpec
             && PairList(PartitionBy, o.PartitionBy, pending)
             && Pair(OrderBy, o.OrderBy, pending)
             && Pair(Frame, o.Frame, pending);
+    }
+}
+
+public partial class WithClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Declarations is not null) foreach (var x in Declarations) yield return x;
+        if (Ctes is not null) foreach (var x in Ctes) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Declarations is not null) foreach (var x in Declarations) x.Accept(visitor);
+        if (Ctes is not null) foreach (var x in Ctes) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Declarations, "WithClause.Declarations");
+        SqlNodeRewriter.RewriteList(rewriter, Ctes, "WithClause.Ctes");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Declarations", Declarations),
+        new("Ctes", Ctes),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new WithClause
+        {
+            Declarations = CloneList(Declarations),
+            Ctes = CloneList(Ctes),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (WithClause)other;
+        return PairList(Declarations, o.Declarations, pending)
+            && PairList(Ctes, o.Ctes, pending);
     }
 }
 

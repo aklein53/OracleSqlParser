@@ -196,8 +196,8 @@ public sealed partial class ErrorLogging : SqlNode
 /// <summary>A full query: [WITH] body [ORDER BY] [OFFSET] [FETCH] [FOR UPDATE]. Also used for subqueries.</summary>
 public sealed partial class SelectStatement : Statement
 {
-    /// <summary>The common table expressions of the <c>WITH</c> clause, in source order; empty when absent.</summary>
-    public List<CommonTableExpression> With { get; set; } = [];
+    /// <summary>The <c>WITH</c> clause, with its PL/SQL declarations and common table expressions; null when absent.</summary>
+    public WithClause? With { get; set; }
     /// <summary>The query body: a query specification, a set operation, a <c>VALUES</c> list or a parenthesized query.</summary>
     public required QueryExpression Body { get; set; }
     /// <summary>The <c>ORDER BY</c> clause, or null when absent.</summary>
@@ -208,8 +208,22 @@ public sealed partial class SelectStatement : Statement
     public FetchClause? Fetch { get; set; }
     /// <summary>The <c>FOR UPDATE</c> clause, or null when absent.</summary>
     public ForUpdateClause? ForUpdate { get; set; }
-    /// <summary>WITH FUNCTION / WITH PROCEDURE declarations preceding the CTEs.</summary>
-    public List<Declaration> WithDeclarations { get; set; } = [];
+}
+
+/// <summary>
+/// The <c>WITH</c> clause of a query: 12c <c>WITH FUNCTION</c> / <c>WITH PROCEDURE</c> declarations, then common table
+/// expressions. Either list may be empty, but not both.
+/// </summary>
+/// <remarks>
+/// Spans the <c>WITH</c> keyword through the end of the last item: the last CTE, or, when there are no CTEs, the last
+/// declaration's <c>;</c>. See <see cref="FromClause"/>.
+/// </remarks>
+public sealed partial class WithClause : SqlNode
+{
+    /// <summary>The <c>WITH FUNCTION</c> and <c>WITH PROCEDURE</c> declarations, in source order; empty when absent.</summary>
+    public List<Declaration> Declarations { get; set; } = [];
+    /// <summary>The common table expressions, in source order; empty when absent.</summary>
+    public List<CommonTableExpression> Ctes { get; set; } = [];
 }
 
 /// <summary>One named query of a <c>WITH</c> clause, such as <c>x (a) AS (SELECT 1 FROM dual)</c>.</summary>

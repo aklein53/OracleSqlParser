@@ -140,8 +140,8 @@ public class QueryShapeTests
     public void WithFunction_Declarations()
     {
         Assert.Equal(
-            "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(FunctionCall name=[F] arguments=[(Argument value=1)]))] from=(FromClause tables=[(NamedTable name=[DUAL])])) " +
-            "withDeclarations=[(SubprogramDeclaration isFunction name=[F] parameters=[(Parameter name=X type=(DataType name=NUMBER))] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Multiply X 2))]))])",
+            "(SelectStatement with=(WithClause declarations=[(SubprogramDeclaration isFunction name=[F] parameters=[(Parameter name=X type=(DataType name=NUMBER))] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Multiply X 2))]))]) " +
+            "body=(QuerySpecification selectList=[(ExpressionSelectItem expression=(FunctionCall name=[F] arguments=[(Argument value=1)]))] from=(FromClause tables=[(NamedTable name=[DUAL])])))",
             Shape.Of<SelectStatement>("WITH FUNCTION f(x NUMBER) RETURN NUMBER IS BEGIN RETURN x * 2; END; SELECT f(1) FROM dual"));
     }
 

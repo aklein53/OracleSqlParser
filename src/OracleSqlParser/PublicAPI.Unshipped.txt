@@ -3359,10 +3359,7 @@ OracleSqlParser.SelectStatement.Offset.set -> void
 OracleSqlParser.SelectStatement.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.SelectStatement.OrderBy.set -> void
 OracleSqlParser.SelectStatement.SelectStatement() -> void
-OracleSqlParser.SelectStatement.With.get -> System.Collections.Generic.List<OracleSqlParser.CommonTableExpression!>!
 OracleSqlParser.SelectStatement.With.set -> void
-OracleSqlParser.SelectStatement.WithDeclarations.get -> System.Collections.Generic.List<OracleSqlParser.Declaration!>!
-OracleSqlParser.SelectStatement.WithDeclarations.set -> void
 OracleSqlParser.SequenceOption
 OracleSqlParser.SequenceOption.Name.get -> string!
 OracleSqlParser.SequenceOption.Name.set -> void
@@ -6059,3 +6056,17 @@ override OracleSqlParser.IntoClause.GetChildren() -> System.Collections.Generic.
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.IntoClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.IntoClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.IntoClause! node) -> void
+
+OracleSqlParser.SelectStatement.With.get -> OracleSqlParser.WithClause?
+OracleSqlParser.WithClause
+OracleSqlParser.WithClause.Ctes.get -> System.Collections.Generic.List<OracleSqlParser.CommonTableExpression!>!
+OracleSqlParser.WithClause.Ctes.set -> void
+OracleSqlParser.WithClause.Declarations.get -> System.Collections.Generic.List<OracleSqlParser.Declaration!>!
+OracleSqlParser.WithClause.Declarations.set -> void
+OracleSqlParser.WithClause.WithClause() -> void
+override OracleSqlParser.WithClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.WithClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.WithClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.WithClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.WithClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WithClause! node) -> void

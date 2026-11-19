@@ -384,7 +384,7 @@ BEGIN NULL; END;");
     [InlineData("BEGIN x := -a ** 2; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(Minus (Power A 2)))])")]
     [InlineData("BEGIN x := 2 ** 3; END;", "(BlockStatement statements=[(AssignmentStatement target=X value=(Power 2 3))])")]
     [InlineData("DECLARE c CONSTANT NUMBER := 2 ** 3; BEGIN NULL; END;", "(BlockStatement hasDeclare declarations=[(VariableDeclaration name=C constant type=(DataType name=NUMBER) default=(Power 2 3))] statements=[(NullStatement)])")]
-    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=(FromClause tables=[(NamedTable name=[DUAL])])) withDeclarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Power 2 3))]))])")]
+    [InlineData("WITH FUNCTION f RETURN NUMBER IS BEGIN RETURN 2 ** 3; END; SELECT f FROM dual", "(SelectStatement with=(WithClause declarations=[(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER) body=(BlockStatement statements=[(ReturnStatement value=(Power 2 3))]))]) body=(QuerySpecification selectList=[(ExpressionSelectItem expression=F)] from=(FromClause tables=[(NamedTable name=[DUAL])])))")]
     public void ExponentInPlsql(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]

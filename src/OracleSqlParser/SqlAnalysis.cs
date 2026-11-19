@@ -337,7 +337,7 @@ public static class SqlAnalysis
             {
                 // Each CTE sees the CTEs before it and itself (a self reference is recursive); the body sees all of them.
                 var visible = outerCtes;
-                foreach (var cte in node.With)
+                foreach (var cte in node.With?.Ctes ?? [])
                 {
                     visible = new CteScope(cte, visible);
                     _ctes = visible;
@@ -381,7 +381,7 @@ public static class SqlAnalysis
                 node.Offset?.Accept(this);
                 node.Fetch?.Accept(this);
                 node.ForUpdate?.Accept(this);
-                foreach (var declaration in node.WithDeclarations) declaration.Accept(this);
+                foreach (var declaration in node.With?.Declarations ?? []) declaration.Accept(this);
             }
             finally
             {

@@ -529,13 +529,18 @@ public sealed partial class SqlParser
     private SelectStatement ParseSelectStatementCore()
     {
         var start = Cur;
-        // Body is required, so the statement is built once the WITH list and the body are parsed; the optional parts follow below.
-        var withDeclarations = new List<Declaration>();
-        var ctes = new List<CommonTableExpression>();
-        if (AcceptKw("WITH"))
+        // Body is required, so the statement is built once the WITH clause and the body are parsed; the optional parts follow below.
+        WithClause? with = null;
+        if (IsKw("WITH"))
         {
+            var withKeyword = Next();
+            var withDeclarations = new List<Declaration>();
+            var ctes = new List<CommonTableExpression>();
             int prog104 = -1;
             while ((IsKw("FUNCTION") || IsKw("PROCEDURE")) && Progress(ref prog104)) { withDeclarations.Add(ParseSubprogram()); AcceptOp(";"); }
+            // WITH FUNCTION declarations may be followed directly by the query; a bare WITH needs at least one CTE name.
+            if (withDeclarations.Count == 0 && (IsKw("SELECT") || IsOp("(")))
+                throw FailExpected("Expected a common table expression name after WITH", "a name");
             if (!(IsKw("SELECT") || IsOp("(")))
             do
             {
@@ -552,12 +557,13 @@ public sealed partial class SqlParser
                 if (IsKw("CYCLE")) cte.Cycle = ParseCycleClause();
                 ctes.Add(Fin(cte, cs));
             } while (AcceptOp(","));
+            with = Fin(new WithClause { Declarations = withDeclarations, Ctes = ctes }, withKeyword);
         }
 
         // A bare VALUES list is a query body only in a CTE here (`WITH x AS (VALUES ...)`); elsewhere it is a table constructor.
         if (IsKw("VALUES")) RequireVersion(OracleVersion.Oracle23, "VALUES table constructor", Cur);
         var body = IsKw("VALUES") ? ParseValuesQuery() : ParseQueryExpression();
-        var stmt = new SelectStatement { With = ctes, WithDeclarations = withDeclarations, Body = body };
+        var stmt = new SelectStatement { With = with, Body = body };
 
         if (IsKw("ORDER"))
         {

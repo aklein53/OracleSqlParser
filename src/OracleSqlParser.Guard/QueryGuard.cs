@@ -169,7 +169,7 @@ public static class QueryGuard
                     break;
                 case SelectStatement s:
                     if (s.ForUpdate != null) v.Add(At(ViolationCode.ForUpdate, "FOR UPDATE is not allowed", s.ForUpdate));
-                    if (s.WithDeclarations.Count > 0) v.Add(At(ViolationCode.PlsqlDeclaration, "WITH FUNCTION/PROCEDURE is not allowed", s.WithDeclarations[0]));
+                    if (s.With is { Declarations.Count: > 0 } withClause) v.Add(At(ViolationCode.PlsqlDeclaration, "WITH FUNCTION/PROCEDURE is not allowed", withClause.Declarations[0]));
                     break;
                 case QuerySpecification qs when qs.Into is not null:
                     v.Add(At(ViolationCode.IntoClause, "SELECT ... INTO is not allowed", qs));
