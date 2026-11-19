@@ -3374,7 +3374,6 @@ OracleSqlParser.SelectStatement.Fetch.get -> OracleSqlParser.FetchClause?
 OracleSqlParser.SelectStatement.Fetch.set -> void
 OracleSqlParser.SelectStatement.ForUpdate.get -> OracleSqlParser.ForUpdateClause?
 OracleSqlParser.SelectStatement.ForUpdate.set -> void
-OracleSqlParser.SelectStatement.Offset.get -> OracleSqlParser.Expression?
 OracleSqlParser.SelectStatement.Offset.set -> void
 OracleSqlParser.SelectStatement.OrderBy.get -> OracleSqlParser.OrderByClause?
 OracleSqlParser.SelectStatement.OrderBy.set -> void
@@ -6033,3 +6032,15 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramO
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
 
 OracleSqlParser.KeepClause.OrderBy.get -> OracleSqlParser.OrderByClause!
+
+OracleSqlParser.OffsetClause
+OracleSqlParser.OffsetClause.Offset.get -> OracleSqlParser.Expression!
+OracleSqlParser.OffsetClause.Offset.set -> void
+OracleSqlParser.OffsetClause.OffsetClause() -> void
+OracleSqlParser.SelectStatement.Offset.get -> OracleSqlParser.OffsetClause?
+override OracleSqlParser.OffsetClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.OffsetClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.OffsetClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.OffsetClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.OffsetClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.OffsetClause! node) -> void

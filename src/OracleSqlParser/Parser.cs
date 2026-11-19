@@ -569,9 +569,10 @@ public sealed partial class SqlParser
         }
         if (IsKw("OFFSET") && !IsOpAt(1, ",")) // OFFSET n ROWS
         {
-            Next();
-            stmt.Offset = ParseAdditive();
+            var offsetTok = Next();
+            var count = ParseAdditive();
             if (!AcceptKw("ROWS")) AcceptKw("ROW");
+            stmt.Offset = Fin(new OffsetClause { Offset = count }, offsetTok);
         }
         if (IsKw("FETCH"))
         {

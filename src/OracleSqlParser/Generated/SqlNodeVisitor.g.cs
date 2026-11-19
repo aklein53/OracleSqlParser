@@ -1978,6 +1978,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="OffsetClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(OffsetClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="OffsetClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(OffsetClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="OnBehaviorClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(OnBehaviorClause node) => Visit((SqlNode)node);
 

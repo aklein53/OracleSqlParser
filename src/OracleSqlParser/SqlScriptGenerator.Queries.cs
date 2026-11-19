@@ -86,7 +86,7 @@ public sealed partial class SqlScriptGenerator
                 Add(orderBy.Siblings ? "ORDER SIBLINGS BY" : "ORDER BY");
                 ClauseBody(() => Sep(orderBy.Items, OrderItem));
             }
-            if (s.Offset != null) { ClauseStart(_o.NewLineBeforeOrderByClause); Add("OFFSET "); Child(s.Offset, 5); Add(" ROWS"); }
+            if (s.Offset is { } offset) { ClauseStart(_o.NewLineBeforeOrderByClause); Add("OFFSET "); Child(offset.Offset, 5); Add(" ROWS"); }
             if (s.Fetch != null)
             {
                 ClauseStart(_o.NewLineBeforeOrderByClause);

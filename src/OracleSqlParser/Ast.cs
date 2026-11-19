@@ -204,8 +204,8 @@ public sealed partial class SelectStatement : Statement
     public required QueryExpression Body { get; set; }
     /// <summary>The <c>ORDER BY</c> clause, or null when absent.</summary>
     public OrderByClause? OrderBy { get; set; }
-    /// <summary>The row count of the <c>OFFSET</c> clause, or null when absent.</summary>
-    public Expression? Offset { get; set; }
+    /// <summary>The <c>OFFSET</c> clause, or null when absent.</summary>
+    public OffsetClause? Offset { get; set; }
     /// <summary>The <c>FETCH</c> clause, or null when absent.</summary>
     public FetchClause? Fetch { get; set; }
     /// <summary>The <c>FOR UPDATE</c> clause, or null when absent.</summary>
@@ -433,6 +433,17 @@ public enum NullsOrdering
     First,
     /// <summary><c>NULLS LAST</c>.</summary>
     Last,
+}
+
+/// <summary>The <c>OFFSET</c> clause, such as <c>OFFSET 5 ROWS</c>. It is independent of <see cref="FetchClause"/>, which Oracle also allows alone.</summary>
+/// <remarks>
+/// Spans the <c>OFFSET</c> keyword through <c>ROW</c> or <c>ROWS</c>; see <see cref="FromClause"/>. The spelling is not kept:
+/// the generator writes <c>ROWS</c>.
+/// </remarks>
+public sealed partial class OffsetClause : SqlNode
+{
+    /// <summary>The number of rows to skip.</summary>
+    public required Expression Offset { get; set; }
 }
 
 /// <summary>A row limiting clause, such as <c>FETCH NEXT 10 ROWS ONLY</c> or <c>FETCH FIRST 5 PERCENT ROWS WITH TIES</c>.</summary>

@@ -150,6 +150,73 @@ public class ClauseNodeTests
         public override SqlNode? Rewrite(WhereClause node) => null;
     }
 
+    /// <summary>The OFFSET clause spans its keyword through ROW or ROWS, and a comment inside it stays inside.</summary>
+    [Theory]
+    [InlineData("SELECT a FROM t OFFSET 5 ROWS", "OFFSET 5 ROWS")]
+    [InlineData("SELECT a FROM t OFFSET /*c*/ 5 ROWS", "OFFSET /*c*/ 5 ROWS")]
+    [InlineData("SELECT a FROM t OFFSET  5  ROW", "OFFSET  5  ROW")]
+    [InlineData("SELECT a FROM t ORDER BY a\n OFFSET 2 ROWS\n FETCH FIRST 1 ROWS ONLY", "OFFSET 2 ROWS")]
+    public void OffsetSpansItsKeywordThroughRowOrRows(string sql, string expected)
+    {
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Equal(expected, Text(sql, Assert.IsType<SelectStatement>(r.Script.Statements[0]).Offset!));
+    }
+
+    /// <summary>The count is the clause's only child, so the offset and the FETCH clause stay independent.</summary>
+    [Fact]
+    public void OffsetIsIndependentOfFetch()
+    {
+        const string sql = "SELECT a FROM t OFFSET 5 ROWS";
+        var stmt = Assert.IsType<SelectStatement>(SqlParser.Parse(sql).Script.Statements[0]);
+
+        Assert.Equal("5", Text(sql, stmt.Offset!.Offset));
+        Assert.Null(stmt.Fetch);
+    }
+
+    /// <summary>The generator writes ROWS whichever spelling was read, and the result parses back to the same tree.</summary>
+    [Fact]
+    public void OffsetRoundTripsAndWritesRows()
+    {
+        var script = SqlParser.Parse("SELECT a FROM t OFFSET 5 ROW").Script;
+        var text = new SqlScriptGenerator().Generate(script).Trim();
+
+        Assert.Equal("SELECT a FROM t OFFSET 5 ROWS;", text);
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, SqlParser.Parse(text).Script));
+    }
+
+    /// <summary>A rewriter can replace the offset, or drop it by returning null for the clause.</summary>
+    [Fact]
+    public void ARewriterCanReplaceOrDropTheOffset()
+    {
+        var replaced = SqlParser.Parse("SELECT a FROM t OFFSET 5 ROWS").Script;
+        new ReplaceOffset().RewriteTree(replaced);
+        Assert.Equal("SELECT a FROM t OFFSET 7 ROWS;", new SqlScriptGenerator().Generate(replaced).Trim());
+
+        var dropped = SqlParser.Parse("SELECT a FROM t OFFSET 5 ROWS").Script;
+        new DropOffset().RewriteTree(dropped);
+        Assert.Equal("SELECT a FROM t;", new SqlScriptGenerator().Generate(dropped).Trim());
+    }
+
+    private sealed class ReplaceOffset : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(OffsetClause node) =>
+            new OffsetClause { Offset = new Literal { Kind = LiteralKind.Number, Value = "7" } };
+    }
+
+    private sealed class DropOffset : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(OffsetClause node) => null;
+    }
+
+    [Theory]
+    [InlineData("SELECT a FROM t OFFSET")]
+    [InlineData("SELECT a FROM t OFFSET ROWS")]
+    public void AnOffsetWithoutACountIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
     /// <summary>KEEP always has its ORDER BY, so a KEEP without one is a parse error and the clause never has a null order.</summary>
     [Fact]
     public void KeepSpansItsOrderBy()
@@ -195,6 +262,7 @@ public class ClauseNodeTests
                 GroupByClause => "GROUP",
                 HavingClause => "HAVING",
                 OrderByClause => "ORDER",
+                OffsetClause => "OFFSET",
                 _ => null,
             };
             if (keyword is null)

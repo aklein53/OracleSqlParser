@@ -12471,6 +12471,52 @@ public partial class NumericAttribute
     }
 }
 
+public partial class OffsetClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Offset is not null) yield return Offset;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Offset?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Offset = SqlNodeRewriter.RewriteRequired(rewriter, Offset, "OffsetClause.Offset");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Offset", Offset),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new OffsetClause
+        {
+            Offset = CloneChild(Offset)!,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (OffsetClause)other;
+        return Pair(Offset, o.Offset, pending);
+    }
+}
+
 public partial class OnBehaviorClause
 {
     /// <inheritdoc/>
