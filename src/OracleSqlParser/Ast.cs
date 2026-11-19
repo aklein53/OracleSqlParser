@@ -650,7 +650,10 @@ public sealed partial class MergeClause : SqlNode
     public List<SetClause> Set { get; set; } = [];
     /// <summary>The <c>WHERE</c> clause of the update, or null when absent.</summary>
     public WhereClause? UpdateWhere { get; set; }
-    /// <summary>The <c>WHERE</c> clause of the <c>DELETE</c> part, or null when absent.</summary>
+    /// <summary>
+    /// The <c>WHERE</c> clause of the <c>DELETE</c> part of an <c>UPDATE SET ... DELETE WHERE</c> action, or null when absent.
+    /// Oracle has no delete-only action (<c>WHEN MATCHED THEN DELETE</c> is a syntax error), so this is set only on an update.
+    /// </summary>
     public WhereClause? DeleteWhere { get; set; }
     // WHEN NOT MATCHED THEN INSERT
     /// <summary>The column list of the insert, each optionally qualified by the target alias (<c>INSERT (p.a, p.b)</c>); empty when absent.</summary>

@@ -586,14 +586,25 @@ public class ClauseNodeTests
         Assert.Equal("WHERE s.id > 1", Text(sql, clauses[1].InsertWhere!));
     }
 
+    /// <summary>The DELETE WHERE of an update action starts at its own WHERE, past a comment.</summary>
     [Fact]
-    public void TheDeleteActionWhereIsItsOwnClause()
+    public void TheMergeDeleteWhereStartsAtItsWhere()
     {
-        const string sql = "MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN DELETE WHERE t.x = 1";
+        const string sql = "MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = 1 DELETE /* d */ WHERE /* e */ t.y = 2";
         var clause = Assert.Single(Assert.IsType<MergeStatement>(SqlParser.Parse(sql).Script.Statements[0]).Clauses);
 
-        Assert.Equal("WHERE t.x = 1", Text(sql, clause.DeleteWhere!));
+        Assert.Equal("WHERE /* e */ t.y = 2", Text(sql, clause.DeleteWhere!));
         Assert.Null(clause.UpdateWhere);
+    }
+
+    /// <summary>Oracle has no delete-only MERGE action (ORA-02000), so DELETE without UPDATE is a parse error, matched or not.</summary>
+    [Theory]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN DELETE WHERE t.x = 1")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN DELETE")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED THEN DELETE WHERE s.x = 1")]
+    public void AMergeDeleteActionWithoutUpdateIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
     }
 
     /// <summary>The generator writes the MERGE wheres back, and the output parses to the same tree.</summary>

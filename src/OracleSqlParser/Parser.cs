@@ -1233,7 +1233,6 @@ public sealed partial class SqlParser
                 mc.UpdateWhere = ParseOptionalWhere();
                 if (AcceptKw("DELETE")) mc.DeleteWhere = ParseWhere();
             }
-            else if (AcceptKw("DELETE")) mc.DeleteWhere = ParseOptionalWhere();
             else if (AcceptKw("INSERT"))
             {
                 if (IsOp("(")) mc.InsertColumns = ParseColumnRefList(true); // the parenthesized column list, consumed to its ')'
@@ -1243,7 +1242,7 @@ public sealed partial class SqlParser
                 ExpectOp(")");
                 mc.InsertWhere = ParseOptionalWhere();
             }
-            else throw FailExpected($"Expected UPDATE, DELETE or INSERT but found {Describe(Cur)}", "UPDATE", "DELETE", "INSERT");
+            else throw FailExpected($"Expected UPDATE or INSERT but found {Describe(Cur)}", "UPDATE", "INSERT");
             st.Clauses.Add(Fin(mc, cs));
         }
         if (st.Clauses.Count == 0) throw FailExpected("Expected WHEN clause in MERGE", "WHEN");
