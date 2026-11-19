@@ -599,12 +599,37 @@ public sealed partial class InsertStatement : DmlStatement
     public required TableReference Target { get; set; }
     /// <summary>The column list in parentheses; empty when absent.</summary>
     public List<Identifier> Columns { get; set; } = [];
-    /// <summary>The rows of the <c>VALUES</c> clause, each a list of expressions; empty for the other forms.</summary>
-    public List<List<Expression>> ValueRows { get; set; } = [];
-    /// <summary>PL/SQL: INSERT INTO t VALUES record_variable.</summary>
-    public Expression? RecordValue { get; set; }
-    /// <summary>The query that supplies the rows of <c>INSERT ... SELECT</c>, or null for the <c>VALUES</c> form.</summary>
+    /// <summary>
+    /// The <c>VALUES</c> clause, or null for the <c>SELECT</c> form. Exactly one of <see cref="Values"/> and
+    /// <see cref="Query"/> is set.
+    /// </summary>
+    public ValuesClause? Values { get; set; }
+    /// <summary>
+    /// The query that supplies the rows of <c>INSERT ... SELECT</c>, or null for the <c>VALUES</c> form. Exactly one of
+    /// <see cref="Values"/> and <see cref="Query"/> is set.
+    /// </summary>
     public SelectStatement? Query { get; set; }
+}
+
+/// <summary>One row of a <c>VALUES</c> list: the expressions in its parentheses, such as <c>(1, 'a')</c>.</summary>
+/// <remarks>Spans the parentheses; see <see cref="FromClause"/>.</remarks>
+public sealed partial class RowValue : SqlNode
+{
+    /// <summary>The expressions of the row, in source order.</summary>
+    public required List<Expression> Values { get; set; }
+}
+
+/// <summary>
+/// A <c>VALUES</c> clause of an <c>INSERT</c>, such as <c>VALUES (1, 2), (3, 4)</c>, or the PL/SQL record form
+/// <c>VALUES rec</c>.
+/// </summary>
+/// <remarks>Spans the <c>VALUES</c> keyword through its last row or record; see <see cref="FromClause"/>.</remarks>
+public sealed partial class ValuesClause : SqlNode
+{
+    /// <summary>The rows, in source order; empty for the PL/SQL record form.</summary>
+    public List<RowValue> Rows { get; set; } = [];
+    /// <summary>The PL/SQL record variable of <c>VALUES rec</c>, or null for the row form.</summary>
+    public Expression? Record { get; set; }
 }
 
 /// <summary><c>UPDATE target SET col = value [FROM ...] [WHERE condition]</c>.</summary>

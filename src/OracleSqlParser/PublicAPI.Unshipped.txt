@@ -2206,7 +2206,6 @@ OracleSqlParser.InsertIntoClause.Columns.set -> void
 OracleSqlParser.InsertIntoClause.InsertIntoClause() -> void
 OracleSqlParser.InsertIntoClause.Table.get -> OracleSqlParser.TableReference!
 OracleSqlParser.InsertIntoClause.Table.set -> void
-OracleSqlParser.InsertIntoClause.Values.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.InsertIntoClause.Values.set -> void
 OracleSqlParser.InsertStatement
 OracleSqlParser.InsertStatement.Columns.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
@@ -2214,12 +2213,8 @@ OracleSqlParser.InsertStatement.Columns.set -> void
 OracleSqlParser.InsertStatement.InsertStatement() -> void
 OracleSqlParser.InsertStatement.Query.get -> OracleSqlParser.SelectStatement?
 OracleSqlParser.InsertStatement.Query.set -> void
-OracleSqlParser.InsertStatement.RecordValue.get -> OracleSqlParser.Expression?
-OracleSqlParser.InsertStatement.RecordValue.set -> void
 OracleSqlParser.InsertStatement.Target.get -> OracleSqlParser.TableReference!
 OracleSqlParser.InsertStatement.Target.set -> void
-OracleSqlParser.InsertStatement.ValueRows.get -> System.Collections.Generic.List<System.Collections.Generic.List<OracleSqlParser.Expression!>!>!
-OracleSqlParser.InsertStatement.ValueRows.set -> void
 OracleSqlParser.IntervalExpression
 OracleSqlParser.IntervalExpression.From.get -> OracleSqlParser.IntervalUnit
 OracleSqlParser.IntervalExpression.From.set -> void
@@ -3968,13 +3963,11 @@ OracleSqlParser.ValuesOfControl.Collection.get -> OracleSqlParser.Expression!
 OracleSqlParser.ValuesOfControl.Collection.set -> void
 OracleSqlParser.ValuesOfControl.ValuesOfControl() -> void
 OracleSqlParser.ValuesQuery
-OracleSqlParser.ValuesQuery.Rows.get -> System.Collections.Generic.List<System.Collections.Generic.List<OracleSqlParser.Expression!>!>!
 OracleSqlParser.ValuesQuery.Rows.set -> void
 OracleSqlParser.ValuesQuery.ValuesQuery() -> void
 OracleSqlParser.ValuesTable
 OracleSqlParser.ValuesTable.ColumnAliases.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 OracleSqlParser.ValuesTable.ColumnAliases.set -> void
-OracleSqlParser.ValuesTable.Rows.get -> System.Collections.Generic.List<System.Collections.Generic.List<OracleSqlParser.Expression!>!>!
 OracleSqlParser.ValuesTable.Rows.set -> void
 OracleSqlParser.ValuesTable.ValuesTable() -> void
 OracleSqlParser.VariableDeclaration
@@ -6132,3 +6125,30 @@ OracleSqlParser.ExistsExpression.Query.get -> OracleSqlParser.SelectStatement!
 OracleSqlParser.ExistsExpression.Query.set -> void
 OracleSqlParser.InExpression.Query.get -> OracleSqlParser.SelectStatement?
 OracleSqlParser.InExpression.Query.set -> void
+OracleSqlParser.InsertIntoClause.Values.get -> OracleSqlParser.ValuesClause?
+OracleSqlParser.InsertStatement.Values.get -> OracleSqlParser.ValuesClause?
+OracleSqlParser.InsertStatement.Values.set -> void
+OracleSqlParser.RowValue
+OracleSqlParser.RowValue.RowValue() -> void
+OracleSqlParser.RowValue.Values.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
+OracleSqlParser.RowValue.Values.set -> void
+OracleSqlParser.ValuesClause
+OracleSqlParser.ValuesClause.Record.get -> OracleSqlParser.Expression?
+OracleSqlParser.ValuesClause.Record.set -> void
+OracleSqlParser.ValuesClause.Rows.get -> System.Collections.Generic.List<OracleSqlParser.RowValue!>!
+OracleSqlParser.ValuesClause.Rows.set -> void
+OracleSqlParser.ValuesClause.ValuesClause() -> void
+OracleSqlParser.ValuesQuery.Rows.get -> System.Collections.Generic.List<OracleSqlParser.RowValue!>!
+OracleSqlParser.ValuesTable.Rows.get -> System.Collections.Generic.List<OracleSqlParser.RowValue!>!
+override OracleSqlParser.RowValue.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.RowValue.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.RowValue.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+override OracleSqlParser.ValuesClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ValuesClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.ValuesClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.RowValue! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ValuesClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.RowValue! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ValuesClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.RowValue! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ValuesClause! node) -> void

@@ -6,7 +6,7 @@ namespace OracleSqlParser.Tests;
 public class MiscShapeTests
 {
     [Theory]
-    [InlineData("INSERT INTO t VALUES rec", "(InsertStatement target=(NamedTable name=[T]) recordValue=REC)")]
+    [InlineData("INSERT INTO t VALUES rec", "(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause record=REC))")]
     [InlineData("UPDATE t SET ROW = rec WHERE id = 1", "(UpdateStatement target=(NamedTable name=[T]) set=[(SetClause row value=REC)] where=(WhereClause condition=(Equals ID 1)))")]
     [InlineData("UPDATE t1 SET a = t2.a FROM t2 WHERE t1.id = t2.id",
         "(UpdateStatement target=(NamedTable name=[T1]) set=[(SetClause columns=[A] value=T2.A)] from=(FromClause tables=[(NamedTable name=[T2])]) where=(WhereClause condition=(Equals T1.ID T2.ID)))")]
@@ -18,7 +18,7 @@ public class MiscShapeTests
 
     [Fact]
     public void ValuesTableConstructor() =>
-        Assert.Equal("(ValuesTable rows=[[1 'a'] [2 'b']] columnAliases=[C1 C2] alias=V)",
+        Assert.Equal("(ValuesTable rows=[(RowValue values=[1 'a']) (RowValue values=[2 'b'])] columnAliases=[C1 C2] alias=V)",
             Shape.Of<ValuesTable>("SELECT * FROM (VALUES (1, 'a'), (2, 'b')) v (c1, c2)"));
 
     [Fact]

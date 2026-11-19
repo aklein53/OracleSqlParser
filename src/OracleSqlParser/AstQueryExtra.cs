@@ -683,8 +683,8 @@ public sealed partial class SubscriptRange : Expression
 /// <summary>(VALUES (..), (..)) table value constructor, optionally followed by an alias column list.</summary>
 public sealed partial class ValuesTable : TableReference
 {
-    /// <summary>The rows of the <c>VALUES</c> list, each a list of expressions.</summary>
-    public List<List<Expression>> Rows { get; set; } = [];
+    /// <summary>The rows of the <c>VALUES</c> list, in source order.</summary>
+    public List<RowValue> Rows { get; set; } = [];
     /// <summary>The column aliases written after the table alias; empty when absent.</summary>
     public List<Identifier> ColumnAliases { get; set; } = [];
 }
@@ -692,8 +692,8 @@ public sealed partial class ValuesTable : TableReference
 /// <summary>A bare VALUES row list used as a query body, e.g. the body of `WITH x(a, b) AS (VALUES (1, 2))`.</summary>
 public sealed partial class ValuesQuery : QueryExpression
 {
-    /// <summary>The rows of the <c>VALUES</c> list, each a list of expressions.</summary>
-    public List<List<Expression>> Rows { get; set; } = [];
+    /// <summary>The rows of the <c>VALUES</c> list, in source order.</summary>
+    public List<RowValue> Rows { get; set; } = [];
 }
 
 // ---------- Misc expressions ----------
@@ -774,6 +774,6 @@ public sealed partial class InsertIntoClause : SqlNode
     public required TableReference Table { get; set; }
     /// <summary>The column list, in source order; empty when absent.</summary>
     public List<Identifier> Columns { get; set; } = [];
-    /// <summary>The <c>VALUES</c> expressions, in source order; empty when absent.</summary>
-    public List<Expression> Values { get; set; } = [];
+    /// <summary>The <c>VALUES</c> clause, or null when absent. A multitable INSERT takes one row, so its clause has one row.</summary>
+    public ValuesClause? Values { get; set; }
 }

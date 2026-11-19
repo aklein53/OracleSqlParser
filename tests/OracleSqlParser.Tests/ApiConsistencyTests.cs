@@ -65,6 +65,69 @@ public class ApiConsistencyTests
         Assert.Contains("FETCH FIRST 10", Generate(first));
     }
 
+    /// <summary>The VALUES clause spans its keyword through its last row; each row spans its parentheses.</summary>
+    [Fact]
+    public void ValuesClauseAndItsRowsSpanTheirKeywordAndParentheses()
+    {
+        const string sql = "INSERT INTO t VALUES /* c */ (1, 2), (3, 4)";
+        var values = Assert.IsAssignableFrom<InsertStatement>(Parsed(sql).Statements[0]).Values!;
+
+        Assert.Equal("VALUES /* c */ (1, 2), (3, 4)", Text(sql, values));
+        Assert.Equal(["(1, 2)", "(3, 4)"], values.Rows.Select(r => Text(sql, r)));
+        Assert.Null(values.Record);
+    }
+
+    /// <summary>PL/SQL's <c>VALUES rec</c> has no rows; the record is the clause's expression.</summary>
+    [Fact]
+    public void ValuesRecordHasNoRows()
+    {
+        const string sql = "BEGIN INSERT INTO t VALUES rec; END;";
+        var insert = Assert.Single(Parsed(sql).Descendants().OfType<InsertStatement>());
+
+        Assert.Empty(insert.Values!.Rows);
+        Assert.Equal("rec", Text(sql, insert.Values!.Record!));
+        Assert.Equal("VALUES rec", Text(sql, insert.Values!));
+    }
+
+    /// <summary>An INSERT has exactly one of VALUES and a query: the other is null.</summary>
+    [Fact]
+    public void InsertSelectHasNoValuesClause()
+    {
+        var insert = Assert.IsType<InsertStatement>(Parsed("INSERT INTO t SELECT 1, 2 FROM dual").Statements[0]);
+
+        Assert.Null(insert.Values);
+        Assert.NotNull(insert.Query);
+    }
+
+    [Theory]
+    [InlineData("INSERT INTO t VALUES (1, 2), (3, 4)")]
+    [InlineData("INSERT INTO t (a, b) VALUES (1, DEFAULT)")]
+    [InlineData("INSERT ALL INTO a (x) VALUES (1) INTO b VALUES (2) SELECT 1 FROM dual")]
+    [InlineData("WITH x(a, b) AS (VALUES (1, 2), (3, 4)) SELECT * FROM x")]
+    [InlineData("SELECT * FROM (VALUES (1, 'a'), (2, 'b')) v (c1, c2)")]
+    public void ValuesRoundTrips(string sql)
+    {
+        var script = Parsed(sql);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
+    /// <summary>A rewriter can replace a row list, and the generator prints the new rows.</summary>
+    [Fact]
+    public void ARewriterCanReplaceTheValuesRows()
+    {
+        var script = Parsed("INSERT INTO t VALUES (1), (2)");
+        new OneRow().RewriteTree(script);
+
+        Assert.Equal("INSERT INTO t VALUES (9);", Generate(script));
+    }
+
+    private sealed class OneRow : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(RowValue node) =>
+            node.Values[0] is Literal { Value: "1" } ? new RowValue { Values = [new Literal { Kind = LiteralKind.Number, Value = "9" }] } : null;
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

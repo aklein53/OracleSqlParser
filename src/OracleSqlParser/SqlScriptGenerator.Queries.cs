@@ -134,7 +134,7 @@ public sealed partial class SqlScriptGenerator
                 case ParenthesizedQuery pq: ParenQuery(pq.Query); break;
                 case ValuesQuery vq:
                     Add("VALUES ");
-                    Sep(vq.Rows, r => { Add("("); Sep(r, e => Expr(e)); Add(")"); });
+                    Sep(vq.Rows, ValueRowText);
                     break;
                 default: throw Unsupported(q);
             }
@@ -224,7 +224,7 @@ public sealed partial class SqlScriptGenerator
                 case JoinTable jt: Join(jt); break;
                 case ValuesTable vt:
                     Add("(VALUES ");
-                    Sep(vt.Rows, r => { Add("("); Sep(r, e => Expr(e)); Add(")"); });
+                    Sep(vt.Rows, ValueRowText);
                     Add(")");
                     Alias(vt);
                     if (vt.ColumnAliases.Count > 0) { Add(" ("); IdList(vt.ColumnAliases); Add(")"); }

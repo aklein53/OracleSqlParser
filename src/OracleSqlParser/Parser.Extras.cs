@@ -765,11 +765,13 @@ public sealed partial class SqlParser
             var s = Next();
             var ic = new InsertIntoClause { Table = ParseTablePrimary() };
             if (IsOp("(")) { Next(); ic.Columns = ParseIdentifierList(); ExpectOp(")"); }
-            if (AcceptKw("VALUES"))
+            if (IsKw("VALUES"))
             {
-                ExpectOp("(");
-                do ic.Values.Add(ParseExpr()); while (AcceptOp(","));
-                ExpectOp(")");
+                var vs = Cur;
+                Next();
+                var clause = new ValuesClause();
+                clause.Rows.Add(ParseRowValue());
+                ic.Values = Fin(clause, vs);
             }
             list.Add(Fin(ic, s));
         }

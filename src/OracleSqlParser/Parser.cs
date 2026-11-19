@@ -920,17 +920,31 @@ public sealed partial class SqlParser
         return left;
     }
 
-    /// <summary>`(e, e), (e, e)`: the row list of a VALUES constructor, up to but not including the closing parenthesis.</summary>
-    private void ParseValueRows(List<List<Expression>> rows)
+    /// <summary>`(e, e), (e, e)`: the row list of a VALUES constructor.</summary>
+    private void ParseValueRows(List<RowValue> rows)
     {
-        do
-        {
-            ExpectOp("(");
-            var row = new List<Expression>();
-            do row.Add(ParseExpr()); while (AcceptOp(","));
-            ExpectOp(")");
-            rows.Add(row);
-        } while (AcceptOp(","));
+        do rows.Add(ParseRowValue()); while (AcceptOp(","));
+    }
+
+    /// <summary>One `(e, e)` row of a VALUES constructor, spanning its parentheses.</summary>
+    private RowValue ParseRowValue()
+    {
+        var s = Cur;
+        ExpectOp("(");
+        var row = new RowValue { Values = [] };
+        do row.Values.Add(ParseExpr()); while (AcceptOp(","));
+        ExpectOp(")");
+        return Fin(row, s);
+    }
+
+    /// <summary>`VALUES (e, e), (e, e)` or the PL/SQL `VALUES rec` of an INSERT; the clause spans its keyword through the last row.</summary>
+    private ValuesClause ParseValuesClause()
+    {
+        var s = Next(); // VALUES
+        var clause = new ValuesClause();
+        if (!IsOp("(")) clause.Record = ParseExpr();
+        else ParseValueRows(clause.Rows);
+        return Fin(clause, s);
     }
 
     /// <summary>The parenthesized list after PARTITION BY in a partitioned outer join (the parentheses are required there).</summary>
@@ -1044,15 +1058,11 @@ public sealed partial class SqlParser
         {
             Next(); st.Columns = ParseIdentifierList(); ExpectOp(")");
         }
-        var valuesTok = Cur;
-        if (AcceptKw("VALUES"))
+        if (IsKw("VALUES"))
         {
-            if (!IsOp("(")) st.RecordValue = ParseExpr();
-            else
-            {
-                ParseValueRows(st.ValueRows);
-                if (st.ValueRows.Count > 1) RequireVersion(OracleVersion.Oracle23, "multi-row INSERT VALUES", valuesTok);
-            }
+            var valuesTok = Cur;
+            st.Values = ParseValuesClause();
+            if (st.Values.Rows.Count > 1) RequireVersion(OracleVersion.Oracle23, "multi-row INSERT VALUES", valuesTok);
         }
         else if (IsKw("SELECT") || IsKw("WITH") || IsOp("(")) st.Query = ParseSelectStatement();
         else throw FailExpected($"Expected VALUES or SELECT but found {Describe(Cur)}", "VALUES", "SELECT");

@@ -10627,7 +10627,7 @@ public partial class InsertIntoClause
     {
         if (Table is not null) yield return Table;
         if (Columns is not null) foreach (var x in Columns) yield return x;
-        if (Values is not null) foreach (var x in Values) yield return x;
+        if (Values is not null) yield return Values;
     }
 
     /// <inheritdoc/>
@@ -10635,14 +10635,14 @@ public partial class InsertIntoClause
     {
         Table?.Accept(visitor);
         if (Columns is not null) foreach (var x in Columns) x.Accept(visitor);
-        if (Values is not null) foreach (var x in Values) x.Accept(visitor);
+        Values?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Table = SqlNodeRewriter.RewriteRequired(rewriter, Table, "InsertIntoClause.Table");
         SqlNodeRewriter.RewriteList(rewriter, Columns, "InsertIntoClause.Columns");
-        SqlNodeRewriter.RewriteList(rewriter, Values, "InsertIntoClause.Values");
+        Values = SqlNodeRewriter.RewriteOptional(rewriter, Values, "InsertIntoClause.Values");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -10663,7 +10663,7 @@ public partial class InsertIntoClause
         {
             Table = CloneChild(Table)!,
             Columns = CloneList(Columns),
-            Values = CloneList(Values),
+            Values = CloneChild(Values),
         };
         CopySpan(this, c);
         return c;
@@ -10674,7 +10674,7 @@ public partial class InsertIntoClause
         var o = (InsertIntoClause)other;
         return Pair(Table, o.Table, pending)
             && PairList(Columns, o.Columns, pending)
-            && PairList(Values, o.Values, pending);
+            && Pair(Values, o.Values, pending);
     }
 }
 
@@ -10685,8 +10685,7 @@ public partial class InsertStatement
     {
         if (Target is not null) yield return Target;
         if (Columns is not null) foreach (var x in Columns) yield return x;
-        if (ValueRows is not null) foreach (var row in ValueRows) if (row is not null) foreach (var x in row) yield return x;
-        if (RecordValue is not null) yield return RecordValue;
+        if (Values is not null) yield return Values;
         if (Query is not null) yield return Query;
         if (Hint is not null) yield return Hint;
         if (Returning is not null) yield return Returning;
@@ -10698,8 +10697,7 @@ public partial class InsertStatement
     {
         Target?.Accept(visitor);
         if (Columns is not null) foreach (var x in Columns) x.Accept(visitor);
-        if (ValueRows is not null) foreach (var row in ValueRows) if (row is not null) foreach (var x in row) x.Accept(visitor);
-        RecordValue?.Accept(visitor);
+        Values?.Accept(visitor);
         Query?.Accept(visitor);
         Hint?.Accept(visitor);
         Returning?.Accept(visitor);
@@ -10710,8 +10708,7 @@ public partial class InsertStatement
     {
         Target = SqlNodeRewriter.RewriteRequired(rewriter, Target, "InsertStatement.Target");
         SqlNodeRewriter.RewriteList(rewriter, Columns, "InsertStatement.Columns");
-        SqlNodeRewriter.RewriteNested(rewriter, ValueRows, "InsertStatement.ValueRows");
-        RecordValue = SqlNodeRewriter.RewriteOptional(rewriter, RecordValue, "InsertStatement.RecordValue");
+        Values = SqlNodeRewriter.RewriteOptional(rewriter, Values, "InsertStatement.Values");
         Query = SqlNodeRewriter.RewriteOptional(rewriter, Query, "InsertStatement.Query");
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "InsertStatement.Hint");
         Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "InsertStatement.Returning");
@@ -10722,8 +10719,7 @@ public partial class InsertStatement
     [
         new("Target", Target),
         new("Columns", Columns),
-        new("ValueRows", ValueRows),
-        new("RecordValue", RecordValue),
+        new("Values", Values),
         new("Query", Query),
         new("Hint", Hint),
         new("Returning", Returning),
@@ -10742,8 +10738,7 @@ public partial class InsertStatement
         {
             Target = CloneChild(Target)!,
             Columns = CloneList(Columns),
-            ValueRows = CloneNested(ValueRows),
-            RecordValue = CloneChild(RecordValue),
+            Values = CloneChild(Values),
             Query = CloneChild(Query),
             Hint = CloneChild(Hint),
             Returning = CloneChild(Returning),
@@ -10759,8 +10754,7 @@ public partial class InsertStatement
         var o = (InsertStatement)other;
         return Pair(Target, o.Target, pending)
             && PairList(Columns, o.Columns, pending)
-            && PairNested(ValueRows, o.ValueRows, pending)
-            && Pair(RecordValue, o.RecordValue, pending)
+            && Pair(Values, o.Values, pending)
             && Pair(Query, o.Query, pending)
             && Pair(Hint, o.Hint, pending)
             && Pair(Returning, o.Returning, pending)
@@ -16060,6 +16054,52 @@ public partial class RowMovementAttribute
     }
 }
 
+public partial class RowValue
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Values is not null) foreach (var x in Values) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Values is not null) foreach (var x in Values) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Values, "RowValue.Values");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Values", Values),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new RowValue
+        {
+            Values = CloneList(Values),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (RowValue)other;
+        return PairList(Values, o.Values, pending);
+    }
+}
+
 public partial class SampleClause
 {
     /// <inheritdoc/>
@@ -18498,6 +18538,58 @@ public partial class ValueClause
     }
 }
 
+public partial class ValuesClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Rows is not null) foreach (var x in Rows) yield return x;
+        if (Record is not null) yield return Record;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Rows is not null) foreach (var x in Rows) x.Accept(visitor);
+        Record?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Rows, "ValuesClause.Rows");
+        Record = SqlNodeRewriter.RewriteOptional(rewriter, Record, "ValuesClause.Record");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Rows", Rows),
+        new("Record", Record),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ValuesClause
+        {
+            Rows = CloneList(Rows),
+            Record = CloneChild(Record),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ValuesClause)other;
+        return PairList(Rows, o.Rows, pending)
+            && Pair(Record, o.Record, pending);
+    }
+}
+
 public partial class ValuesOfControl
 {
     /// <inheritdoc/>
@@ -18561,18 +18653,18 @@ public partial class ValuesQuery
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (Rows is not null) foreach (var row in Rows) if (row is not null) foreach (var x in row) yield return x;
+        if (Rows is not null) foreach (var x in Rows) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        if (Rows is not null) foreach (var row in Rows) if (row is not null) foreach (var x in row) x.Accept(visitor);
+        if (Rows is not null) foreach (var x in Rows) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteNested(rewriter, Rows, "ValuesQuery.Rows");
+        SqlNodeRewriter.RewriteList(rewriter, Rows, "ValuesQuery.Rows");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -18589,7 +18681,7 @@ public partial class ValuesQuery
     {
         var c = new ValuesQuery
         {
-            Rows = CloneNested(Rows),
+            Rows = CloneList(Rows),
         };
         CopySpan(this, c);
         return c;
@@ -18598,7 +18690,7 @@ public partial class ValuesQuery
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (ValuesQuery)other;
-        return PairNested(Rows, o.Rows, pending);
+        return PairList(Rows, o.Rows, pending);
     }
 }
 
@@ -18607,7 +18699,7 @@ public partial class ValuesTable
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (Rows is not null) foreach (var row in Rows) if (row is not null) foreach (var x in row) yield return x;
+        if (Rows is not null) foreach (var x in Rows) yield return x;
         if (ColumnAliases is not null) foreach (var x in ColumnAliases) yield return x;
         if (Alias is not null) yield return Alias;
     }
@@ -18615,14 +18707,14 @@ public partial class ValuesTable
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        if (Rows is not null) foreach (var row in Rows) if (row is not null) foreach (var x in row) x.Accept(visitor);
+        if (Rows is not null) foreach (var x in Rows) x.Accept(visitor);
         if (ColumnAliases is not null) foreach (var x in ColumnAliases) x.Accept(visitor);
         Alias?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        SqlNodeRewriter.RewriteNested(rewriter, Rows, "ValuesTable.Rows");
+        SqlNodeRewriter.RewriteList(rewriter, Rows, "ValuesTable.Rows");
         SqlNodeRewriter.RewriteList(rewriter, ColumnAliases, "ValuesTable.ColumnAliases");
         Alias = SqlNodeRewriter.RewriteOptional(rewriter, Alias, "ValuesTable.Alias");
     }
@@ -18643,7 +18735,7 @@ public partial class ValuesTable
     {
         var c = new ValuesTable
         {
-            Rows = CloneNested(Rows),
+            Rows = CloneList(Rows),
             ColumnAliases = CloneList(ColumnAliases),
             Alias = CloneChild(Alias),
         };
@@ -18654,7 +18746,7 @@ public partial class ValuesTable
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (ValuesTable)other;
-        return PairNested(Rows, o.Rows, pending)
+        return PairList(Rows, o.Rows, pending)
             && PairList(ColumnAliases, o.ColumnAliases, pending)
             && Pair(Alias, o.Alias, pending);
     }

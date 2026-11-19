@@ -24,6 +24,12 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `FetchClause.Next` | `bool`, compared structurally | `bool`, marked spelling only: `FETCH NEXT n` and `FETCH FIRST n` compare equal |
   | `ExistsExpression.Subquery` | `SelectStatement` | `SelectStatement` as `.Query` |
   | `InExpression.Subquery` | `SelectStatement?` | `SelectStatement?` as `.Query` |
+  | `InsertStatement.ValueRows` | `List<List<Expression>>` | removed; use `InsertStatement.Values.Rows[i].Values` |
+  | `InsertStatement.RecordValue` | `Expression?` | removed; use `InsertStatement.Values.Record` |
+  | `InsertStatement.Values` (new) | n/a | `ValuesClause?`; exactly one of `Values` and `Query` is set |
+  | `InsertIntoClause.Values` | `List<Expression>` | `ValuesClause?` (one row) |
+  | `ValuesQuery.Rows`, `ValuesTable.Rows` | `List<List<Expression>>` | `List<RowValue>` (`.Values`) |
+  - New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
 
 ## [1.0.0-rc.3] - 2026-11-18
 

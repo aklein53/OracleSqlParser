@@ -9,8 +9,8 @@ public class DmlAndSessionShapeTests
 
     [Theory]
     [InlineData("INSERT INTO t (a, b) VALUES (1, DEFAULT) RETURNING a INTO :x",
-        "(InsertStatement target=(NamedTable name=[T]) columns=[A B] valueRows=[[1 DEFAULT]] returning=(ReturningClause items=[(ReturningItem expression=A)] into=(IntoClause targets=[:x])))")]
-    [InlineData("INSERT INTO t VALUES (1), (2)", "(InsertStatement target=(NamedTable name=[T]) valueRows=[[1] [2]])")]
+        "(InsertStatement target=(NamedTable name=[T]) columns=[A B] values=(ValuesClause rows=[(RowValue values=[1 DEFAULT])]) returning=(ReturningClause items=[(ReturningItem expression=A)] into=(IntoClause targets=[:x])))")]
+    [InlineData("INSERT INTO t VALUES (1), (2)", "(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause rows=[(RowValue values=[1]) (RowValue values=[2])]))")]
     [InlineData("INSERT /*+ APPEND */ INTO t SELECT 1 FROM dual",
         "(InsertStatement target=(NamedTable name=[T]) query=" + SelDual + " hint=(HintClause text=APPEND items=[(HintItem name=APPEND)]))")]
     [InlineData("INSERT INTO t (a) (SELECT 1 FROM dual)",
@@ -20,12 +20,12 @@ public class DmlAndSessionShapeTests
     [InlineData("INSERT INTO t SELECT 1 FROM dual LOG ERRORS REJECT LIMIT 10",
         "(InsertStatement target=(NamedTable name=[T]) query=" + SelDual + " errorLogging=(ErrorLogging rejectLimit=10))")]
     [InlineData("INSERT INTO t VALUES (1) RETURNING a, b BULK COLLECT INTO v1, v2",
-        "(InsertStatement target=(NamedTable name=[T]) valueRows=[[1]] returning=(ReturningClause items=[(ReturningItem expression=A) (ReturningItem expression=B)] into=(IntoClause bulkCollect targets=[V1 V2])))")]
+        "(InsertStatement target=(NamedTable name=[T]) values=(ValuesClause rows=[(RowValue values=[1])]) returning=(ReturningClause items=[(ReturningItem expression=A) (ReturningItem expression=B)] into=(IntoClause bulkCollect targets=[V1 V2])))")]
     public void Inserts(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Theory]
     [InlineData("INSERT ALL INTO a (x) VALUES (1) INTO b VALUES (2) SELECT 1 FROM dual",
-        "(MultiTableInsertStatement branches=[(MultiInsertBranch targets=[(InsertIntoClause table=(NamedTable name=[A]) columns=[X] values=[1]) (InsertIntoClause table=(NamedTable name=[B]) values=[2])])] query=" + SelDual + ")")]
+        "(MultiTableInsertStatement branches=[(MultiInsertBranch targets=[(InsertIntoClause table=(NamedTable name=[A]) columns=[X] values=(ValuesClause rows=[(RowValue values=[1])])) (InsertIntoClause table=(NamedTable name=[B]) values=(ValuesClause rows=[(RowValue values=[2])]))])] query=" + SelDual + ")")]
     [InlineData("INSERT FIRST WHEN x > 1 THEN INTO a WHEN x > 0 THEN INTO b ELSE INTO c SELECT 1 FROM dual",
         "(MultiTableInsertStatement first conditional branches=[(MultiInsertBranch when=(GreaterThan X 1) targets=[(InsertIntoClause table=(NamedTable name=[A]))]) (MultiInsertBranch when=(GreaterThan X 0) targets=[(InsertIntoClause table=(NamedTable name=[B]))])] else=(MultiInsertBranch targets=[(InsertIntoClause table=(NamedTable name=[C]))]) query=" + SelDual + ")")]
     public void MultitableInserts(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));

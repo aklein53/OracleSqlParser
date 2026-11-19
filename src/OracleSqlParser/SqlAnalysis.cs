@@ -502,9 +502,9 @@ public static class SqlAnalysis
                 WriteTarget(node.Target, TableAccess.Insert);
                 var target = new Scope([node.Target], null);
                 foreach (var column in node.Columns) AddColumn(column, [column], write: true, target);
-                foreach (var row in node.ValueRows)
-                    foreach (var value in row) value.Accept(this);
-                node.RecordValue?.Accept(this);
+                foreach (var row in node.Values?.Rows ?? [])
+                    foreach (var value in row.Values) value.Accept(this);
+                node.Values?.Record?.Accept(this);
                 node.Query?.Accept(this);
                 WalkReturning(node, target);
                 node.ErrorLogging?.Accept(this);
@@ -619,7 +619,8 @@ public static class SqlAnalysis
             WriteTarget(into.Table, TableAccess.Insert);
             var target = new Scope([into.Table], null);
             foreach (var column in into.Columns) AddColumn(column, [column], write: true, target);
-            foreach (var value in into.Values) value.Accept(this);
+            foreach (var value in into.Values?.Rows.SelectMany(r => r.Values) ?? []) value.Accept(this);
+            into.Values?.Record?.Accept(this);
         }
 
         private void WalkReturning(DmlStatement node, Scope target)

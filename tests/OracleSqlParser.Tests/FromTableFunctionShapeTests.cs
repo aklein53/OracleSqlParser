@@ -74,7 +74,7 @@ public class FromTableFunctionShapeTests
 
     // Outside a query's FROM clause a name followed by '(' is still a column list or an error, as before.
     [Theory]
-    [InlineData("INSERT INTO t (a, b) VALUES (1, 2)", "(InsertStatement target=(NamedTable name=[T]) columns=[A B] valueRows=[[1 2]])")]
+    [InlineData("INSERT INTO t (a, b) VALUES (1, 2)", "(InsertStatement target=(NamedTable name=[T]) columns=[A B] values=(ValuesClause rows=[(RowValue values=[1 2])]))")]
     public void DmlTargetsAreUnchanged(string sql, string expected) =>
         Assert.Equal(expected, Shape.Of<InsertStatement>(sql));
 

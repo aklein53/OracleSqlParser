@@ -91,22 +91,27 @@ public sealed partial class SqlScriptGenerator
             Add("INSERT"); DmlHint(i);
             Add(" INTO "); Table(i.Target);
             if (i.Columns.Count > 0) { Add(" ("); IdList(i.Columns); Add(")"); }
-            if (i.RecordValue != null) { ClauseStart(_o.NewLineBeforeValuesClause); Add("VALUES "); Expr(i.RecordValue); }
-            else if (i.ValueRows.Count > 0)
-            {
-                ClauseStart(_o.NewLineBeforeValuesClause);
-                Add("VALUES ");
-                Sep(i.ValueRows, r => { Add("("); Sep(r, e => Expr(e)); Add(")"); });
-            }
+            if (i.Values is { } values) { ClauseStart(_o.NewLineBeforeValuesClause); ValuesText(values); }
             else if (i.Query != null) { ClauseStart(_o.NewLineBeforeValuesClause); Select(i.Query); }
             DmlTail(i);
         }
+
+        /// <summary>The <c>VALUES</c> clause: its rows, or the PL/SQL record.</summary>
+        private void ValuesText(ValuesClause v)
+        {
+            Add("VALUES ");
+            if (v.Record != null) Expr(v.Record);
+            else Sep(v.Rows, ValueRowText);
+        }
+
+        /// <summary>One parenthesized row of a VALUES list.</summary>
+        private void ValueRowText(RowValue r) { Add("("); Sep(r.Values, e => Expr(e)); Add(")"); }
 
         private void InsertInto(InsertIntoClause c)
         {
             Add("INTO "); Table(c.Table);
             if (c.Columns.Count > 0) { Add(" ("); IdList(c.Columns); Add(")"); }
-            if (c.Values.Count > 0) { Add(" VALUES ("); Sep(c.Values, e => Expr(e)); Add(")"); }
+            if (c.Values is { } values) { Add(" "); ValuesText(values); }
         }
 
         private void MultiInsert(MultiTableInsertStatement m)
