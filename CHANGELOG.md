@@ -48,7 +48,15 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   `ROLLUP`, `CUBE` or `GROUPING SETS` call, `()` inside a list, an empty `ROLLUP()`, `CUBE()` or `GROUPING SETS()`, a nested
   `GROUPING SETS`, and `ROLLUP(a) + 1`. A bare `WITH` followed by `SELECT` or `(` is also rejected, as Oracle rejects it.
   `EXECUTE IMMEDIATE ... INTO a INTO b` (a second `INTO`) is rejected too.
-- The generated SQL is unchanged: the 915-file real-world corpus and the test suite print the same text as before. The JSON and shape output gain the clause level
+- Deliberate new rejections, each one Oracle also rejects at parse or compile time:
+  - `OFFSET n` must be followed by `ROW` or `ROWS` (ORA-03047). `SELECT a FROM t OFFSET 5` used to parse.
+  - `MERGE ... WHEN [NOT] MATCHED THEN DELETE [WHERE ...]` is rejected, since Oracle has no delete-only MERGE action (ORA-02000).
+    `DeleteWhere` now means only the `DELETE WHERE` of an `UPDATE SET ... DELETE WHERE` action.
+  - `EXECUTE IMMEDIATE` clauses must come in Oracle's order: `[BULK COLLECT] INTO`, then `USING`, then `RETURNING [BULK COLLECT] INTO`
+    (PLS-00103 otherwise). `INTO` and `RETURNING INTO` cannot be used together (PLS-00429).
+- The generated SQL is unchanged for the 915-file real-world corpus and for the test suite, with one exception: `ROLLUP`,
+  `CUBE` and `GROUPING SETS` are printed in upper case, as Oracle keywords. A lower-case `GROUP BY rollup(a)` used to print
+  as it was written, and now prints `GROUP BY ROLLUP(a)`. The JSON and shape output gain the clause level
   (`offset=(OffsetClause offset=5)`, `groupBy=(GroupByClause items=[(ExpressionGrouping expression=A)])`).
 - `OracleSqlParser.Guard` reads these properties, so it is updated in this release and needs this version of the core library
   (as rc.2 noted for its own changes).
