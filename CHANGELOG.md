@@ -18,7 +18,7 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | Property | Was | Is |
   |---|---|---|
   | `ReturningClause` (JSON/XML `RETURNING type`) | class `ReturningClause` | class `ReturningTypeClause` (same members) |
-  | `DmlStatement.Returning` | `List<ReturningItem>` | `ReturningClause?` (`.Items`, `.Into`) |
+  | `DmlStatement.Returning` | `List<ReturningItem>` | `ReturningClause?` (`.Items`, and a required `.Into`, since Oracle needs the INTO after DML RETURNING) |
   | `DmlStatement.ReturningInto` | `IntoClause?` | removed; use `Returning.Into` |
   | `ExecuteImmediateStatement.ReturningInto` | `IntoClause?` | unchanged; documented as the `RETURNING INTO` of the dynamic SQL |
   | `FetchClause.Next` | `bool`, compared structurally | `bool`, marked spelling only: `FETCH NEXT n` and `FETCH FIRST n` compare equal |
@@ -77,10 +77,8 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | Property | Was | Is |
   |---|---|---|
   | `Statement.Labels` | `List<string>` (upper-cased value) | `List<Identifier>`, so a label keeps its spelling and quoting (`Value`, `Text`, `Quoted`) |
-  | `BlockStatement.EndName` | `Identifier?` | `Identifier?` as `EndLabel`, matching `LoopStatement.EndLabel`. On a subprogram body, which is a block here, it holds the subprogram name |
 
-  `CreatePackageStatement.EndName` and `CreatePackageBodyStatement.EndName` keep their names: they repeat the package name,
-  which is not a label.
+  `BlockStatement.EndName` (the label after `END`, or the subprogram name of a subprogram body) and the package `EndName`s keep their names.
 
 - Anchored types take an enum:
 
@@ -99,13 +97,14 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
   | Property | Was | Is |
   |---|---|---|
-  | `MergeClause` | one class for both kinds | abstract base with `AndCondition`; `MergeMatchedClause` and `MergeNotMatchedClause` derive from it |
+  | `MergeClause` | one class for both kinds | abstract base with no members (it spans `WHEN` through the action); `MergeMatchedClause` and `MergeNotMatchedClause` derive from it |
+  | `MergeClause.AndCondition` | `Expression?` | removed. Oracle has no condition after `MATCHED`: `WHEN MATCHED AND c` and `WHEN NOT MATCHED AND c` are rejected (ORA-02000); write the condition as the action's `WHERE` |
   | `MergeClause.Matched` | `bool` | removed; the type says it (`WHEN MATCHED` is `MergeMatchedClause`) |
   | `MergeClause.Set`, `UpdateWhere`, `DeleteWhere` | on `MergeClause` | `MergeMatchedClause.Set`, `.UpdateWhere`, `.DeleteWhere` |
   | `MergeClause.InsertColumns`, `InsertValues`, `InsertWhere` | on `MergeClause` | `MergeNotMatchedClause.Columns`, `.Values` (`ValuesClause`, one row), `.Where` |
   | `MergeMatchedClause.Set` | `List<SetClause>` | `SetClause` (required, `.Items`) |
 
-- The parser rejects `WHEN MATCHED THEN INSERT` and `WHEN NOT MATCHED THEN UPDATE`, which used to parse. Oracle rejects both
+- The parser rejects `WHEN MATCHED THEN INSERT`, `WHEN NOT MATCHED THEN UPDATE` and the `AND` condition form, which used to parse. Oracle rejects all three
   (ORA-02000). A `DELETE` action without `UPDATE` is still rejected.
 
 ## [1.0.0-rc.3] - 2026-11-18

@@ -54,7 +54,7 @@ public sealed partial class SqlParser
         b.Statements = ParseStatements(AtBlockEnd);
         if (IsKw("EXCEPTION")) b.Handlers = ParseExceptionHandlers();
         ExpectKw("END");
-        if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier) b.EndLabel = ParseIdentifier();
+        if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier) b.EndName = ParseIdentifier();
     }
 
     /// <summary>Body after IS/AS of a subprogram: declarations then BEGIN ... END.</summary>

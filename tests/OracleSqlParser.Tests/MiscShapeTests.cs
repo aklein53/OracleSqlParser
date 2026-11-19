@@ -12,8 +12,8 @@ public class MiscShapeTests
         "(UpdateStatement target=(NamedTable name=[T1]) set=(SetClause items=[(SetItem columns=[A] value=T2.A)]) from=(FromClause tables=[(NamedTable name=[T2])]) where=(WhereClause condition=(Equals T1.ID T2.ID)))")]
     [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.x = 1 DELETE WHERE t.x = 1",
         "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.X] value=1)]) deleteWhere=(WhereClause condition=(Equals T.X 1)))])")]
-    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v",
-        "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]) andCondition=(GreaterThan S.V 0))])")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v",
+        "(MergeStatement target=(NamedTable name=[T]) source=(NamedTable name=[S]) on=(paren (Equals T.ID S.ID)) clauses=[(MergeMatchedClause set=(SetClause items=[(SetItem columns=[T.V] value=S.V)]))])")]
     public void DmlForms(string sql, string expected) => Assert.Equal(expected, Shape.Of(sql));
 
     [Fact]

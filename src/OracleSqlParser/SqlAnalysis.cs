@@ -572,7 +572,6 @@ public static class SqlAnalysis
                     node.On.Accept(this);
                     foreach (var clause in node.Clauses)
                     {
-                        clause.AndCondition?.Accept(this);
                         switch (clause)
                         {
                             case MergeMatchedClause matched:

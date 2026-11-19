@@ -2405,7 +2405,7 @@ public partial class BlockStatement
         if (Declarations is not null) foreach (var x in Declarations) yield return x;
         if (Statements is not null) foreach (var x in Statements) yield return x;
         if (Handlers is not null) foreach (var x in Handlers) yield return x;
-        if (EndLabel is not null) yield return EndLabel;
+        if (EndName is not null) yield return EndName;
         if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
@@ -2415,7 +2415,7 @@ public partial class BlockStatement
         if (Declarations is not null) foreach (var x in Declarations) x.Accept(visitor);
         if (Statements is not null) foreach (var x in Statements) x.Accept(visitor);
         if (Handlers is not null) foreach (var x in Handlers) x.Accept(visitor);
-        EndLabel?.Accept(visitor);
+        EndName?.Accept(visitor);
         if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
@@ -2424,7 +2424,7 @@ public partial class BlockStatement
         SqlNodeRewriter.RewriteList(rewriter, Declarations, "BlockStatement.Declarations");
         SqlNodeRewriter.RewriteList(rewriter, Statements, "BlockStatement.Statements");
         SqlNodeRewriter.RewriteList(rewriter, Handlers, "BlockStatement.Handlers");
-        EndLabel = SqlNodeRewriter.RewriteOptional(rewriter, EndLabel, "BlockStatement.EndLabel");
+        EndName = SqlNodeRewriter.RewriteOptional(rewriter, EndName, "BlockStatement.EndName");
         SqlNodeRewriter.RewriteList(rewriter, Labels, "BlockStatement.Labels");
     }
 
@@ -2434,7 +2434,7 @@ public partial class BlockStatement
         new("Declarations", Declarations),
         new("Statements", Statements),
         new("Handlers", Handlers),
-        new("EndLabel", EndLabel),
+        new("EndName", EndName),
         new("Labels", Labels),
     ];
 
@@ -2451,7 +2451,7 @@ public partial class BlockStatement
             Declarations = CloneList(Declarations),
             Statements = CloneList(Statements),
             Handlers = CloneList(Handlers),
-            EndLabel = CloneChild(EndLabel),
+            EndName = CloneChild(EndName),
             Labels = CloneList(Labels),
         };
         CopySpan(this, c);
@@ -2465,7 +2465,7 @@ public partial class BlockStatement
             && PairList(Declarations, o.Declarations, pending)
             && PairList(Statements, o.Statements, pending)
             && PairList(Handlers, o.Handlers, pending)
-            && Pair(EndLabel, o.EndLabel, pending)
+            && Pair(EndName, o.EndName, pending)
             && PairList(Labels, o.Labels, pending);
     }
 }
@@ -12278,7 +12278,6 @@ public partial class MergeMatchedClause
         if (Set is not null) yield return Set;
         if (UpdateWhere is not null) yield return UpdateWhere;
         if (DeleteWhere is not null) yield return DeleteWhere;
-        if (AndCondition is not null) yield return AndCondition;
     }
 
     /// <inheritdoc/>
@@ -12287,7 +12286,6 @@ public partial class MergeMatchedClause
         Set?.Accept(visitor);
         UpdateWhere?.Accept(visitor);
         DeleteWhere?.Accept(visitor);
-        AndCondition?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -12295,7 +12293,6 @@ public partial class MergeMatchedClause
         Set = SqlNodeRewriter.RewriteRequired(rewriter, Set, "MergeMatchedClause.Set");
         UpdateWhere = SqlNodeRewriter.RewriteOptional(rewriter, UpdateWhere, "MergeMatchedClause.UpdateWhere");
         DeleteWhere = SqlNodeRewriter.RewriteOptional(rewriter, DeleteWhere, "MergeMatchedClause.DeleteWhere");
-        AndCondition = SqlNodeRewriter.RewriteOptional(rewriter, AndCondition, "MergeMatchedClause.AndCondition");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -12303,7 +12300,6 @@ public partial class MergeMatchedClause
         new("Set", Set),
         new("UpdateWhere", UpdateWhere),
         new("DeleteWhere", DeleteWhere),
-        new("AndCondition", AndCondition),
     ];
 
     /// <inheritdoc/>
@@ -12318,7 +12314,6 @@ public partial class MergeMatchedClause
             Set = CloneChild(Set)!,
             UpdateWhere = CloneChild(UpdateWhere),
             DeleteWhere = CloneChild(DeleteWhere),
-            AndCondition = CloneChild(AndCondition),
         };
         CopySpan(this, c);
         return c;
@@ -12329,8 +12324,7 @@ public partial class MergeMatchedClause
         var o = (MergeMatchedClause)other;
         return Pair(Set, o.Set, pending)
             && Pair(UpdateWhere, o.UpdateWhere, pending)
-            && Pair(DeleteWhere, o.DeleteWhere, pending)
-            && Pair(AndCondition, o.AndCondition, pending);
+            && Pair(DeleteWhere, o.DeleteWhere, pending);
     }
 }
 
@@ -12342,7 +12336,6 @@ public partial class MergeNotMatchedClause
         if (Columns is not null) foreach (var x in Columns) yield return x;
         if (Values is not null) yield return Values;
         if (Where is not null) yield return Where;
-        if (AndCondition is not null) yield return AndCondition;
     }
 
     /// <inheritdoc/>
@@ -12351,7 +12344,6 @@ public partial class MergeNotMatchedClause
         if (Columns is not null) foreach (var x in Columns) x.Accept(visitor);
         Values?.Accept(visitor);
         Where?.Accept(visitor);
-        AndCondition?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -12359,7 +12351,6 @@ public partial class MergeNotMatchedClause
         SqlNodeRewriter.RewriteList(rewriter, Columns, "MergeNotMatchedClause.Columns");
         Values = SqlNodeRewriter.RewriteRequired(rewriter, Values, "MergeNotMatchedClause.Values");
         Where = SqlNodeRewriter.RewriteOptional(rewriter, Where, "MergeNotMatchedClause.Where");
-        AndCondition = SqlNodeRewriter.RewriteOptional(rewriter, AndCondition, "MergeNotMatchedClause.AndCondition");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -12367,7 +12358,6 @@ public partial class MergeNotMatchedClause
         new("Columns", Columns),
         new("Values", Values),
         new("Where", Where),
-        new("AndCondition", AndCondition),
     ];
 
     /// <inheritdoc/>
@@ -12382,7 +12372,6 @@ public partial class MergeNotMatchedClause
             Columns = CloneList(Columns),
             Values = CloneChild(Values)!,
             Where = CloneChild(Where),
-            AndCondition = CloneChild(AndCondition),
         };
         CopySpan(this, c);
         return c;
@@ -12393,8 +12382,7 @@ public partial class MergeNotMatchedClause
         var o = (MergeNotMatchedClause)other;
         return PairList(Columns, o.Columns, pending)
             && Pair(Values, o.Values, pending)
-            && Pair(Where, o.Where, pending)
-            && Pair(AndCondition, o.AndCondition, pending);
+            && Pair(Where, o.Where, pending);
     }
 }
 
@@ -16201,7 +16189,7 @@ public partial class ReturningClause
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Items, "ReturningClause.Items");
-        Into = SqlNodeRewriter.RewriteOptional(rewriter, Into, "ReturningClause.Into");
+        Into = SqlNodeRewriter.RewriteRequired(rewriter, Into, "ReturningClause.Into");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16220,7 +16208,7 @@ public partial class ReturningClause
         var c = new ReturningClause
         {
             Items = CloneList(Items),
-            Into = CloneChild(Into),
+            Into = CloneChild(Into)!,
         };
         CopySpan(this, c);
         return c;

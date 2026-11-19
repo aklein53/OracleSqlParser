@@ -171,8 +171,11 @@ public sealed partial class ReturningClause : SqlNode
 {
     /// <summary>The returned items, in source order.</summary>
     public required List<ReturningItem> Items { get; set; }
-    /// <summary>The <c>INTO</c> clause that receives the returned values, or null when absent.</summary>
-    public IntoClause? Into { get; set; }
+    /// <summary>
+    /// The <c>INTO</c> clause that receives the returned values. Required: Oracle needs the <c>INTO</c> after a DML
+    /// <c>RETURNING</c> list, so a RETURNING clause always has one.
+    /// </summary>
+    public required IntoClause Into { get; set; }
 }
 
 /// <summary>One item of a RETURNING list: a column or expression, optionally qualified with the row image OLD or NEW (23ai).</summary>
@@ -716,11 +719,13 @@ public sealed partial class MergeStatement : DmlStatement
 }
 
 /// <summary>One <c>WHEN [NOT] MATCHED THEN</c> clause of a <c>MERGE</c> statement: <see cref="MergeMatchedClause"/> or <see cref="MergeNotMatchedClause"/>.</summary>
-/// <remarks>Spans <c>WHEN</c> through the end of its action; see <see cref="FromClause"/>.</remarks>
+/// <remarks>
+/// The base of the two kinds. Spans <c>WHEN</c> through the end of its action (<c>UPDATE SET ...</c> or <c>INSERT ... VALUES ...</c>,
+/// with their <c>WHERE</c> clauses); see <see cref="FromClause"/>. Oracle has no condition after <c>MATCHED</c>
+/// (<c>WHEN MATCHED AND cond</c> is rejected), so the base carries no members.
+/// </remarks>
 public abstract partial class MergeClause : SqlNode
 {
-    /// <summary>The condition after <c>AND</c> in <c>WHEN MATCHED AND cond</c> or <c>WHEN NOT MATCHED AND cond</c>, or null when absent.</summary>
-    public Expression? AndCondition { get; set; }
 }
 
 /// <summary><c>WHEN MATCHED THEN UPDATE SET ... [WHERE ...] [DELETE WHERE ...]</c>.</summary>

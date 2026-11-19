@@ -42,6 +42,8 @@ public class ClauseGrammarOracleTests(OracleFixture db)
         "SELECT id FROM t ORDER BY id OFFSET 5 FETCH FIRST 2 ROWS ONLY",
         "MERGE INTO t USING t s ON (t.id = s.id) WHEN MATCHED THEN DELETE WHERE t.a = 1",
         "MERGE INTO t USING t s ON (t.id = s.id) WHEN NOT MATCHED THEN DELETE WHERE s.a = 1",
+        "MERGE INTO t USING t s ON (t.id = s.id) WHEN MATCHED AND s.a = 1 THEN UPDATE SET t.a = s.a",
+        "MERGE INTO t USING t s ON (t.id = s.id) WHEN NOT MATCHED AND s.a = 1 THEN INSERT (id) VALUES (s.id)",
     ];
 
     /// <summary>

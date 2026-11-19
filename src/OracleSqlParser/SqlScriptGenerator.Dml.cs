@@ -66,7 +66,8 @@ public sealed partial class SqlScriptGenerator
             {
                 ClauseStart(_o.NewLineBeforeReturningClause);
                 Add("RETURNING "); Sep(returning.Items, ReturningItemText);
-                if (returning.Into is { } returningInto) { Add(returningInto.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(returningInto.Targets, e => Expr(e)); }
+                var returningInto = returning.Into;
+                Add(returningInto.BulkCollect ? " BULK COLLECT INTO " : " INTO "); Sep(returningInto.Targets, e => Expr(e));
             }
             if (d.ErrorLogging != null) { ClauseStart(_o.NewLineBeforeReturningClause); ErrorLoggingText(d.ErrorLogging); }
         }
@@ -180,7 +181,6 @@ public sealed partial class SqlScriptGenerator
             {
                 ClauseStart(_o.NewLineBeforeSetClause);
                 Add(c is MergeMatchedClause ? "WHEN MATCHED" : "WHEN NOT MATCHED");
-                if (c.AndCondition != null) { Add(" AND "); Expr(c.AndCondition); }
                 Add(" THEN ");
                 switch (c)
                 {

@@ -2474,8 +2474,6 @@ OracleSqlParser.MemberModifiers.Order = 16 -> OracleSqlParser.MemberModifiers
 OracleSqlParser.MemberModifiers.Overriding = 512 -> OracleSqlParser.MemberModifiers
 OracleSqlParser.MemberModifiers.Static = 2 -> OracleSqlParser.MemberModifiers
 OracleSqlParser.MergeClause
-OracleSqlParser.MergeClause.AndCondition.get -> OracleSqlParser.Expression?
-OracleSqlParser.MergeClause.AndCondition.set -> void
 OracleSqlParser.MergeClause.MergeClause() -> void
 OracleSqlParser.MergeStatement
 OracleSqlParser.MergeStatement.Clauses.get -> System.Collections.Generic.List<OracleSqlParser.MergeClause!>!
@@ -6022,7 +6020,6 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.GrandTotalGrouping!
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.GroupingSetsGrouping! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.RollupGrouping! node) -> void
 OracleSqlParser.DmlStatement.Returning.get -> OracleSqlParser.ReturningClause?
-OracleSqlParser.ReturningClause.Into.get -> OracleSqlParser.IntoClause?
 OracleSqlParser.ReturningClause.Into.set -> void
 OracleSqlParser.ReturningClause.Items.get -> System.Collections.Generic.List<OracleSqlParser.ReturningItem!>!
 OracleSqlParser.ReturningClause.Items.set -> void
@@ -6209,8 +6206,6 @@ OracleSqlParser.NthValueFrom.Last = 1 -> OracleSqlParser.NthValueFrom
 OracleSqlParser.NullTreatment
 OracleSqlParser.NullTreatment.Ignore = 0 -> OracleSqlParser.NullTreatment
 OracleSqlParser.NullTreatment.Respect = 1 -> OracleSqlParser.NullTreatment
-OracleSqlParser.BlockStatement.EndLabel.get -> OracleSqlParser.Identifier?
-OracleSqlParser.BlockStatement.EndLabel.set -> void
 OracleSqlParser.Statement.Labels.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 override OracleSqlParser.NullStatement.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.NullStatement.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
@@ -6219,3 +6214,6 @@ OracleSqlParser.DataType.Anchor.set -> void
 OracleSqlParser.TypeAnchor
 OracleSqlParser.TypeAnchor.RowType = 1 -> OracleSqlParser.TypeAnchor
 OracleSqlParser.TypeAnchor.Type = 0 -> OracleSqlParser.TypeAnchor
+OracleSqlParser.BlockStatement.EndName.get -> OracleSqlParser.Identifier?
+OracleSqlParser.BlockStatement.EndName.set -> void
+OracleSqlParser.ReturningClause.Into.get -> OracleSqlParser.IntoClause!

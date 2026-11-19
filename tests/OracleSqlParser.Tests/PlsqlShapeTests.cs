@@ -96,7 +96,7 @@ BEGIN NULL; END;");
     {
         var b = FirstBlock("DECLARE PROCEDURE p(x IN OUT NOCOPY NUMBER) IS BEGIN x := 1; END p; FUNCTION f RETURN NUMBER; BEGIN NULL; END;");
         Assert.Equal(
-            "[(SubprogramDeclaration name=[P] parameters=[(Parameter name=X mode=InOut noCopy type=(DataType name=NUMBER))] body=(BlockStatement statements=[(AssignmentStatement target=X value=1)] endLabel=P)) " +
+            "[(SubprogramDeclaration name=[P] parameters=[(Parameter name=X mode=InOut noCopy type=(DataType name=NUMBER))] body=(BlockStatement statements=[(AssignmentStatement target=X value=1)] endName=P)) " +
             "(SubprogramDeclaration isFunction name=[F] returnType=(DataType name=NUMBER))]",
             AstPrinter.Print(b.Declarations));
     }
@@ -185,7 +185,7 @@ BEGIN NULL; END;");
     public void Block_LabelAndDeclareFlag()
     {
         var b = Shape.Parse("<<lbl>> DECLARE x NUMBER; BEGIN NULL; END lbl;").Statements[0];
-        Assert.Equal("(BlockStatement hasDeclare declarations=[(VariableDeclaration name=X type=(DataType name=NUMBER))] statements=[(NullStatement)] endLabel=LBL labels=[LBL])", AstPrinter.Print(b));
+        Assert.Equal("(BlockStatement hasDeclare declarations=[(VariableDeclaration name=X type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=LBL labels=[LBL])", AstPrinter.Print(b));
     }
 
     // ---- program units ----
@@ -197,7 +197,7 @@ BEGIN NULL; END;");
             "(Parameter name=A mode=In type=(DataType name=NUMBER)) " +
             "(Parameter name=B mode=InOut noCopy type=(DataType name=VARCHAR2) default='x') " +
             "(Parameter name=C mode=Out type=(DataType name=T nameParts=[T]))] " +
-            "body=(BlockStatement declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER))] statements=[(NullStatement)] endLabel=P)))",
+            "body=(BlockStatement declarations=[(VariableDeclaration name=V type=(DataType name=NUMBER))] statements=[(NullStatement)] endName=P)))",
             Shape.Of("CREATE OR REPLACE PROCEDURE p (a IN NUMBER, b IN OUT NOCOPY VARCHAR2 DEFAULT 'x', c OUT t) AS v NUMBER; BEGIN NULL; END p;"));
 
     [Theory]

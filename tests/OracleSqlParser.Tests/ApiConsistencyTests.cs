@@ -155,14 +155,13 @@ public class ApiConsistencyTests
     public void MergeClausesSpanWhenThroughTheirAction()
     {
         const string sql = "MERGE INTO t USING s ON (t.id = s.id) " +
-            "WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0 " +
+            "WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0 " +
             "WHEN NOT MATCHED THEN INSERT (t.id) VALUES (s.id) WHERE s.id > 1";
         var clauses = Assert.IsType<MergeStatement>(Parsed(sql).Statements[0]).Clauses;
 
-        Assert.Equal("WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0", Text(sql, clauses[0]));
+        Assert.Equal("WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0", Text(sql, clauses[0]));
         Assert.Equal("WHEN NOT MATCHED THEN INSERT (t.id) VALUES (s.id) WHERE s.id > 1", Text(sql, clauses[1]));
         Assert.IsType<MergeMatchedClause>(clauses[0]);
-        Assert.Equal("s.v > 0", Text(sql, clauses[0].AndCondition!));
         Assert.Equal("VALUES (s.id)", Text(sql, Assert.IsType<MergeNotMatchedClause>(clauses[1]).Values));
     }
 
@@ -175,9 +174,21 @@ public class ApiConsistencyTests
         Assert.False(SqlParser.Parse(sql).Success);
     }
 
+    /// <summary>Oracle has no condition after MATCHED (ORA-02000): WHEN MATCHED AND and WHEN NOT MATCHED AND are rejected.</summary>
+    [Theory]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED AND s.id > 0 THEN INSERT (t.id) VALUES (s.id)")]
+    public void MergeWhenAndConditionIsRejected(string sql)
+    {
+        var r = SqlParser.Parse(sql);
+
+        Assert.False(r.Success);
+        Assert.Contains(r.Errors, e => e.Message.Contains("not Oracle syntax"));
+    }
+
     [Theory]
     [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0")]
-    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED AND s.id > 0 THEN INSERT (t.id) VALUES (s.id)")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED THEN INSERT (t.id) VALUES (s.id) WHERE s.id > 0")]
     public void MergeClausesRoundTrip(string sql)
     {
         var script = Parsed(sql);
@@ -417,7 +428,7 @@ public class ApiConsistencyTests
         Assert.False(labels[0].Quoted);
         Assert.Equal("a b", labels[1].Value);
         Assert.True(labels[1].Quoted);
-        Assert.Equal("lbl", Text(sql, block.EndLabel!));
+        Assert.Equal("lbl", Text(sql, block.EndName!));
     }
 
     [Theory]

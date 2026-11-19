@@ -1180,10 +1180,10 @@ public sealed partial class SqlParser
         if (IsKw("RETURNING") || IsKw("RETURN"))
         {
             var start = Next();
-            var returning = new ReturningClause { Items = [] };
-            do returning.Items.Add(ParseReturningItem()); while (AcceptOp(","));
-            returning.Into = ParseInto();
-            st.Returning = Fin(returning, start);
+            var items = new List<ReturningItem>();
+            do items.Add(ParseReturningItem()); while (AcceptOp(","));
+            var into = ParseInto();
+            st.Returning = Fin(new ReturningClause { Items = items, Into = into }, start);
         }
         ParseErrorLogging(st);
     }
@@ -1252,7 +1252,8 @@ public sealed partial class SqlParser
             var cs = Next();
             bool matched = !AcceptKw("NOT");
             ExpectKw("MATCHED");
-            Expression? andCondition = AcceptKw("AND") ? ParseExpr() : null;
+            // Oracle has no condition after MATCHED (ORA-02000): the condition belongs in the action's WHERE.
+            if (IsKw("AND")) throw Fail("WHEN MATCHED AND and WHEN NOT MATCHED AND are not Oracle syntax; write the condition as the action's WHERE", ParseErrorCodes.InvalidCombination);
             ExpectKw("THEN");
             MergeClause mc;
             if (matched)
@@ -1275,7 +1276,6 @@ public sealed partial class SqlParser
                 values.Rows.Add(ParseRowValue());
                 mc = new MergeNotMatchedClause { Columns = columns, Values = Fin(values, valuesStart), Where = ParseOptionalWhere() };
             }
-            mc.AndCondition = andCondition;
             st.Clauses.Add(Fin(mc, cs));
         }
         if (st.Clauses.Count == 0) throw FailExpected("Expected WHEN clause in MERGE", "WHEN");

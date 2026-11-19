@@ -14,10 +14,10 @@ public sealed partial class BlockStatement : Statement
     /// <summary>The exception handlers, in source order; empty when there is no <c>EXCEPTION</c> part.</summary>
     public List<ExceptionHandler> Handlers { get; set; } = [];
     /// <summary>
-    /// The label written after <c>END</c>, or null when absent. When this block is a subprogram body, it holds the subprogram
-    /// name repeated after <c>END</c> instead, since a subprogram body is a block in this tree.
+    /// The identifier written after <c>END</c>, as written, or null when absent. For a labelled block it is the label; for a
+    /// subprogram body (a block in this tree) it is the subprogram name.
     /// </summary>
-    public Identifier? EndLabel { get; set; }
+    public Identifier? EndName { get; set; }
 }
 
 /// <summary>One <c>WHEN ... THEN</c> handler of an <c>EXCEPTION</c> section, such as <c>WHEN NO_DATA_FOUND THEN NULL</c>.</summary>
