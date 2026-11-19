@@ -8,6 +8,51 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+### Changed (breaking)
+- The remaining query and DML clauses are nodes that span their keyword, as ScriptDom's are: `OFFSET`, `WITHIN GROUP`,
+  `WITH`, `INTO` and the grouping elements of `GROUP BY`. Each one is taken as written, or replaced, without a search for
+  the keyword. Grouping is typed, so `ROLLUP`, `CUBE` and `GROUPING SETS` are no longer function calls.
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `SelectStatement.Offset` | `Expression?` | `OffsetClause?` (`.Offset`), spanning `OFFSET n ROW\|ROWS` |
+  | `FunctionCall.WithinGroup` | `OrderByClause?` | `WithinGroupClause?` (`.OrderBy`), spanning `WITHIN GROUP (...)` |
+  | `KeepClause.OrderBy` | `OrderByClause?` | `OrderByClause` (required: `KEEP` always has its `ORDER BY`) |
+  | `MergeClause.UpdateWhere`, `MergeClause.DeleteWhere`, `MergeClause.InsertWhere` | `Expression?` | `WhereClause?` (`.Condition`) |
+  | `GroupByClause.Items` | `List<Expression>` | `List<GroupingSpec>` (see the grouping kinds below) |
+  | `SelectStatement.With` | `List<CommonTableExpression>` | `WithClause?` (`.Ctes`, `.Declarations`) |
+  | `SelectStatement.WithDeclarations` | `List<Declaration>` | removed; use `With.Declarations` |
+  | `QuerySpecification.Into`, `DmlStatement.ReturningInto`, `ExecuteImmediateStatement.Into`, `ExecuteImmediateStatement.ReturningInto` | `List<Expression>` | `IntoClause?` (`.Targets`, `.BulkCollect`) |
+  | `QuerySpecification.IntoBulkCollect`, `DmlStatement.ReturningBulkCollect`, `ExecuteImmediateStatement.BulkCollect`, `ExecuteImmediateStatement.ReturningBulkCollect` | `bool` | removed; use `IntoClause.BulkCollect` |
+  | `FetchStatement.Into` | `List<Expression>` | `IntoClause` (required: `FETCH` always has its `INTO`, and `.Targets` holds the variables) |
+  | `FetchStatement.BulkCollect` | `bool` | removed; use `IntoClause.BulkCollect` |
+
+- New nodes: `OffsetClause`, `WithinGroupClause`, `WithClause` and `IntoClause`, and the abstract `GroupingSpec` with its
+  kinds. `GROUP BY` elements are written as:
+
+  | Written | Was | Is |
+  |---|---|---|
+  | `a` | `Expression` | `ExpressionGrouping` (`.Expression`) |
+  | `(a, b)` | `ExpressionList` | `CompositeGrouping` (`.Items`) |
+  | `()` | `ExpressionList` | `GrandTotalGrouping` |
+  | `ROLLUP(...)` | `FunctionCall` named `ROLLUP` | `RollupGrouping` (`.Items`) |
+  | `CUBE(...)` | `FunctionCall` named `CUBE` | `CubeGrouping` (`.Items`) |
+  | `GROUPING SETS(...)` | `FunctionCall` named `GROUPING SETS` | `GroupingSetsGrouping` (`.Sets`) |
+
+- A single parenthesized expression, `(a)`, is an `ExpressionGrouping` holding its `ParenthesizedExpression`, as it is
+  everywhere else in the tree.
+- `SqlAnalysis.GetFunctions` no longer reports `ROLLUP`, `CUBE` or `GROUPING SETS`, and `OracleSqlParser.Guard`'s function
+  allowlist no longer exempts them by name. `GROUPING()`, `GROUPING_ID()` and `GROUP_ID()` are still functions. `ROLLUP(ROLLUP(a))`
+  still reports `ROLLUP` as a function, because Oracle reads it as a call to an unknown function.
+- The parser rejects the grouping forms Oracle rejects at parse time: a composite holding a list, a composite holding a
+  `ROLLUP`, `CUBE` or `GROUPING SETS` call, `()` inside a list, an empty `ROLLUP()`, `CUBE()` or `GROUPING SETS()`, a nested
+  `GROUPING SETS`, and `ROLLUP(a) + 1`. A bare `WITH` followed by `SELECT` or `(` is also rejected, as Oracle rejects it.
+  `EXECUTE IMMEDIATE ... INTO a INTO b` (a second `INTO`) is rejected too.
+- The generated SQL is unchanged: the 915-file real-world corpus and the test suite print the same text as before. The JSON and shape output gain the clause level
+  (`offset=(OffsetClause offset=5)`, `groupBy=(GroupByClause items=[(ExpressionGrouping expression=A)])`).
+- `OracleSqlParser.Guard` reads these properties, so it is updated in this release and needs this version of the core library
+  (as rc.2 noted for its own changes).
+
 ## [1.0.0-rc.2] - 2026-11-18
 
 Second release candidate. `OracleSqlParser.Guard` 0.9.0-preview.1 is released alongside it: Guard 0.8 reads the clause
