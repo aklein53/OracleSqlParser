@@ -178,20 +178,20 @@ public sealed partial class SqlScriptGenerator
                 if (c.Matched && c.Set.Count > 0)
                 {
                     Add("UPDATE SET "); Sep(c.Set, SetClauseText);
-                    if (c.UpdateWhere != null) { Add(" WHERE "); Expr(c.UpdateWhere); }
-                    if (c.DeleteWhere != null) { Add(" DELETE WHERE "); Expr(c.DeleteWhere); }
+                    if (c.UpdateWhere is { } updateWhere) { Add(" WHERE "); Expr(updateWhere.Condition); }
+                    if (c.DeleteWhere is { } deleteWhere) { Add(" DELETE WHERE "); Expr(deleteWhere.Condition); }
                 }
                 else if (c.Matched)
                 {
                     Add("DELETE");
-                    if (c.DeleteWhere != null) { Add(" WHERE "); Expr(c.DeleteWhere); }
+                    if (c.DeleteWhere is { } deleteOnlyWhere) { Add(" WHERE "); Expr(deleteOnlyWhere.Condition); }
                 }
                 else
                 {
                     Add("INSERT");
                     if (c.InsertColumns.Count > 0) { Add(" ("); Sep(c.InsertColumns, col => Expr(col)); Add(")"); }
                     Add(" VALUES ("); Sep(c.InsertValues, e => Expr(e)); Add(")");
-                    if (c.InsertWhere != null) { Add(" WHERE "); Expr(c.InsertWhere); }
+                    if (c.InsertWhere is { } insertWhere) { Add(" WHERE "); Expr(insertWhere.Condition); }
                 }
             }
             DmlTail(m);

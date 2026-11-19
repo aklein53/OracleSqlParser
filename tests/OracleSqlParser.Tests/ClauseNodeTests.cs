@@ -217,6 +217,66 @@ public class ClauseNodeTests
         Assert.False(SqlParser.Parse(sql).Success);
     }
 
+    /// <summary>
+    /// Each MERGE action has its own WHERE clause. The DELETE part's clause starts at its WHERE, not at the DELETE before it.
+    /// </summary>
+    [Fact]
+    public void EachMergeActionSpansItsOwnWhere()
+    {
+        const string sql = "MERGE INTO t USING s ON (t.id = s.id) " +
+            "WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 DELETE  WHERE t.v = 0 " +
+            "WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id) WHERE s.id > 1";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        var clauses = Assert.IsType<MergeStatement>(r.Script.Statements[0]).Clauses;
+
+        Assert.Equal("WHERE s.v > 0", Text(sql, clauses[0].UpdateWhere!));
+        Assert.Equal("WHERE t.v = 0", Text(sql, clauses[0].DeleteWhere!));
+        Assert.Null(clauses[0].InsertWhere);
+        Assert.Equal("WHERE s.id > 1", Text(sql, clauses[1].InsertWhere!));
+    }
+
+    [Fact]
+    public void TheDeleteActionWhereIsItsOwnClause()
+    {
+        const string sql = "MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN DELETE WHERE t.x = 1";
+        var clause = Assert.Single(Assert.IsType<MergeStatement>(SqlParser.Parse(sql).Script.Statements[0]).Clauses);
+
+        Assert.Equal("WHERE t.x = 1", Text(sql, clause.DeleteWhere!));
+        Assert.Null(clause.UpdateWhere);
+    }
+
+    /// <summary>The generator writes the MERGE wheres back, and the output parses to the same tree.</summary>
+    [Fact]
+    public void MergeWheresRoundTrip()
+    {
+        const string sql = "MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 " +
+            "DELETE WHERE t.v = 0 WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id) WHERE s.id > 1";
+        var script = SqlParser.Parse(sql).Script;
+        var text = new SqlScriptGenerator().Generate(script).Trim();
+
+        Assert.Equal(sql + ";", text);
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, SqlParser.Parse(text).Script));
+    }
+
+    /// <summary>A rewriter that returns null for every WHERE removes the MERGE actions' WHEREs and nothing else.</summary>
+    [Fact]
+    public void ARewriterCanDropTheMergeWheres()
+    {
+        var script = SqlParser.Parse("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 DELETE WHERE t.v = 0").Script;
+        new DropWhere().RewriteTree(script);
+
+        Assert.Equal("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v;", new SqlScriptGenerator().Generate(script).Trim());
+    }
+
+    [Theory]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v DELETE t.v = 0")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id) WHERE")]
+    public void AMergeWhereWithoutItsConditionIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
     /// <summary>KEEP always has its ORDER BY, so a KEEP without one is a parse error and the clause never has a null order.</summary>
     [Fact]
     public void KeepSpansItsOrderBy()

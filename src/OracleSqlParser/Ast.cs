@@ -560,17 +560,17 @@ public sealed partial class MergeClause : SqlNode
     // WHEN MATCHED THEN UPDATE
     /// <summary>The <c>UPDATE SET</c> assignments; empty for the insert and delete forms.</summary>
     public List<SetClause> Set { get; set; } = [];
-    /// <summary>The <c>WHERE</c> condition of the update, or null when absent.</summary>
-    public Expression? UpdateWhere { get; set; }
-    /// <summary>The <c>WHERE</c> condition of the <c>DELETE</c> part, or null when absent.</summary>
-    public Expression? DeleteWhere { get; set; }
+    /// <summary>The <c>WHERE</c> clause of the update, or null when absent.</summary>
+    public WhereClause? UpdateWhere { get; set; }
+    /// <summary>The <c>WHERE</c> clause of the <c>DELETE</c> part, or null when absent.</summary>
+    public WhereClause? DeleteWhere { get; set; }
     // WHEN NOT MATCHED THEN INSERT
     /// <summary>The column list of the insert, each optionally qualified by the target alias (<c>INSERT (p.a, p.b)</c>); empty when absent.</summary>
     public List<ColumnReference> InsertColumns { get; set; } = [];
     /// <summary>The values of the insert, in source order; empty for the update and delete forms.</summary>
     public List<Expression> InsertValues { get; set; } = [];
-    /// <summary>The <c>WHERE</c> condition of the insert, or null when absent.</summary>
-    public Expression? InsertWhere { get; set; }
+    /// <summary>The <c>WHERE</c> clause of the insert, or null when absent.</summary>
+    public WhereClause? InsertWhere { get; set; }
 }
 
 // ---------- Table references ----------

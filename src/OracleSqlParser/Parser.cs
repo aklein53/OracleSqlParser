@@ -1131,6 +1131,17 @@ public sealed partial class SqlParser
         }
     }
 
+    /// <summary>A <c>WHERE</c> clause of a MERGE action, or null when the next token is not <c>WHERE</c>.</summary>
+    private WhereClause? ParseOptionalWhere() => IsKw("WHERE") ? ParseWhere() : null;
+
+    /// <summary>A <c>WHERE</c> clause of a MERGE action: the span starts at the keyword, not at a preceding DELETE.</summary>
+    private WhereClause ParseWhere()
+    {
+        var kw = Cur;
+        ExpectKw("WHERE");
+        return Fin(new WhereClause { Condition = ParseExpr() }, kw);
+    }
+
     private MergeStatement ParseMerge()
     {
         var start = Cur;
@@ -1157,10 +1168,10 @@ public sealed partial class SqlParser
             {
                 ExpectKw("SET");
                 mc.Set = ParseSetClauses();
-                if (AcceptKw("WHERE")) mc.UpdateWhere = ParseExpr();
-                if (AcceptKw("DELETE")) { ExpectKw("WHERE"); mc.DeleteWhere = ParseExpr(); }
+                mc.UpdateWhere = ParseOptionalWhere();
+                if (AcceptKw("DELETE")) mc.DeleteWhere = ParseWhere();
             }
-            else if (AcceptKw("DELETE")) { if (AcceptKw("WHERE")) mc.DeleteWhere = ParseExpr(); }
+            else if (AcceptKw("DELETE")) mc.DeleteWhere = ParseOptionalWhere();
             else if (AcceptKw("INSERT"))
             {
                 if (IsOp("(")) mc.InsertColumns = ParseColumnRefList(true); // the parenthesized column list, consumed to its ')'
@@ -1168,7 +1179,7 @@ public sealed partial class SqlParser
                 ExpectOp("(");
                 do mc.InsertValues.Add(ParseExpr()); while (AcceptOp(","));
                 ExpectOp(")");
-                if (AcceptKw("WHERE")) mc.InsertWhere = ParseExpr();
+                mc.InsertWhere = ParseOptionalWhere();
             }
             else throw FailExpected($"Expected UPDATE, DELETE or INSERT but found {Describe(Cur)}", "UPDATE", "DELETE", "INSERT");
             st.Clauses.Add(Fin(mc, cs));
