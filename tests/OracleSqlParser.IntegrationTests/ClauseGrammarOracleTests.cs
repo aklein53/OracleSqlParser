@@ -72,6 +72,50 @@ public class ClauseGrammarOracleTests(OracleFixture db)
         "SELECT COUNT(*) FROM t OFFSET 1 ROWS",
     ];
 
+    /// <summary>
+    /// EXECUTE IMMEDIATE clauses out of Oracle's order (INTO, USING, RETURNING INTO), and INTO together with RETURNING INTO.
+    /// Oracle reports the order errors as PLS-00103 and the pair as PLS-00429, both while compiling the block.
+    /// </summary>
+    private static readonly string[] RejectedPlsql =
+    [
+        "DECLARE a NUMBER; BEGIN EXECUTE IMMEDIATE 'select 1 from dual' USING 1 INTO a; END;",
+        "DECLARE a NUMBER; BEGIN EXECUTE IMMEDIATE 'select 1 from dual' RETURNING INTO a USING 1; END;",
+        "DECLARE a NUMBER; b NUMBER; BEGIN EXECUTE IMMEDIATE 'select 1 from dual' INTO a INTO b; END;",
+        "DECLARE a NUMBER; b NUMBER; BEGIN EXECUTE IMMEDIATE 'select 1 from dual' INTO a RETURNING INTO b; END;",
+        "DECLARE a NUMBER; b NUMBER; BEGIN EXECUTE IMMEDIATE 'select 1 from dual' INTO a USING 1 RETURNING INTO b; END;",
+    ];
+
+    /// <summary>EXECUTE IMMEDIATE clauses in Oracle's order, which run without a compile or runtime error.</summary>
+    private static readonly string[] AcceptedPlsql =
+    [
+        "DECLARE a NUMBER; BEGIN EXECUTE IMMEDIATE 'select :x from dual' INTO a USING 1; END;",
+        "DECLARE a NUMBER; BEGIN EXECUTE IMMEDIATE 'select 1 from dual' INTO a; END;",
+    ];
+
+    public static IEnumerable<object[]> RejectedPlsqlCases() => RejectedPlsql.Select((s, i) => new object[] { i, s });
+
+    public static IEnumerable<object[]> AcceptedPlsqlCases() => AcceptedPlsql.Select((s, i) => new object[] { i, s });
+
+    [SkippableTheory]
+    [MemberData(nameof(RejectedPlsqlCases))]
+    public async Task OracleRejectsThisPlsqlClauseOrder(int index, string sql)
+    {
+        db.SkipIfUnavailable();
+        Assert.False(SqlParser.Parse(sql).Success, $"the parser accepted:\n{sql}");
+        var (outcome, detail) = await OracleHarness.RunInScratchSchema(db, $"CGP{index}", OracleHarness.Prepare(sql), true);
+        Assert.True(outcome == Outcome.Rejected, $"expected Oracle to reject the syntax of:\n{sql}\nbut the outcome was {outcome}: {detail}");
+    }
+
+    [SkippableTheory]
+    [MemberData(nameof(AcceptedPlsqlCases))]
+    public async Task OracleAcceptsThisPlsqlClauseOrder(int index, string sql)
+    {
+        db.SkipIfUnavailable();
+        Assert.True(SqlParser.Parse(sql).Success, $"the parser rejected:\n{sql}");
+        var (outcome, detail) = await OracleHarness.RunInScratchSchema(db, $"CGQ{index}", OracleHarness.Prepare(sql), true);
+        Assert.True(outcome == Outcome.Executed, $"expected a clean run of:\n{sql}\nbut the outcome was {outcome}: {detail}");
+    }
+
     public static IEnumerable<object[]> RejectedCases() => Rejected.Select((s, i) => new object[] { i, s });
 
     public static IEnumerable<object[]> AcceptedCases() => Accepted.Select((s, i) => new object[] { i, s });

@@ -128,6 +128,7 @@ public static class OracleHarness
     {
         // PLS-00103 "Encountered the symbol X when expecting ..." is the PL/SQL parser's syntax error; PLS-00201/ORA-00942 etc. are name resolution.
         string brief = text.Length > 200 ? text[..200] : text;
-        return Regex.IsMatch(text, @"PLS-00103") ? (Outcome.Rejected, brief) : (Outcome.SyntaxAcceptedSemanticError, brief);
+        // PLS-00429 is a compile-time rejection of a clause combination (INTO together with RETURNING INTO), so it is a syntax rejection too.
+        return Regex.IsMatch(text, @"PLS-00103|PLS-00429") ? (Outcome.Rejected, brief) : (Outcome.SyntaxAcceptedSemanticError, brief);
     }
 }

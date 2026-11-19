@@ -1150,18 +1150,17 @@ public sealed partial class SqlParser
     {
         var start = Next(); Next();
         var st = new ExecuteImmediateStatement { Sql = ParseExpr() };
-        int prog38 = -1;
-        while (Progress(ref prog38))
+        // Oracle's order: [BULK COLLECT] INTO, then USING, then [RETURNING | RETURN] [BULK COLLECT] INTO.
+        if (IsIntoStart()) st.Into = ParseInto();
+        if (AcceptKw("USING")) st.Using = ParseUsingList();
+        if (IsKw("RETURNING") || IsKw("RETURN"))
         {
-            if (st.Into is null && IsIntoStart()) st.Into = ParseInto();
-            else if (AcceptKw("USING")) st.Using = ParseUsingList();
-            else if (st.ReturningInto is null && (IsKw("RETURNING") || IsKw("RETURN")))
-            {
-                Next();
-                st.ReturningInto = ParseInto();
-            }
-            else break;
+            Next();
+            st.ReturningInto = ParseInto();
         }
+        // INTO and RETURNING INTO cannot both be written: Oracle rejects the pair at compile time (PLS-00429).
+        if (st.Into is not null && st.ReturningInto is not null)
+            throw Fail("INTO and RETURNING INTO cannot be used in the same EXECUTE IMMEDIATE");
         return Fin(st, start);
     }
 
