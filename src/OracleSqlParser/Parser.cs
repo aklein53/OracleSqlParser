@@ -766,9 +766,10 @@ public sealed partial class SqlParser
             ExpectOp(")");
             return rollup ? Fin(new RollupGrouping { Items = items }, start) : Fin(new CubeGrouping { Items = items }, start);
         }
-        if (context == GroupingContext.Element && IsKw("GROUPING") && IsKwAt(1, "SETS") && IsOpAt(2, "("))
+        if (context == GroupingContext.Element && IsKw("GROUPING") && IsKwAt(1, "SETS"))
         {
-            Next(); Next(); Next();
+            Next(); Next();
+            ExpectOp("(");
             var sets = new List<GroupingSpec>();
             do sets.Add(ParseGroupingSpec(GroupingContext.Set)); while (AcceptOp(","));
             ExpectOp(")");

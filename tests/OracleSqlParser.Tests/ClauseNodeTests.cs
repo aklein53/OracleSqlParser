@@ -326,6 +326,39 @@ public class ClauseNodeTests
         Assert.True(stmt.ReturningInto!.BulkCollect);
     }
 
+    /// <summary>EXECUTE IMMEDIATE takes INTO, then USING, then RETURNING INTO; Oracle rejects the other orders (PLS-00103).</summary>
+    [Theory]
+    [InlineData("EXECUTE IMMEDIATE 'x' USING 1 INTO a")]
+    [InlineData("EXECUTE IMMEDIATE 'x' RETURNING INTO a USING 1")]
+    [InlineData("EXECUTE IMMEDIATE 'x' INTO a INTO b")]
+    [InlineData("EXECUTE IMMEDIATE 'x' USING 1 USING 2")]
+    [InlineData("EXECUTE IMMEDIATE 'x' RETURNING INTO a RETURNING INTO b")]
+    public void AnExecuteImmediateClauseOutOfOrderIsRejected(string statement)
+    {
+        Assert.False(SqlParser.Parse(InBlock(statement)).Success);
+    }
+
+    /// <summary>INTO and RETURNING INTO cannot be combined: Oracle rejects the pair at compile time (PLS-00429).</summary>
+    [Theory]
+    [InlineData("EXECUTE IMMEDIATE 'x' INTO a RETURNING INTO b")]
+    [InlineData("EXECUTE IMMEDIATE 'x' INTO a USING 1 RETURNING INTO b")]
+    public void IntoAndReturningIntoCannotBeCombined(string statement)
+    {
+        Assert.False(SqlParser.Parse(InBlock(statement)).Success);
+    }
+
+    /// <summary>USING then RETURNING INTO is the valid order, and the RETURNING INTO is then the statement's own clause.</summary>
+    [Fact]
+    public void UsingThenReturningIntoParses()
+    {
+        var sql = InBlock("EXECUTE IMMEDIATE 'x' USING 1 RETURNING INTO r");
+        var stmt = Assert.Single(Parsed(sql).Script.Descendants().OfType<ExecuteImmediateStatement>());
+
+        Assert.Null(stmt.Into);
+        Assert.Single(stmt.Using);
+        Assert.Equal("INTO r", Text(sql, stmt.ReturningInto!));
+    }
+
     [Theory]
     [InlineData("UPDATE t SET a = 1 RETURNING a INTO v", "INTO v", false)]
     [InlineData("DELETE FROM t RETURNING a BULK  COLLECT INTO v", "BULK  COLLECT INTO v", true)]
@@ -517,6 +550,31 @@ public class ClauseNodeTests
     }
 
     /// <summary>Oracle rejects these at parse time, so the parser does too.</summary>
+    /// <summary>A GROUPING SETS with no parenthesis is an expected-'(' error, as Oracle reports it (ORA-00906), at element level.</summary>
+    [Theory]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS", "Expected '('")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS a", "Expected '('")]
+    public void GroupingSetsWithoutParenthesisSaysExpectedParenthesis(string sql, string expected)
+    {
+        var r = SqlParser.Parse(sql);
+
+        Assert.False(r.Success);
+        Assert.Contains(expected, r.Errors[0].Message);
+        Assert.DoesNotContain("nested", r.Errors[0].Message);
+    }
+
+    /// <summary>GROUPING SETS inside a list or another set is the nested error, not the parenthesis error.</summary>
+    [Theory]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(GROUPING SETS(a))")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS(GROUPING SETS(a))")]
+    public void GroupingSetsNestedInAnotherGroupingSaysSo(string sql)
+    {
+        var r = SqlParser.Parse(sql);
+
+        Assert.False(r.Success);
+        Assert.Contains("cannot be nested", r.Errors[0].Message);
+    }
+
     [Theory]
     [InlineData("SELECT a FROM t GROUP BY ROLLUP()")]
     [InlineData("SELECT a FROM t GROUP BY CUBE()")]
