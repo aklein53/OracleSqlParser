@@ -1896,6 +1896,210 @@ public class ExpertStressTests(OracleFixture db)
     }
 
     // ------------------------------------------------------------------------------------------------------------------
+    // Clause nodes: grouping specs, OFFSET, MERGE actions, WITH, and the PL/SQL INTO forms
+    // ------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Grouping specs in every nesting Oracle accepts: GROUPING SETS holding ROLLUP, CUBE with a composite and a grand total,
+    /// concatenated groupings, a composite in ROLLUP, and <c>GROUP BY ()</c>.
+    /// </summary>
+    [SkippableFact]
+    public async Task G01_GroupingSpecNestingsAndConcatenation()
+    {
+        db.SkipIfUnavailable();
+        var sql = new[]
+        {
+            """
+            SELECT GROUPING_ID(deptno, job, mgr) gid, deptno, job, mgr, COUNT(*) n
+              FROM emp
+             GROUP BY GROUPING SETS ((deptno, job), ROLLUP(deptno, mgr), CUBE((job, mgr)), ())
+             ORDER BY gid, deptno NULLS LAST, job NULLS LAST, mgr NULLS LAST
+            """,
+            """
+            SELECT GROUPING_ID(deptno, job, mgr) gid, deptno, job, mgr, COUNT(*) n
+              FROM emp
+             GROUP BY deptno, ROLLUP(job), CUBE((mgr))
+             ORDER BY gid, deptno NULLS LAST, job NULLS LAST, mgr NULLS LAST
+            """,
+            "SELECT deptno, job, COUNT(*) n FROM emp GROUP BY (deptno, job), ROLLUP((mgr)) ORDER BY deptno NULLS LAST, job NULLS LAST",
+            "SELECT COUNT(*) n, SUM(sal) s FROM emp GROUP BY ()",
+            """
+            SELECT GROUPING_ID(deptno, job) gid, deptno, job, COUNT(*) n
+              FROM emp
+             GROUP BY GROUPING SETS (ROLLUP(deptno, job), (job), ())
+             ORDER BY gid, deptno NULLS LAST, job NULLS LAST
+            """,
+        };
+        var s = Shape.Parse(sql[0]);
+        var sets = Find<GroupingSetsGrouping>(s).Single();
+        Assert.Equal(4, sets.Sets.Count);
+        Assert.IsType<RollupGrouping>(sets.Sets[1]);
+        Assert.IsType<CubeGrouping>(sets.Sets[2]);
+        Assert.IsType<GrandTotalGrouping>(sets.Sets[3]);
+        Assert.IsType<CompositeGrouping>(((CubeGrouping)sets.Sets[2]).Items[0]);
+        await VerifyAsync(sql, []);
+    }
+
+    /// <summary>OFFSET alone, OFFSET with ROW, and OFFSET followed by FETCH: the offset clause is independent of FETCH.</summary>
+    [SkippableFact]
+    public async Task C01_OffsetAloneAndWithFetch()
+    {
+        db.SkipIfUnavailable();
+        var sql = new[]
+        {
+            "SELECT empno FROM emp ORDER BY empno OFFSET 2 ROW",
+            "SELECT empno FROM emp ORDER BY empno OFFSET /* skip */ 3 ROWS FETCH NEXT 4 ROWS ONLY",
+            "SELECT empno FROM emp ORDER BY empno OFFSET 10 ROWS",
+        };
+        var select = (SelectStatement)Shape.Parse(sql[1]).Statements[0];
+        Assert.Equal("OFFSET /* skip */ 3 ROWS", sql[1][select.Offset!.Start..select.Offset.End]);
+        Assert.NotNull(select.Fetch);
+        await VerifyAsync(sql, []);
+    }
+
+    /// <summary>MERGE with the UPDATE WHERE and the DELETE WHERE of one action, and the delete-only action's WHERE.</summary>
+    [SkippableFact]
+    public async Task C02_MergeUpdateWhereDeleteWhereAndDeleteOnlyWhere()
+    {
+        db.SkipIfUnavailable();
+        var sql = new[]
+        {
+            """
+            MERGE INTO bonus b
+            USING (SELECT e.empno, e.deptno, e.sal FROM emp e) s
+               ON (b.empno = s.empno)
+             WHEN MATCHED THEN
+               UPDATE SET b.amount = b.amount + 1 WHERE s.sal > 1000 DELETE WHERE b.amount > 3000
+             WHEN NOT MATCHED THEN
+               INSERT (empno, amount, note) VALUES (s.empno, s.sal / 100, 'n') WHERE s.deptno = 10
+            """,
+        };
+        var s = Shape.Parse(sql[0]);
+        var clause = Find<MergeClause>(s).Single(c => c.Matched && c.UpdateWhere is not null);
+        Assert.Equal("WHERE s.sal > 1000", sql[0][clause.UpdateWhere!.Start..clause.UpdateWhere.End]);
+        Assert.Equal("WHERE b.amount > 3000", sql[0][clause.DeleteWhere!.Start..clause.DeleteWhere.End]);
+        var insertWhere = Find<MergeClause>(s).Single(c => !c.Matched).InsertWhere!;
+        Assert.Equal("WHERE s.deptno = 10", sql[0][insertWhere.Start..insertWhere.End]);
+        await VerifyAsync(sql, ["SELECT empno, amount, note FROM bonus ORDER BY empno"]);
+    }
+
+    /// <summary>A WITH FUNCTION declaration followed by two CTEs, one of which calls the declared function.</summary>
+    [SkippableFact]
+    public async Task C03_WithFunctionFollowedByCtes()
+    {
+        db.SkipIfUnavailable();
+        var sql = new[]
+        {
+            """
+            WITH
+              FUNCTION twice(x NUMBER) RETURN NUMBER IS BEGIN RETURN x * 2; END;
+              base AS (SELECT empno, sal FROM emp),
+              doubled (empno, d) AS (SELECT empno, twice(sal) FROM base)
+            SELECT empno, d FROM doubled ORDER BY empno
+            """,
+        };
+        var s = Shape.Parse(sql[0]);
+        var with = ((SelectStatement)s.Statements[0]).With!;
+        Assert.Single(with.Declarations);
+        Assert.Equal(2, with.Ctes.Count);
+        await VerifyAsync(sql, []);
+    }
+
+    /// <summary>
+    /// The PL/SQL INTO forms: SELECT INTO and FETCH INTO, with and without BULK COLLECT, EXECUTE IMMEDIATE INTO and
+    /// BULK COLLECT INTO, and RETURNING INTO on a DML statement. Each block writes its result to STOCK, which is checked.
+    /// </summary>
+    [SkippableFact]
+    public async Task C04_PlsqlIntoAndBulkCollectForms()
+    {
+        db.SkipIfUnavailable();
+        var sql = new[]
+        {
+            "DECLARE v NUMBER; BEGIN SELECT COUNT(*) INTO v FROM emp; INSERT INTO stock VALUES ('c0', v, 0); END;",
+            """
+            DECLARE
+              TYPE t IS TABLE OF emp.ename%TYPE;
+              l t;
+              n PLS_INTEGER;
+            BEGIN
+              SELECT ename BULK  COLLECT INTO /* names */ l FROM emp WHERE deptno = 20 ORDER BY ename;
+              n := l.COUNT;
+              INSERT INTO stock VALUES ('c1', n, 0);
+            END;
+            """,
+            """
+            DECLARE
+              CURSOR c IS SELECT sal FROM emp ORDER BY empno;
+              s NUMBER;
+              t NUMBER := 0;
+            BEGIN
+              OPEN c;
+              LOOP
+                FETCH c INTO s;
+                EXIT WHEN c%NOTFOUND;
+                t := t + s;
+              END LOOP;
+              CLOSE c;
+              INSERT INTO stock VALUES ('c2', t, 0);
+            END;
+            """,
+            """
+            DECLARE
+              CURSOR c IS SELECT sal FROM emp ORDER BY empno;
+              TYPE tt IS TABLE OF NUMBER;
+              l tt;
+              t NUMBER := 0;
+            BEGIN
+              OPEN c;
+              LOOP
+                FETCH c BULK COLLECT INTO l LIMIT 5;
+                EXIT WHEN l.COUNT = 0;
+                FOR i IN 1 .. l.COUNT LOOP t := t + l(i); END LOOP;
+              END LOOP;
+              CLOSE c;
+              INSERT INTO stock VALUES ('c3', t, 0);
+            END;
+            """,
+            "DECLARE v NUMBER; BEGIN EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM emp WHERE deptno = :d' INTO v USING 20; INSERT INTO stock VALUES ('c4', v, 0); END;",
+            """
+            DECLARE
+              TYPE tt IS TABLE OF NUMBER;
+              l tt;
+              n PLS_INTEGER;
+            BEGIN
+              EXECUTE IMMEDIATE 'SELECT empno FROM emp WHERE deptno = 30 ORDER BY empno' BULK COLLECT INTO l;
+              n := l.COUNT;
+              INSERT INTO stock VALUES ('c5', n, 0);
+            END;
+            """,
+            """
+            DECLARE
+              v NUMBER;
+            BEGIN
+              INSERT INTO stock VALUES ('c6', 1, 0);
+              UPDATE stock SET qty = qty + 1 WHERE sku = 'c6' RETURNING qty INTO v;
+              INSERT INTO stock VALUES ('c7', v, 0);
+            END;
+            """,
+            """
+            DECLARE
+              TYPE tt IS TABLE OF NUMBER;
+              l tt;
+              n PLS_INTEGER;
+            BEGIN
+              INSERT INTO stock VALUES ('c8', 5, 0);
+              UPDATE stock SET price = price + 1 WHERE sku LIKE 'c%' RETURNING qty BULK COLLECT INTO l;
+              n := l.COUNT;
+              INSERT INTO stock VALUES ('c9', n, 0);
+            END;
+            """,
+        };
+        Assert.False(Find<FetchStatement>(Shape.Parse(sql[2])).Single().Into.BulkCollect);
+        Assert.True(Find<FetchStatement>(Shape.Parse(sql[3])).Single().Into.BulkCollect);
+        await VerifyAsync(sql, ["SELECT sku, qty, price FROM stock ORDER BY sku"]);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------
     // Harness
     // ------------------------------------------------------------------------------------------------------------------
 
