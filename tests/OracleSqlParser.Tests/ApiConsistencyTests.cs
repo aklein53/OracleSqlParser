@@ -404,6 +404,32 @@ public class ApiConsistencyTests
         Assert.False(SqlParser.Parse(sql).Success);
     }
 
+    /// <summary>A statement label is an identifier, so it keeps its spelling and its quoting.</summary>
+    [Fact]
+    public void StatementLabelsAreIdentifiers()
+    {
+        const string sql = "BEGIN <<lbl>> NULL; <<\"a b\">> NULL; END lbl;";
+        var block = Assert.Single(Parsed(sql).Descendants().OfType<BlockStatement>());
+        var labels = block.Statements.Select(s => s.Labels.Single()).ToList();
+
+        Assert.Equal("LBL", labels[0].Value);
+        Assert.Equal("lbl", labels[0].Text);
+        Assert.False(labels[0].Quoted);
+        Assert.Equal("a b", labels[1].Value);
+        Assert.True(labels[1].Quoted);
+        Assert.Equal("lbl", Text(sql, block.EndLabel!));
+    }
+
+    [Theory]
+    [InlineData("BEGIN <<\"a b\">> NULL; END;")]
+    [InlineData("BEGIN <<abc>> NULL; END;")]
+    public void StatementLabelsRoundTrip(string sql)
+    {
+        var script = Parsed(sql);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

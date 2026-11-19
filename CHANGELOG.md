@@ -71,6 +71,16 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `LockTableStatement.Wait` (seconds) | `Expression?` | `Expression?` as `WaitSeconds`, set with `LockWait.Wait` |
 
   `CommitWrite.Wait` keeps its `WaitMode` (`Wait`, `NoWait`), which is unchanged.
+
+- Labels are names, and are typed as names:
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `Statement.Labels` | `List<string>` (upper-cased value) | `List<Identifier>`, so a label keeps its spelling and quoting (`Value`, `Text`, `Quoted`) |
+  | `BlockStatement.EndName` | `Identifier?` | `Identifier?` as `EndLabel`, matching `LoopStatement.EndLabel`. On a subprogram body, which is a block here, it holds the subprogram name |
+
+  `CreatePackageStatement.EndName` and `CreatePackageBodyStatement.EndName` keep their names: they repeat the package name,
+  which is not a label.
   | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).

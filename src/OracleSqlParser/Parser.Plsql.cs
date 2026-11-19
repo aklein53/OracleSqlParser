@@ -11,14 +11,14 @@ public sealed partial class SqlParser
     /// <summary>The $ELSIF, $ELSE or $END of a conditional-compilation block (these never start a statement or declaration).</summary>
     private bool AtDirectiveEnd() => IsKw("$ELSIF") || IsKw("$ELSE") || IsKw("$END");
 
-    private List<string> ParseLabels()
+    private List<Identifier> ParseLabels()
     {
-        var labels = new List<string>();
+        var labels = new List<Identifier>();
         int prog132 = -1;
         while (IsOp("<<") && Progress(ref prog132))
         {
             Next();
-            labels.Add(ParseIdentifier().Value);
+            labels.Add(ParseIdentifier());
             ExpectOp(">>");
         }
         return labels;
@@ -54,7 +54,7 @@ public sealed partial class SqlParser
         b.Statements = ParseStatements(AtBlockEnd);
         if (IsKw("EXCEPTION")) b.Handlers = ParseExceptionHandlers();
         ExpectKw("END");
-        if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier) b.EndName = ParseIdentifier();
+        if (Cur.Type is TokenType.Identifier or TokenType.QuotedIdentifier) b.EndLabel = ParseIdentifier();
     }
 
     /// <summary>Body after IS/AS of a subprogram: declarations then BEGIN ... END.</summary>

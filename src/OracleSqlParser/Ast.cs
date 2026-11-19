@@ -145,8 +145,8 @@ public sealed partial class SqlScript : SqlNode
 /// <summary>A statement: the base of every SQL and PL/SQL statement node.</summary>
 public abstract partial class Statement : SqlNode
 {
-    /// <summary>PL/SQL labels (&lt;&lt;name&gt;&gt;) attached to this statement.</summary>
-    public List<string> Labels { get; set; } = [];
+    /// <summary>PL/SQL labels (&lt;&lt;name&gt;&gt;) attached to this statement, in source order; quoted labels keep their quotes.</summary>
+    public List<Identifier> Labels { get; set; } = [];
 }
 
 /// <summary>INSERT / UPDATE / DELETE / MERGE; carries an optional optimizer hint.</summary>

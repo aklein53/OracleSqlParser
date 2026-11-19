@@ -578,8 +578,6 @@ OracleSqlParser.BlockStatement
 OracleSqlParser.BlockStatement.BlockStatement() -> void
 OracleSqlParser.BlockStatement.Declarations.get -> System.Collections.Generic.List<OracleSqlParser.Declaration!>!
 OracleSqlParser.BlockStatement.Declarations.set -> void
-OracleSqlParser.BlockStatement.EndName.get -> OracleSqlParser.Identifier?
-OracleSqlParser.BlockStatement.EndName.set -> void
 OracleSqlParser.BlockStatement.Handlers.get -> System.Collections.Generic.List<OracleSqlParser.ExceptionHandler!>!
 OracleSqlParser.BlockStatement.Handlers.set -> void
 OracleSqlParser.BlockStatement.HasDeclare.get -> bool
@@ -3466,7 +3464,6 @@ override OracleSqlParser.StartWithClause.Accept(OracleSqlParser.SqlNodeVisitor! 
 override OracleSqlParser.StartWithClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.StartWithClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
 OracleSqlParser.Statement
-OracleSqlParser.Statement.Labels.get -> System.Collections.Generic.List<string!>!
 OracleSqlParser.Statement.Labels.set -> void
 OracleSqlParser.Statement.Statement() -> void
 OracleSqlParser.StorageAttribute
@@ -6214,3 +6211,8 @@ OracleSqlParser.NthValueFrom.Last = 1 -> OracleSqlParser.NthValueFrom
 OracleSqlParser.NullTreatment
 OracleSqlParser.NullTreatment.Ignore = 0 -> OracleSqlParser.NullTreatment
 OracleSqlParser.NullTreatment.Respect = 1 -> OracleSqlParser.NullTreatment
+OracleSqlParser.BlockStatement.EndLabel.get -> OracleSqlParser.Identifier?
+OracleSqlParser.BlockStatement.EndLabel.set -> void
+OracleSqlParser.Statement.Labels.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
+override OracleSqlParser.NullStatement.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.NullStatement.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!

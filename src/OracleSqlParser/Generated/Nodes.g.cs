@@ -61,17 +61,20 @@ public partial class AdminStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Body is not null) foreach (var x in Body) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Body is not null) foreach (var x in Body) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Body, "AdminStatement.Body");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AdminStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -92,7 +95,7 @@ public partial class AdminStatement
         {
             Verb = Verb,
             Body = CloneList(Body),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -103,7 +106,7 @@ public partial class AdminStatement
         var o = (AdminStatement)other;
         return Verb == o.Verb
             && PairList(Body, o.Body, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -115,6 +118,7 @@ public partial class AlterAnnotationsStatement
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Annotations is not null) yield return Annotations;
         if (ColumnAnnotations is not null) foreach (var x in ColumnAnnotations) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -123,6 +127,7 @@ public partial class AlterAnnotationsStatement
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         Annotations?.Accept(visitor);
         if (ColumnAnnotations is not null) foreach (var x in ColumnAnnotations) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -130,6 +135,7 @@ public partial class AlterAnnotationsStatement
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterAnnotationsStatement.Name");
         Annotations = SqlNodeRewriter.RewriteOptional(rewriter, Annotations, "AlterAnnotationsStatement.Annotations");
         SqlNodeRewriter.RewriteList(rewriter, ColumnAnnotations, "AlterAnnotationsStatement.ColumnAnnotations");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterAnnotationsStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -154,7 +160,7 @@ public partial class AlterAnnotationsStatement
             Name = CloneList(Name),
             Annotations = CloneChild(Annotations),
             ColumnAnnotations = CloneList(ColumnAnnotations),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -167,7 +173,7 @@ public partial class AlterAnnotationsStatement
             && PairList(Name, o.Name, pending)
             && Pair(Annotations, o.Annotations, pending)
             && PairList(ColumnAnnotations, o.ColumnAnnotations, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -179,6 +185,7 @@ public partial class AlterAuditPolicyStatement
         if (Name is not null) yield return Name;
         if (Lists is not null) foreach (var x in Lists) yield return x;
         if (Condition is not null) yield return Condition;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -187,6 +194,7 @@ public partial class AlterAuditPolicyStatement
         Name?.Accept(visitor);
         if (Lists is not null) foreach (var x in Lists) x.Accept(visitor);
         Condition?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -194,6 +202,7 @@ public partial class AlterAuditPolicyStatement
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "AlterAuditPolicyStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Lists, "AlterAuditPolicyStatement.Lists");
         Condition = SqlNodeRewriter.RewriteOptional(rewriter, Condition, "AlterAuditPolicyStatement.Condition");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterAuditPolicyStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -222,7 +231,7 @@ public partial class AlterAuditPolicyStatement
             Condition = CloneChild(Condition),
             Evaluate = Evaluate,
             DropCondition = DropCondition,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -237,7 +246,7 @@ public partial class AlterAuditPolicyStatement
             && Pair(Condition, o.Condition, pending)
             && Evaluate == o.Evaluate
             && DropCondition == o.DropCondition
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -248,6 +257,7 @@ public partial class AlterCompileStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Parameters is not null) foreach (var x in Parameters) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -255,12 +265,14 @@ public partial class AlterCompileStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Parameters is not null) foreach (var x in Parameters) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterCompileStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Parameters, "AlterCompileStatement.Parameters");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterCompileStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -293,7 +305,7 @@ public partial class AlterCompileStatement
             Part = Part,
             ReuseSettings = ReuseSettings,
             Parameters = CloneList(Parameters),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -310,7 +322,7 @@ public partial class AlterCompileStatement
             && Part == o.Part
             && ReuseSettings == o.ReuseSettings
             && PairList(Parameters, o.Parameters, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -372,6 +384,7 @@ public partial class AlterDomainStatement
         if (Action is not null) yield return Action;
         if (Annotations is not null) yield return Annotations;
         if (OtherClauses is not null) foreach (var x in OtherClauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -381,6 +394,7 @@ public partial class AlterDomainStatement
         Action?.Accept(visitor);
         Annotations?.Accept(visitor);
         if (OtherClauses is not null) foreach (var x in OtherClauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -389,6 +403,7 @@ public partial class AlterDomainStatement
         Action = SqlNodeRewriter.RewriteOptional(rewriter, Action, "AlterDomainStatement.Action");
         Annotations = SqlNodeRewriter.RewriteOptional(rewriter, Annotations, "AlterDomainStatement.Annotations");
         SqlNodeRewriter.RewriteList(rewriter, OtherClauses, "AlterDomainStatement.OtherClauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterDomainStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -413,7 +428,7 @@ public partial class AlterDomainStatement
             Action = CloneChild(Action),
             Annotations = CloneChild(Annotations),
             OtherClauses = CloneList(OtherClauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -426,7 +441,7 @@ public partial class AlterDomainStatement
             && Pair(Action, o.Action, pending)
             && Pair(Annotations, o.Annotations, pending)
             && PairList(OtherClauses, o.OtherClauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -534,6 +549,7 @@ public partial class AlterIndexStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Actions is not null) foreach (var x in Actions) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -541,12 +557,14 @@ public partial class AlterIndexStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Actions is not null) foreach (var x in Actions) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterIndexStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Actions, "AlterIndexStatement.Actions");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterIndexStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -567,7 +585,7 @@ public partial class AlterIndexStatement
         {
             Name = CloneList(Name),
             Actions = CloneList(Actions),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -578,7 +596,7 @@ public partial class AlterIndexStatement
         var o = (AlterIndexStatement)other;
         return PairList(Name, o.Name, pending)
             && PairList(Actions, o.Actions, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -590,6 +608,7 @@ public partial class AlterMaterializedViewStatement
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Refresh is not null) yield return Refresh;
         if (Attributes is not null) foreach (var x in Attributes) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -598,6 +617,7 @@ public partial class AlterMaterializedViewStatement
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         Refresh?.Accept(visitor);
         if (Attributes is not null) foreach (var x in Attributes) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -605,6 +625,7 @@ public partial class AlterMaterializedViewStatement
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterMaterializedViewStatement.Name");
         Refresh = SqlNodeRewriter.RewriteOptional(rewriter, Refresh, "AlterMaterializedViewStatement.Refresh");
         SqlNodeRewriter.RewriteList(rewriter, Attributes, "AlterMaterializedViewStatement.Attributes");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterMaterializedViewStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -639,7 +660,7 @@ public partial class AlterMaterializedViewStatement
             ShrinkCompact = ShrinkCompact,
             ShrinkCascade = ShrinkCascade,
             Attributes = CloneList(Attributes),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -657,7 +678,7 @@ public partial class AlterMaterializedViewStatement
             && ShrinkCompact == o.ShrinkCompact
             && ShrinkCascade == o.ShrinkCascade
             && PairList(Attributes, o.Attributes, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -668,6 +689,7 @@ public partial class AlterObjectStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Body is not null) foreach (var x in Body) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -675,12 +697,14 @@ public partial class AlterObjectStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Body is not null) foreach (var x in Body) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterObjectStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Body, "AlterObjectStatement.Body");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterObjectStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -707,7 +731,7 @@ public partial class AlterObjectStatement
             IfExists = IfExists,
             Name = CloneList(Name),
             Body = CloneList(Body),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -721,7 +745,7 @@ public partial class AlterObjectStatement
             && IfExists == o.IfExists
             && PairList(Name, o.Name, pending)
             && PairList(Body, o.Body, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -732,6 +756,7 @@ public partial class AlterProfileStatement
     {
         if (Name is not null) yield return Name;
         if (Limits is not null) foreach (var x in Limits) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -739,12 +764,14 @@ public partial class AlterProfileStatement
     {
         Name?.Accept(visitor);
         if (Limits is not null) foreach (var x in Limits) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "AlterProfileStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Limits, "AlterProfileStatement.Limits");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterProfileStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -771,7 +798,7 @@ public partial class AlterProfileStatement
             Limits = CloneList(Limits),
             Container = Container,
             Cascade = Cascade,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -785,7 +812,7 @@ public partial class AlterProfileStatement
             && PairList(Limits, o.Limits, pending)
             && Container == o.Container
             && Cascade == o.Cascade
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -797,6 +824,7 @@ public partial class AlterRoleStatement
         if (Name is not null) yield return Name;
         if (Password is not null) yield return Password;
         if (Package is not null) foreach (var x in Package) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -805,6 +833,7 @@ public partial class AlterRoleStatement
         Name?.Accept(visitor);
         Password?.Accept(visitor);
         if (Package is not null) foreach (var x in Package) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -812,6 +841,7 @@ public partial class AlterRoleStatement
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "AlterRoleStatement.Name");
         Password = SqlNodeRewriter.RewriteOptional(rewriter, Password, "AlterRoleStatement.Password");
         SqlNodeRewriter.RewriteList(rewriter, Package, "AlterRoleStatement.Package");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterRoleStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -840,7 +870,7 @@ public partial class AlterRoleStatement
             Password = CloneChild(Password),
             Package = CloneList(Package),
             Container = Container,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -855,7 +885,7 @@ public partial class AlterRoleStatement
             && Pair(Password, o.Password, pending)
             && PairList(Package, o.Package, pending)
             && Container == o.Container
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -866,6 +896,7 @@ public partial class AlterSequenceStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Options is not null) foreach (var x in Options) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -873,12 +904,14 @@ public partial class AlterSequenceStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Options is not null) foreach (var x in Options) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterSequenceStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Options, "AlterSequenceStatement.Options");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterSequenceStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -899,7 +932,7 @@ public partial class AlterSequenceStatement
         {
             Name = CloneList(Name),
             Options = CloneList(Options),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -910,7 +943,7 @@ public partial class AlterSequenceStatement
         var o = (AlterSequenceStatement)other;
         return PairList(Name, o.Name, pending)
             && PairList(Options, o.Options, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -925,6 +958,7 @@ public partial class AlterSessionStatement
         if (ResumableName is not null) yield return ResumableName;
         if (DatabaseLink is not null) yield return DatabaseLink;
         if (FeatureSyntax is not null) foreach (var x in FeatureSyntax) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -936,6 +970,7 @@ public partial class AlterSessionStatement
         ResumableName?.Accept(visitor);
         DatabaseLink?.Accept(visitor);
         if (FeatureSyntax is not null) foreach (var x in FeatureSyntax) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -946,6 +981,7 @@ public partial class AlterSessionStatement
         ResumableName = SqlNodeRewriter.RewriteOptional(rewriter, ResumableName, "AlterSessionStatement.ResumableName");
         DatabaseLink = SqlNodeRewriter.RewriteOptional(rewriter, DatabaseLink, "AlterSessionStatement.DatabaseLink");
         SqlNodeRewriter.RewriteList(rewriter, FeatureSyntax, "AlterSessionStatement.FeatureSyntax");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterSessionStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -980,7 +1016,7 @@ public partial class AlterSessionStatement
             DatabaseLink = CloneChild(DatabaseLink),
             Advise = Advise,
             FeatureSyntax = CloneList(FeatureSyntax),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -998,7 +1034,7 @@ public partial class AlterSessionStatement
             && Pair(DatabaseLink, o.DatabaseLink, pending)
             && Advise == o.Advise
             && PairList(FeatureSyntax, o.FeatureSyntax, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1145,6 +1181,7 @@ public partial class AlterTableStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Actions is not null) foreach (var x in Actions) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1152,12 +1189,14 @@ public partial class AlterTableStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Actions is not null) foreach (var x in Actions) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterTableStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Actions, "AlterTableStatement.Actions");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterTableStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1180,7 +1219,7 @@ public partial class AlterTableStatement
             Name = CloneList(Name),
             IfExists = IfExists,
             Actions = CloneList(Actions),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1192,7 +1231,7 @@ public partial class AlterTableStatement
         return PairList(Name, o.Name, pending)
             && IfExists == o.IfExists
             && PairList(Actions, o.Actions, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1203,6 +1242,7 @@ public partial class AlterTablespaceStatement
     {
         if (Name is not null) yield return Name;
         if (Actions is not null) foreach (var x in Actions) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1210,12 +1250,14 @@ public partial class AlterTablespaceStatement
     {
         Name?.Accept(visitor);
         if (Actions is not null) foreach (var x in Actions) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "AlterTablespaceStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Actions, "AlterTablespaceStatement.Actions");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterTablespaceStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1238,7 +1280,7 @@ public partial class AlterTablespaceStatement
             IfExists = IfExists,
             Name = CloneChild(Name)!,
             Actions = CloneList(Actions),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1250,7 +1292,7 @@ public partial class AlterTablespaceStatement
         return IfExists == o.IfExists
             && Pair(Name, o.Name, pending)
             && PairList(Actions, o.Actions, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1261,6 +1303,7 @@ public partial class AlterTriggerStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (RenameTo is not null) yield return RenameTo;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1268,12 +1311,14 @@ public partial class AlterTriggerStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         RenameTo?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterTriggerStatement.Name");
         RenameTo = SqlNodeRewriter.RewriteOptional(rewriter, RenameTo, "AlterTriggerStatement.RenameTo");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterTriggerStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1296,7 +1341,7 @@ public partial class AlterTriggerStatement
             Name = CloneList(Name),
             Enable = Enable,
             RenameTo = CloneChild(RenameTo),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1308,7 +1353,7 @@ public partial class AlterTriggerStatement
         return PairList(Name, o.Name, pending)
             && Enable == o.Enable
             && Pair(RenameTo, o.RenameTo, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1319,6 +1364,7 @@ public partial class AlterUserStatement
     {
         if (Name is not null) yield return Name;
         if (Clauses is not null) foreach (var x in Clauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1326,12 +1372,14 @@ public partial class AlterUserStatement
     {
         Name?.Accept(visitor);
         if (Clauses is not null) foreach (var x in Clauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "AlterUserStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Clauses, "AlterUserStatement.Clauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterUserStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1354,7 +1402,7 @@ public partial class AlterUserStatement
             IfExists = IfExists,
             Name = CloneChild(Name)!,
             Clauses = CloneList(Clauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1366,7 +1414,7 @@ public partial class AlterUserStatement
         return IfExists == o.IfExists
             && Pair(Name, o.Name, pending)
             && PairList(Clauses, o.Clauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1377,6 +1425,7 @@ public partial class AlterViewStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Actions is not null) foreach (var x in Actions) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1384,12 +1433,14 @@ public partial class AlterViewStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Actions is not null) foreach (var x in Actions) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "AlterViewStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Actions, "AlterViewStatement.Actions");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AlterViewStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1412,7 +1463,7 @@ public partial class AlterViewStatement
             Name = CloneList(Name),
             Actions = CloneList(Actions),
             ReadOnly = ReadOnly,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1424,7 +1475,7 @@ public partial class AlterViewStatement
         return PairList(Name, o.Name, pending)
             && PairList(Actions, o.Actions, pending)
             && ReadOnly == o.ReadOnly
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1438,6 +1489,7 @@ public partial class AnalyzeStatement
         if (Sample is not null) yield return Sample;
         if (IntoTable is not null) foreach (var x in IntoTable) yield return x;
         if (OtherClauses is not null) foreach (var x in OtherClauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1448,6 +1500,7 @@ public partial class AnalyzeStatement
         Sample?.Accept(visitor);
         if (IntoTable is not null) foreach (var x in IntoTable) x.Accept(visitor);
         if (OtherClauses is not null) foreach (var x in OtherClauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -1457,6 +1510,7 @@ public partial class AnalyzeStatement
         Sample = SqlNodeRewriter.RewriteOptional(rewriter, Sample, "AnalyzeStatement.Sample");
         SqlNodeRewriter.RewriteList(rewriter, IntoTable, "AnalyzeStatement.IntoTable");
         SqlNodeRewriter.RewriteList(rewriter, OtherClauses, "AnalyzeStatement.OtherClauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AnalyzeStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1495,7 +1549,7 @@ public partial class AnalyzeStatement
             Online = Online,
             IntoTable = CloneList(IntoTable),
             OtherClauses = CloneList(OtherClauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1515,7 +1569,7 @@ public partial class AnalyzeStatement
             && Online == o.Online
             && PairList(IntoTable, o.IntoTable, pending)
             && PairList(OtherClauses, o.OtherClauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -1758,6 +1812,7 @@ public partial class AssignmentStatement
     {
         if (Target is not null) yield return Target;
         if (Value is not null) yield return Value;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -1765,12 +1820,14 @@ public partial class AssignmentStatement
     {
         Target?.Accept(visitor);
         Value?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Target = SqlNodeRewriter.RewriteRequired(rewriter, Target, "AssignmentStatement.Target");
         Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "AssignmentStatement.Value");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AssignmentStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -1791,7 +1848,7 @@ public partial class AssignmentStatement
         {
             Target = CloneChild(Target)!,
             Value = CloneChild(Value)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -1802,7 +1859,7 @@ public partial class AssignmentStatement
         var o = (AssignmentStatement)other;
         return Pair(Target, o.Target, pending)
             && Pair(Value, o.Value, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -2068,6 +2125,7 @@ public partial class AuditStatement
         if (ByUsers is not null) foreach (var x in ByUsers) yield return x;
         if (WithRoles is not null) foreach (var x in WithRoles) yield return x;
         if (ExceptUsers is not null) foreach (var x in ExceptUsers) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -2081,6 +2139,7 @@ public partial class AuditStatement
         if (ByUsers is not null) foreach (var x in ByUsers) x.Accept(visitor);
         if (WithRoles is not null) foreach (var x in WithRoles) x.Accept(visitor);
         if (ExceptUsers is not null) foreach (var x in ExceptUsers) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -2093,6 +2152,7 @@ public partial class AuditStatement
         SqlNodeRewriter.RewriteList(rewriter, ByUsers, "AuditStatement.ByUsers");
         SqlNodeRewriter.RewriteList(rewriter, WithRoles, "AuditStatement.WithRoles");
         SqlNodeRewriter.RewriteList(rewriter, ExceptUsers, "AuditStatement.ExceptUsers");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "AuditStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -2133,7 +2193,7 @@ public partial class AuditStatement
             ExceptUsers = CloneList(ExceptUsers),
             By = By,
             Successful = Successful,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -2154,7 +2214,7 @@ public partial class AuditStatement
             && PairList(ExceptUsers, o.ExceptUsers, pending)
             && By == o.By
             && Successful == o.Successful
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -2345,7 +2405,8 @@ public partial class BlockStatement
         if (Declarations is not null) foreach (var x in Declarations) yield return x;
         if (Statements is not null) foreach (var x in Statements) yield return x;
         if (Handlers is not null) foreach (var x in Handlers) yield return x;
-        if (EndName is not null) yield return EndName;
+        if (EndLabel is not null) yield return EndLabel;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -2354,7 +2415,8 @@ public partial class BlockStatement
         if (Declarations is not null) foreach (var x in Declarations) x.Accept(visitor);
         if (Statements is not null) foreach (var x in Statements) x.Accept(visitor);
         if (Handlers is not null) foreach (var x in Handlers) x.Accept(visitor);
-        EndName?.Accept(visitor);
+        EndLabel?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -2362,7 +2424,8 @@ public partial class BlockStatement
         SqlNodeRewriter.RewriteList(rewriter, Declarations, "BlockStatement.Declarations");
         SqlNodeRewriter.RewriteList(rewriter, Statements, "BlockStatement.Statements");
         SqlNodeRewriter.RewriteList(rewriter, Handlers, "BlockStatement.Handlers");
-        EndName = SqlNodeRewriter.RewriteOptional(rewriter, EndName, "BlockStatement.EndName");
+        EndLabel = SqlNodeRewriter.RewriteOptional(rewriter, EndLabel, "BlockStatement.EndLabel");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "BlockStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -2371,7 +2434,7 @@ public partial class BlockStatement
         new("Declarations", Declarations),
         new("Statements", Statements),
         new("Handlers", Handlers),
-        new("EndName", EndName),
+        new("EndLabel", EndLabel),
         new("Labels", Labels),
     ];
 
@@ -2388,8 +2451,8 @@ public partial class BlockStatement
             Declarations = CloneList(Declarations),
             Statements = CloneList(Statements),
             Handlers = CloneList(Handlers),
-            EndName = CloneChild(EndName),
-            Labels = CloneStrings(Labels),
+            EndLabel = CloneChild(EndLabel),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -2402,8 +2465,8 @@ public partial class BlockStatement
             && PairList(Declarations, o.Declarations, pending)
             && PairList(Statements, o.Statements, pending)
             && PairList(Handlers, o.Handlers, pending)
-            && Pair(EndName, o.EndName, pending)
-            && SameStrings(Labels, o.Labels);
+            && Pair(EndLabel, o.EndLabel, pending)
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -2443,6 +2506,7 @@ public partial class CallStatement
     {
         if (Routine is not null) yield return Routine;
         if (Into is not null) yield return Into;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -2450,12 +2514,14 @@ public partial class CallStatement
     {
         Routine?.Accept(visitor);
         Into?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Routine = SqlNodeRewriter.RewriteRequired(rewriter, Routine, "CallStatement.Routine");
         Into = SqlNodeRewriter.RewriteOptional(rewriter, Into, "CallStatement.Into");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CallStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -2476,7 +2542,7 @@ public partial class CallStatement
         {
             Routine = CloneChild(Routine)!,
             Into = CloneChild(Into),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -2487,7 +2553,7 @@ public partial class CallStatement
         var o = (CallStatement)other;
         return Pair(Routine, o.Routine, pending)
             && Pair(Into, o.Into, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -2796,17 +2862,20 @@ public partial class CloseStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Cursor is not null) yield return Cursor;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Cursor?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Cursor = SqlNodeRewriter.RewriteRequired(rewriter, Cursor, "CloseStatement.Cursor");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CloseStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -2825,7 +2894,7 @@ public partial class CloseStatement
         var c = new CloseStatement
         {
             Cursor = CloneChild(Cursor)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -2835,7 +2904,7 @@ public partial class CloseStatement
     {
         var o = (CloseStatement)other;
         return Pair(Cursor, o.Cursor, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -3137,17 +3206,20 @@ public partial class CommentStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Name is not null) foreach (var x in Name) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "CommentStatement.Name");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CommentStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -3170,7 +3242,7 @@ public partial class CommentStatement
             Target = Target,
             Name = CloneList(Name),
             Text = Text,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -3182,7 +3254,7 @@ public partial class CommentStatement
         return Target == o.Target
             && PairList(Name, o.Name, pending)
             && Text == o.Text
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -3195,6 +3267,7 @@ public partial class CommitStatement
         if (Write is not null) yield return Write;
         if (Force is not null) yield return Force;
         if (ForceScn is not null) yield return ForceScn;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -3204,6 +3277,7 @@ public partial class CommitStatement
         Write?.Accept(visitor);
         Force?.Accept(visitor);
         ForceScn?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -3212,6 +3286,7 @@ public partial class CommitStatement
         Write = SqlNodeRewriter.RewriteOptional(rewriter, Write, "CommitStatement.Write");
         Force = SqlNodeRewriter.RewriteOptional(rewriter, Force, "CommitStatement.Force");
         ForceScn = SqlNodeRewriter.RewriteOptional(rewriter, ForceScn, "CommitStatement.ForceScn");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CommitStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -3238,7 +3313,7 @@ public partial class CommitStatement
             Write = CloneChild(Write),
             Force = CloneChild(Force),
             ForceScn = CloneChild(ForceScn),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -3252,7 +3327,7 @@ public partial class CommitStatement
             && Pair(Write, o.Write, pending)
             && Pair(Force, o.Force, pending)
             && Pair(ForceScn, o.ForceScn, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -3410,17 +3485,20 @@ public partial class CompilationErrorStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Message is not null) yield return Message;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Message?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Message = SqlNodeRewriter.RewriteRequired(rewriter, Message, "CompilationErrorStatement.Message");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CompilationErrorStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -3439,7 +3517,7 @@ public partial class CompilationErrorStatement
         var c = new CompilationErrorStatement
         {
             Message = CloneChild(Message)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -3449,7 +3527,7 @@ public partial class CompilationErrorStatement
     {
         var o = (CompilationErrorStatement)other;
         return Pair(Message, o.Message, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -3911,6 +3989,7 @@ public partial class ConditionalStatement
         if (ThenStatements is not null) foreach (var x in ThenStatements) yield return x;
         if (ElsifBranches is not null) foreach (var x in ElsifBranches) yield return x;
         if (ElseStatements is not null) foreach (var x in ElseStatements) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -3920,6 +3999,7 @@ public partial class ConditionalStatement
         if (ThenStatements is not null) foreach (var x in ThenStatements) x.Accept(visitor);
         if (ElsifBranches is not null) foreach (var x in ElsifBranches) x.Accept(visitor);
         if (ElseStatements is not null) foreach (var x in ElseStatements) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -3928,6 +4008,7 @@ public partial class ConditionalStatement
         SqlNodeRewriter.RewriteList(rewriter, ThenStatements, "ConditionalStatement.ThenStatements");
         SqlNodeRewriter.RewriteList(rewriter, ElsifBranches, "ConditionalStatement.ElsifBranches");
         SqlNodeRewriter.RewriteList(rewriter, ElseStatements, "ConditionalStatement.ElseStatements");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ConditionalStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -3952,7 +4033,7 @@ public partial class ConditionalStatement
             ThenStatements = CloneList(ThenStatements),
             ElsifBranches = CloneList(ElsifBranches),
             ElseStatements = CloneList(ElseStatements),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -3965,7 +4046,7 @@ public partial class ConditionalStatement
             && PairList(ThenStatements, o.ThenStatements, pending)
             && PairList(ElsifBranches, o.ElsifBranches, pending)
             && PairList(ElseStatements, o.ElseStatements, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4144,6 +4225,7 @@ public partial class ContinueStatement
     {
         if (Label is not null) yield return Label;
         if (When is not null) yield return When;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4151,12 +4233,14 @@ public partial class ContinueStatement
     {
         Label?.Accept(visitor);
         When?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Label = SqlNodeRewriter.RewriteOptional(rewriter, Label, "ContinueStatement.Label");
         When = SqlNodeRewriter.RewriteOptional(rewriter, When, "ContinueStatement.When");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ContinueStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4177,7 +4261,7 @@ public partial class ContinueStatement
         {
             Label = CloneChild(Label),
             When = CloneChild(When),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4188,7 +4272,7 @@ public partial class ContinueStatement
         var o = (ContinueStatement)other;
         return Pair(Label, o.Label, pending)
             && Pair(When, o.When, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4200,6 +4284,7 @@ public partial class CreateAuditPolicyStatement
         if (Name is not null) yield return Name;
         if (Lists is not null) foreach (var x in Lists) yield return x;
         if (Condition is not null) yield return Condition;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4208,6 +4293,7 @@ public partial class CreateAuditPolicyStatement
         Name?.Accept(visitor);
         if (Lists is not null) foreach (var x in Lists) x.Accept(visitor);
         Condition?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4215,6 +4301,7 @@ public partial class CreateAuditPolicyStatement
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "CreateAuditPolicyStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Lists, "CreateAuditPolicyStatement.Lists");
         Condition = SqlNodeRewriter.RewriteOptional(rewriter, Condition, "CreateAuditPolicyStatement.Condition");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateAuditPolicyStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4245,7 +4332,7 @@ public partial class CreateAuditPolicyStatement
             Evaluate = Evaluate,
             OnlyToplevel = OnlyToplevel,
             Container = Container,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4261,7 +4348,7 @@ public partial class CreateAuditPolicyStatement
             && Evaluate == o.Evaluate
             && OnlyToplevel == o.OnlyToplevel
             && Container == o.Container
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4272,6 +4359,7 @@ public partial class CreateContextStatement
     {
         if (Name is not null) yield return Name;
         if (Package is not null) foreach (var x in Package) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4279,12 +4367,14 @@ public partial class CreateContextStatement
     {
         Name?.Accept(visitor);
         if (Package is not null) foreach (var x in Package) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "CreateContextStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Package, "CreateContextStatement.Package");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateContextStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4313,7 +4403,7 @@ public partial class CreateContextStatement
             Package = CloneList(Package),
             Initialized = Initialized,
             AccessedGlobally = AccessedGlobally,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4328,7 +4418,7 @@ public partial class CreateContextStatement
             && PairList(Package, o.Package, pending)
             && Initialized == o.Initialized
             && AccessedGlobally == o.AccessedGlobally
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4344,6 +4434,7 @@ public partial class CreateDatabaseLinkStatement
         if (AuthenticatedPassword is not null) yield return AuthenticatedPassword;
         if (Using is not null) yield return Using;
         if (OtherClauses is not null) foreach (var x in OtherClauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4356,6 +4447,7 @@ public partial class CreateDatabaseLinkStatement
         AuthenticatedPassword?.Accept(visitor);
         Using?.Accept(visitor);
         if (OtherClauses is not null) foreach (var x in OtherClauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4367,6 +4459,7 @@ public partial class CreateDatabaseLinkStatement
         AuthenticatedPassword = SqlNodeRewriter.RewriteOptional(rewriter, AuthenticatedPassword, "CreateDatabaseLinkStatement.AuthenticatedPassword");
         Using = SqlNodeRewriter.RewriteOptional(rewriter, Using, "CreateDatabaseLinkStatement.Using");
         SqlNodeRewriter.RewriteList(rewriter, OtherClauses, "CreateDatabaseLinkStatement.OtherClauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateDatabaseLinkStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4407,7 +4500,7 @@ public partial class CreateDatabaseLinkStatement
             AuthenticatedPassword = CloneChild(AuthenticatedPassword),
             Using = CloneChild(Using),
             OtherClauses = CloneList(OtherClauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4428,7 +4521,7 @@ public partial class CreateDatabaseLinkStatement
             && Pair(AuthenticatedPassword, o.AuthenticatedPassword, pending)
             && Pair(Using, o.Using, pending)
             && PairList(OtherClauses, o.OtherClauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4439,6 +4532,7 @@ public partial class CreateDirectoryStatement
     {
         if (Name is not null) yield return Name;
         if (Path is not null) yield return Path;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4446,12 +4540,14 @@ public partial class CreateDirectoryStatement
     {
         Name?.Accept(visitor);
         Path?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "CreateDirectoryStatement.Name");
         Path = SqlNodeRewriter.RewriteRequired(rewriter, Path, "CreateDirectoryStatement.Path");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateDirectoryStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4478,7 +4574,7 @@ public partial class CreateDirectoryStatement
             Name = CloneChild(Name)!,
             Sharing = Sharing,
             Path = CloneChild(Path)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4492,7 +4588,7 @@ public partial class CreateDirectoryStatement
             && Pair(Name, o.Name, pending)
             && Sharing == o.Sharing
             && Pair(Path, o.Path, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4509,6 +4605,7 @@ public partial class CreateDomainStatement
         if (Display is not null) yield return Display;
         if (Order is not null) yield return Order;
         if (Annotations is not null) yield return Annotations;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4522,6 +4619,7 @@ public partial class CreateDomainStatement
         Display?.Accept(visitor);
         Order?.Accept(visitor);
         Annotations?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4534,6 +4632,7 @@ public partial class CreateDomainStatement
         Display = SqlNodeRewriter.RewriteOptional(rewriter, Display, "CreateDomainStatement.Display");
         Order = SqlNodeRewriter.RewriteOptional(rewriter, Order, "CreateDomainStatement.Order");
         Annotations = SqlNodeRewriter.RewriteOptional(rewriter, Annotations, "CreateDomainStatement.Annotations");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateDomainStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4572,7 +4671,7 @@ public partial class CreateDomainStatement
             Display = CloneChild(Display),
             Order = CloneChild(Order),
             Annotations = CloneChild(Annotations),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4592,7 +4691,7 @@ public partial class CreateDomainStatement
             && Pair(Display, o.Display, pending)
             && Pair(Order, o.Order, pending)
             && Pair(Annotations, o.Annotations, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4604,6 +4703,7 @@ public partial class CreateDualityViewStatement
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Query is not null) yield return Query;
         if (OtherClauses is not null) foreach (var x in OtherClauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4612,6 +4712,7 @@ public partial class CreateDualityViewStatement
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         Query?.Accept(visitor);
         if (OtherClauses is not null) foreach (var x in OtherClauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4619,6 +4720,7 @@ public partial class CreateDualityViewStatement
         SqlNodeRewriter.RewriteList(rewriter, Name, "CreateDualityViewStatement.Name");
         Query = SqlNodeRewriter.RewriteOptional(rewriter, Query, "CreateDualityViewStatement.Query");
         SqlNodeRewriter.RewriteList(rewriter, OtherClauses, "CreateDualityViewStatement.OtherClauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateDualityViewStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4645,7 +4747,7 @@ public partial class CreateDualityViewStatement
             Name = CloneList(Name),
             Query = CloneChild(Query),
             OtherClauses = CloneList(OtherClauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4659,7 +4761,7 @@ public partial class CreateDualityViewStatement
             && PairList(Name, o.Name, pending)
             && Pair(Query, o.Query, pending)
             && PairList(OtherClauses, o.OtherClauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4676,6 +4778,7 @@ public partial class CreateIndexStatement
         if (Indextype is not null) foreach (var x in Indextype) yield return x;
         if (IndextypeParameters is not null) yield return IndextypeParameters;
         if (Attributes is not null) foreach (var x in Attributes) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4689,6 +4792,7 @@ public partial class CreateIndexStatement
         if (Indextype is not null) foreach (var x in Indextype) x.Accept(visitor);
         IndextypeParameters?.Accept(visitor);
         if (Attributes is not null) foreach (var x in Attributes) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4701,6 +4805,7 @@ public partial class CreateIndexStatement
         SqlNodeRewriter.RewriteList(rewriter, Indextype, "CreateIndexStatement.Indextype");
         IndextypeParameters = SqlNodeRewriter.RewriteOptional(rewriter, IndextypeParameters, "CreateIndexStatement.IndextypeParameters");
         SqlNodeRewriter.RewriteList(rewriter, Attributes, "CreateIndexStatement.Attributes");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateIndexStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4749,7 +4854,7 @@ public partial class CreateIndexStatement
             Local = Local,
             Global = Global,
             Attributes = CloneList(Attributes),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4774,7 +4879,7 @@ public partial class CreateIndexStatement
             && Local == o.Local
             && Global == o.Global
             && PairList(Attributes, o.Attributes, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4789,6 +4894,7 @@ public partial class CreateJavaStatement
         if (UsingFile is not null) yield return UsingFile;
         if (UsingKey is not null) yield return UsingKey;
         if (UsingQuery is not null) yield return UsingQuery;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4800,6 +4906,7 @@ public partial class CreateJavaStatement
         UsingFile?.Accept(visitor);
         UsingKey?.Accept(visitor);
         UsingQuery?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4810,6 +4917,7 @@ public partial class CreateJavaStatement
         UsingFile = SqlNodeRewriter.RewriteOptional(rewriter, UsingFile, "CreateJavaStatement.UsingFile");
         UsingKey = SqlNodeRewriter.RewriteOptional(rewriter, UsingKey, "CreateJavaStatement.UsingKey");
         UsingQuery = SqlNodeRewriter.RewriteOptional(rewriter, UsingQuery, "CreateJavaStatement.UsingQuery");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateJavaStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4856,7 +4964,7 @@ public partial class CreateJavaStatement
             UsingKey = CloneChild(UsingKey),
             UsingQuery = CloneChild(UsingQuery),
             SourceText = SourceText,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4880,7 +4988,7 @@ public partial class CreateJavaStatement
             && Pair(UsingKey, o.UsingKey, pending)
             && Pair(UsingQuery, o.UsingQuery, pending)
             && SourceText == o.SourceText
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4893,6 +5001,7 @@ public partial class CreateLibraryStatement
         if (Path is not null) yield return Path;
         if (Agent is not null) yield return Agent;
         if (Credential is not null) yield return Credential;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4902,6 +5011,7 @@ public partial class CreateLibraryStatement
         Path?.Accept(visitor);
         Agent?.Accept(visitor);
         Credential?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -4910,6 +5020,7 @@ public partial class CreateLibraryStatement
         Path = SqlNodeRewriter.RewriteRequired(rewriter, Path, "CreateLibraryStatement.Path");
         Agent = SqlNodeRewriter.RewriteOptional(rewriter, Agent, "CreateLibraryStatement.Agent");
         Credential = SqlNodeRewriter.RewriteOptional(rewriter, Credential, "CreateLibraryStatement.Credential");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateLibraryStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -4940,7 +5051,7 @@ public partial class CreateLibraryStatement
             Path = CloneChild(Path)!,
             Agent = CloneChild(Agent),
             Credential = CloneChild(Credential),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -4956,7 +5067,7 @@ public partial class CreateLibraryStatement
             && Pair(Path, o.Path, pending)
             && Pair(Agent, o.Agent, pending)
             && Pair(Credential, o.Credential, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -4967,6 +5078,7 @@ public partial class CreateObjectStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Body is not null) foreach (var x in Body) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -4974,12 +5086,14 @@ public partial class CreateObjectStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Body is not null) foreach (var x in Body) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "CreateObjectStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Body, "CreateObjectStatement.Body");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateObjectStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5008,7 +5122,7 @@ public partial class CreateObjectStatement
             IfNotExists = IfNotExists,
             Name = CloneList(Name),
             Body = CloneList(Body),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5023,7 +5137,7 @@ public partial class CreateObjectStatement
             && IfNotExists == o.IfNotExists
             && PairList(Name, o.Name, pending)
             && PairList(Body, o.Body, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5037,6 +5151,7 @@ public partial class CreatePackageBodyStatement
         if (InitStatements is not null) foreach (var x in InitStatements) yield return x;
         if (InitHandlers is not null) foreach (var x in InitHandlers) yield return x;
         if (EndName is not null) yield return EndName;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5047,6 +5162,7 @@ public partial class CreatePackageBodyStatement
         if (InitStatements is not null) foreach (var x in InitStatements) x.Accept(visitor);
         if (InitHandlers is not null) foreach (var x in InitHandlers) x.Accept(visitor);
         EndName?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5056,6 +5172,7 @@ public partial class CreatePackageBodyStatement
         SqlNodeRewriter.RewriteList(rewriter, InitStatements, "CreatePackageBodyStatement.InitStatements");
         SqlNodeRewriter.RewriteList(rewriter, InitHandlers, "CreatePackageBodyStatement.InitHandlers");
         EndName = SqlNodeRewriter.RewriteOptional(rewriter, EndName, "CreatePackageBodyStatement.EndName");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreatePackageBodyStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5086,7 +5203,7 @@ public partial class CreatePackageBodyStatement
             InitStatements = CloneList(InitStatements),
             InitHandlers = CloneList(InitHandlers),
             EndName = CloneChild(EndName),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5102,7 +5219,7 @@ public partial class CreatePackageBodyStatement
             && PairList(InitStatements, o.InitStatements, pending)
             && PairList(InitHandlers, o.InitHandlers, pending)
             && Pair(EndName, o.EndName, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5115,6 +5232,7 @@ public partial class CreatePackageStatement
         if (Options is not null) yield return Options;
         if (Declarations is not null) foreach (var x in Declarations) yield return x;
         if (EndName is not null) yield return EndName;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5124,6 +5242,7 @@ public partial class CreatePackageStatement
         Options?.Accept(visitor);
         if (Declarations is not null) foreach (var x in Declarations) x.Accept(visitor);
         EndName?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5132,6 +5251,7 @@ public partial class CreatePackageStatement
         Options = SqlNodeRewriter.RewriteOptional(rewriter, Options, "CreatePackageStatement.Options");
         SqlNodeRewriter.RewriteList(rewriter, Declarations, "CreatePackageStatement.Declarations");
         EndName = SqlNodeRewriter.RewriteOptional(rewriter, EndName, "CreatePackageStatement.EndName");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreatePackageStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5160,7 +5280,7 @@ public partial class CreatePackageStatement
             Options = CloneChild(Options),
             Declarations = CloneList(Declarations),
             EndName = CloneChild(EndName),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5175,7 +5295,7 @@ public partial class CreatePackageStatement
             && Pair(Options, o.Options, pending)
             && PairList(Declarations, o.Declarations, pending)
             && Pair(EndName, o.EndName, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5186,6 +5306,7 @@ public partial class CreateProfileStatement
     {
         if (Name is not null) yield return Name;
         if (Limits is not null) foreach (var x in Limits) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5193,12 +5314,14 @@ public partial class CreateProfileStatement
     {
         Name?.Accept(visitor);
         if (Limits is not null) foreach (var x in Limits) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "CreateProfileStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Limits, "CreateProfileStatement.Limits");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateProfileStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5223,7 +5346,7 @@ public partial class CreateProfileStatement
             Name = CloneChild(Name)!,
             Limits = CloneList(Limits),
             Container = Container,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5236,7 +5359,7 @@ public partial class CreateProfileStatement
             && Pair(Name, o.Name, pending)
             && PairList(Limits, o.Limits, pending)
             && Container == o.Container
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5246,17 +5369,20 @@ public partial class CreateProgramStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Subprogram is not null) yield return Subprogram;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Subprogram?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Subprogram = SqlNodeRewriter.RewriteRequired(rewriter, Subprogram, "CreateProgramStatement.Subprogram");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateProgramStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5279,7 +5405,7 @@ public partial class CreateProgramStatement
             OrReplace = OrReplace,
             Editionable = Editionable,
             Subprogram = CloneChild(Subprogram)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5291,7 +5417,7 @@ public partial class CreateProgramStatement
         return OrReplace == o.OrReplace
             && Editionable == o.Editionable
             && Pair(Subprogram, o.Subprogram, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5303,6 +5429,7 @@ public partial class CreatePropertyGraphStatement
         if (Name is not null) foreach (var x in Name) yield return x;
         if (VertexTables is not null) foreach (var x in VertexTables) yield return x;
         if (EdgeTables is not null) foreach (var x in EdgeTables) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5311,6 +5438,7 @@ public partial class CreatePropertyGraphStatement
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (VertexTables is not null) foreach (var x in VertexTables) x.Accept(visitor);
         if (EdgeTables is not null) foreach (var x in EdgeTables) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5318,6 +5446,7 @@ public partial class CreatePropertyGraphStatement
         SqlNodeRewriter.RewriteList(rewriter, Name, "CreatePropertyGraphStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, VertexTables, "CreatePropertyGraphStatement.VertexTables");
         SqlNodeRewriter.RewriteList(rewriter, EdgeTables, "CreatePropertyGraphStatement.EdgeTables");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreatePropertyGraphStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5342,7 +5471,7 @@ public partial class CreatePropertyGraphStatement
             Name = CloneList(Name),
             VertexTables = CloneList(VertexTables),
             EdgeTables = CloneList(EdgeTables),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5355,7 +5484,7 @@ public partial class CreatePropertyGraphStatement
             && PairList(Name, o.Name, pending)
             && PairList(VertexTables, o.VertexTables, pending)
             && PairList(EdgeTables, o.EdgeTables, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5367,6 +5496,7 @@ public partial class CreateRoleStatement
         if (Name is not null) yield return Name;
         if (Password is not null) yield return Password;
         if (Package is not null) foreach (var x in Package) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5375,6 +5505,7 @@ public partial class CreateRoleStatement
         Name?.Accept(visitor);
         Password?.Accept(visitor);
         if (Package is not null) foreach (var x in Package) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5382,6 +5513,7 @@ public partial class CreateRoleStatement
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "CreateRoleStatement.Name");
         Password = SqlNodeRewriter.RewriteOptional(rewriter, Password, "CreateRoleStatement.Password");
         SqlNodeRewriter.RewriteList(rewriter, Package, "CreateRoleStatement.Package");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateRoleStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5410,7 +5542,7 @@ public partial class CreateRoleStatement
             Password = CloneChild(Password),
             Package = CloneList(Package),
             Container = Container,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5425,7 +5557,7 @@ public partial class CreateRoleStatement
             && Pair(Password, o.Password, pending)
             && PairList(Package, o.Package, pending)
             && Container == o.Container
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5436,6 +5568,7 @@ public partial class CreateSequenceStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Options is not null) foreach (var x in Options) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5443,12 +5576,14 @@ public partial class CreateSequenceStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Options is not null) foreach (var x in Options) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "CreateSequenceStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Options, "CreateSequenceStatement.Options");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateSequenceStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5473,7 +5608,7 @@ public partial class CreateSequenceStatement
             IfNotExists = IfNotExists,
             Name = CloneList(Name),
             Options = CloneList(Options),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5486,7 +5621,7 @@ public partial class CreateSequenceStatement
             && IfNotExists == o.IfNotExists
             && PairList(Name, o.Name, pending)
             && PairList(Options, o.Options, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5498,6 +5633,7 @@ public partial class CreateSynonymStatement
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Target is not null) foreach (var x in Target) yield return x;
         if (DbLink is not null) foreach (var x in DbLink) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5506,6 +5642,7 @@ public partial class CreateSynonymStatement
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Target is not null) foreach (var x in Target) x.Accept(visitor);
         if (DbLink is not null) foreach (var x in DbLink) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5513,6 +5650,7 @@ public partial class CreateSynonymStatement
         SqlNodeRewriter.RewriteList(rewriter, Name, "CreateSynonymStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Target, "CreateSynonymStatement.Target");
         SqlNodeRewriter.RewriteList(rewriter, DbLink, "CreateSynonymStatement.DbLink");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateSynonymStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5543,7 +5681,7 @@ public partial class CreateSynonymStatement
             Name = CloneList(Name),
             Target = CloneList(Target),
             DbLink = CloneList(DbLink),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5559,7 +5697,7 @@ public partial class CreateSynonymStatement
             && PairList(Name, o.Name, pending)
             && PairList(Target, o.Target, pending)
             && PairList(DbLink, o.DbLink, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5574,6 +5712,7 @@ public partial class CreateTableStatement
         if (OfType is not null) foreach (var x in OfType) yield return x;
         if (Attributes is not null) foreach (var x in Attributes) yield return x;
         if (AsQuery is not null) yield return AsQuery;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5585,6 +5724,7 @@ public partial class CreateTableStatement
         if (OfType is not null) foreach (var x in OfType) x.Accept(visitor);
         if (Attributes is not null) foreach (var x in Attributes) x.Accept(visitor);
         AsQuery?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5595,6 +5735,7 @@ public partial class CreateTableStatement
         SqlNodeRewriter.RewriteList(rewriter, OfType, "CreateTableStatement.OfType");
         SqlNodeRewriter.RewriteList(rewriter, Attributes, "CreateTableStatement.Attributes");
         AsQuery = SqlNodeRewriter.RewriteOptional(rewriter, AsQuery, "CreateTableStatement.AsQuery");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateTableStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5641,7 +5782,7 @@ public partial class CreateTableStatement
             OnCommit = OnCommit,
             Attributes = CloneList(Attributes),
             AsQuery = CloneChild(AsQuery),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5665,7 +5806,7 @@ public partial class CreateTableStatement
             && OnCommit == o.OnCommit
             && PairList(Attributes, o.Attributes, pending)
             && Pair(AsQuery, o.AsQuery, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5679,6 +5820,7 @@ public partial class CreateTablespaceStatement
         if (UniformSize is not null) yield return UniformSize;
         if (EncryptionUsing is not null) yield return EncryptionUsing;
         if (OtherClauses is not null) foreach (var x in OtherClauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5689,6 +5831,7 @@ public partial class CreateTablespaceStatement
         UniformSize?.Accept(visitor);
         EncryptionUsing?.Accept(visitor);
         if (OtherClauses is not null) foreach (var x in OtherClauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5698,6 +5841,7 @@ public partial class CreateTablespaceStatement
         UniformSize = SqlNodeRewriter.RewriteOptional(rewriter, UniformSize, "CreateTablespaceStatement.UniformSize");
         EncryptionUsing = SqlNodeRewriter.RewriteOptional(rewriter, EncryptionUsing, "CreateTablespaceStatement.EncryptionUsing");
         SqlNodeRewriter.RewriteList(rewriter, OtherClauses, "CreateTablespaceStatement.OtherClauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateTablespaceStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5746,7 +5890,7 @@ public partial class CreateTablespaceStatement
             EncryptionUsing = CloneChild(EncryptionUsing),
             DefaultStorageEncrypt = DefaultStorageEncrypt,
             OtherClauses = CloneList(OtherClauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5771,7 +5915,7 @@ public partial class CreateTablespaceStatement
             && Pair(EncryptionUsing, o.EncryptionUsing, pending)
             && DefaultStorageEncrypt == o.DefaultStorageEncrypt
             && PairList(OtherClauses, o.OtherClauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5791,6 +5935,7 @@ public partial class CreateTriggerStatement
         if (Call is not null) yield return Call;
         if (CompoundDeclarations is not null) foreach (var x in CompoundDeclarations) yield return x;
         if (Sections is not null) foreach (var x in Sections) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5807,6 +5952,7 @@ public partial class CreateTriggerStatement
         Call?.Accept(visitor);
         if (CompoundDeclarations is not null) foreach (var x in CompoundDeclarations) x.Accept(visitor);
         if (Sections is not null) foreach (var x in Sections) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -5822,6 +5968,7 @@ public partial class CreateTriggerStatement
         Call = SqlNodeRewriter.RewriteOptional(rewriter, Call, "CreateTriggerStatement.Call");
         SqlNodeRewriter.RewriteList(rewriter, CompoundDeclarations, "CreateTriggerStatement.CompoundDeclarations");
         SqlNodeRewriter.RewriteList(rewriter, Sections, "CreateTriggerStatement.Sections");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateTriggerStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5880,7 +6027,7 @@ public partial class CreateTriggerStatement
             Compound = Compound,
             CompoundDeclarations = CloneList(CompoundDeclarations),
             Sections = CloneList(Sections),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5910,7 +6057,7 @@ public partial class CreateTriggerStatement
             && Compound == o.Compound
             && PairList(CompoundDeclarations, o.CompoundDeclarations, pending)
             && PairList(Sections, o.Sections, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5921,6 +6068,7 @@ public partial class CreateTypeBodyStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (Members is not null) foreach (var x in Members) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5928,12 +6076,14 @@ public partial class CreateTypeBodyStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (Members is not null) foreach (var x in Members) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "CreateTypeBodyStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Members, "CreateTypeBodyStatement.Members");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateTypeBodyStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -5956,7 +6106,7 @@ public partial class CreateTypeBodyStatement
             OrReplace = OrReplace,
             Name = CloneList(Name),
             Members = CloneList(Members),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -5968,7 +6118,7 @@ public partial class CreateTypeBodyStatement
         return OrReplace == o.OrReplace
             && PairList(Name, o.Name, pending)
             && PairList(Members, o.Members, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -5985,6 +6135,7 @@ public partial class CreateTypeStatement
         if (ElementType is not null) yield return ElementType;
         if (Limit is not null) yield return Limit;
         if (SuperType is not null) foreach (var x in SuperType) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -5998,6 +6149,7 @@ public partial class CreateTypeStatement
         ElementType?.Accept(visitor);
         Limit?.Accept(visitor);
         if (SuperType is not null) foreach (var x in SuperType) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -6010,6 +6162,7 @@ public partial class CreateTypeStatement
         ElementType = SqlNodeRewriter.RewriteOptional(rewriter, ElementType, "CreateTypeStatement.ElementType");
         Limit = SqlNodeRewriter.RewriteOptional(rewriter, Limit, "CreateTypeStatement.Limit");
         SqlNodeRewriter.RewriteList(rewriter, SuperType, "CreateTypeStatement.SuperType");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateTypeStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -6056,7 +6209,7 @@ public partial class CreateTypeStatement
             ElementType = CloneChild(ElementType),
             Limit = CloneChild(Limit),
             SuperType = CloneList(SuperType),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -6080,7 +6233,7 @@ public partial class CreateTypeStatement
             && Pair(ElementType, o.ElementType, pending)
             && Pair(Limit, o.Limit, pending)
             && PairList(SuperType, o.SuperType, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -6091,6 +6244,7 @@ public partial class CreateUserStatement
     {
         if (Name is not null) yield return Name;
         if (Clauses is not null) foreach (var x in Clauses) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -6098,12 +6252,14 @@ public partial class CreateUserStatement
     {
         Name?.Accept(visitor);
         if (Clauses is not null) foreach (var x in Clauses) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "CreateUserStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, Clauses, "CreateUserStatement.Clauses");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateUserStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -6126,7 +6282,7 @@ public partial class CreateUserStatement
             IfNotExists = IfNotExists,
             Name = CloneChild(Name)!,
             Clauses = CloneList(Clauses),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -6138,7 +6294,7 @@ public partial class CreateUserStatement
         return IfNotExists == o.IfNotExists
             && Pair(Name, o.Name, pending)
             && PairList(Clauses, o.Clauses, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -6153,6 +6309,7 @@ public partial class CreateViewStatement
         if (Attributes is not null) foreach (var x in Attributes) yield return x;
         if (Query is not null) yield return Query;
         if (CheckOptionConstraint is not null) yield return CheckOptionConstraint;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -6164,6 +6321,7 @@ public partial class CreateViewStatement
         if (Attributes is not null) foreach (var x in Attributes) x.Accept(visitor);
         Query?.Accept(visitor);
         CheckOptionConstraint?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -6174,6 +6332,7 @@ public partial class CreateViewStatement
         SqlNodeRewriter.RewriteList(rewriter, Attributes, "CreateViewStatement.Attributes");
         Query = SqlNodeRewriter.RewriteRequired(rewriter, Query, "CreateViewStatement.Query");
         CheckOptionConstraint = SqlNodeRewriter.RewriteOptional(rewriter, CheckOptionConstraint, "CreateViewStatement.CheckOptionConstraint");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "CreateViewStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -6226,7 +6385,7 @@ public partial class CreateViewStatement
             ReadOnly = ReadOnly,
             CheckOption = CheckOption,
             CheckOptionConstraint = CloneChild(CheckOptionConstraint),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -6253,7 +6412,7 @@ public partial class CreateViewStatement
             && ReadOnly == o.ReadOnly
             && CheckOption == o.CheckOption
             && Pair(CheckOptionConstraint, o.CheckOptionConstraint, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -6732,6 +6891,7 @@ public partial class DeleteStatement
         if (Hint is not null) yield return Hint;
         if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -6743,6 +6903,7 @@ public partial class DeleteStatement
         Hint?.Accept(visitor);
         Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -6753,6 +6914,7 @@ public partial class DeleteStatement
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "DeleteStatement.Hint");
         Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "DeleteStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "DeleteStatement.ErrorLogging");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "DeleteStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -6781,7 +6943,7 @@ public partial class DeleteStatement
             Hint = CloneChild(Hint),
             Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -6796,7 +6958,7 @@ public partial class DeleteStatement
             && Pair(Hint, o.Hint, pending)
             && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -6808,6 +6970,7 @@ public partial class DropStatement
         if (Name is not null) foreach (var x in Name) yield return x;
         if (OnTable is not null) foreach (var x in OnTable) yield return x;
         if (Rest is not null) foreach (var x in Rest) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -6816,6 +6979,7 @@ public partial class DropStatement
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         if (OnTable is not null) foreach (var x in OnTable) x.Accept(visitor);
         if (Rest is not null) foreach (var x in Rest) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -6823,6 +6987,7 @@ public partial class DropStatement
         SqlNodeRewriter.RewriteList(rewriter, Name, "DropStatement.Name");
         SqlNodeRewriter.RewriteList(rewriter, OnTable, "DropStatement.OnTable");
         SqlNodeRewriter.RewriteList(rewriter, Rest, "DropStatement.Rest");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "DropStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -6867,7 +7032,7 @@ public partial class DropStatement
             Validate = Validate,
             Invalidate = Invalidate,
             Rest = CloneList(Rest),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -6890,7 +7055,7 @@ public partial class DropStatement
             && Validate == o.Validate
             && Invalidate == o.Invalidate
             && PairList(Rest, o.Rest, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -7213,17 +7378,20 @@ public partial class ExecStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Body is not null) yield return Body;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Body?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Body = SqlNodeRewriter.RewriteRequired(rewriter, Body, "ExecStatement.Body");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ExecStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -7242,7 +7410,7 @@ public partial class ExecStatement
         var c = new ExecStatement
         {
             Body = CloneChild(Body)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -7252,7 +7420,7 @@ public partial class ExecStatement
     {
         var o = (ExecStatement)other;
         return Pair(Body, o.Body, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -7265,6 +7433,7 @@ public partial class ExecuteImmediateStatement
         if (Into is not null) yield return Into;
         if (Using is not null) foreach (var x in Using) yield return x;
         if (ReturningInto is not null) yield return ReturningInto;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -7274,6 +7443,7 @@ public partial class ExecuteImmediateStatement
         Into?.Accept(visitor);
         if (Using is not null) foreach (var x in Using) x.Accept(visitor);
         ReturningInto?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -7282,6 +7452,7 @@ public partial class ExecuteImmediateStatement
         Into = SqlNodeRewriter.RewriteOptional(rewriter, Into, "ExecuteImmediateStatement.Into");
         SqlNodeRewriter.RewriteList(rewriter, Using, "ExecuteImmediateStatement.Using");
         ReturningInto = SqlNodeRewriter.RewriteOptional(rewriter, ReturningInto, "ExecuteImmediateStatement.ReturningInto");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ExecuteImmediateStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -7306,7 +7477,7 @@ public partial class ExecuteImmediateStatement
             Into = CloneChild(Into),
             Using = CloneList(Using),
             ReturningInto = CloneChild(ReturningInto),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -7319,7 +7490,7 @@ public partial class ExecuteImmediateStatement
             && Pair(Into, o.Into, pending)
             && PairList(Using, o.Using, pending)
             && Pair(ReturningInto, o.ReturningInto, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -7376,6 +7547,7 @@ public partial class ExitStatement
     {
         if (Label is not null) yield return Label;
         if (When is not null) yield return When;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -7383,12 +7555,14 @@ public partial class ExitStatement
     {
         Label?.Accept(visitor);
         When?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Label = SqlNodeRewriter.RewriteOptional(rewriter, Label, "ExitStatement.Label");
         When = SqlNodeRewriter.RewriteOptional(rewriter, When, "ExitStatement.When");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ExitStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -7409,7 +7583,7 @@ public partial class ExitStatement
         {
             Label = CloneChild(Label),
             When = CloneChild(When),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -7420,7 +7594,7 @@ public partial class ExitStatement
         var o = (ExitStatement)other;
         return Pair(Label, o.Label, pending)
             && Pair(When, o.When, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -7432,6 +7606,7 @@ public partial class ExplainPlanStatement
         if (StatementId is not null) yield return StatementId;
         if (IntoTable is not null) foreach (var x in IntoTable) yield return x;
         if (Statement is not null) yield return Statement;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -7440,6 +7615,7 @@ public partial class ExplainPlanStatement
         StatementId?.Accept(visitor);
         if (IntoTable is not null) foreach (var x in IntoTable) x.Accept(visitor);
         Statement?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -7447,6 +7623,7 @@ public partial class ExplainPlanStatement
         StatementId = SqlNodeRewriter.RewriteOptional(rewriter, StatementId, "ExplainPlanStatement.StatementId");
         SqlNodeRewriter.RewriteList(rewriter, IntoTable, "ExplainPlanStatement.IntoTable");
         Statement = SqlNodeRewriter.RewriteRequired(rewriter, Statement, "ExplainPlanStatement.Statement");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ExplainPlanStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -7469,7 +7646,7 @@ public partial class ExplainPlanStatement
             StatementId = CloneChild(StatementId),
             IntoTable = CloneList(IntoTable),
             Statement = CloneChild(Statement)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -7481,7 +7658,7 @@ public partial class ExplainPlanStatement
         return Pair(StatementId, o.StatementId, pending)
             && PairList(IntoTable, o.IntoTable, pending)
             && Pair(Statement, o.Statement, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -7959,6 +8136,7 @@ public partial class FetchStatement
         if (Cursor is not null) yield return Cursor;
         if (Into is not null) yield return Into;
         if (Limit is not null) yield return Limit;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -7967,6 +8145,7 @@ public partial class FetchStatement
         Cursor?.Accept(visitor);
         Into?.Accept(visitor);
         Limit?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -7974,6 +8153,7 @@ public partial class FetchStatement
         Cursor = SqlNodeRewriter.RewriteRequired(rewriter, Cursor, "FetchStatement.Cursor");
         Into = SqlNodeRewriter.RewriteRequired(rewriter, Into, "FetchStatement.Into");
         Limit = SqlNodeRewriter.RewriteOptional(rewriter, Limit, "FetchStatement.Limit");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "FetchStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -7996,7 +8176,7 @@ public partial class FetchStatement
             Cursor = CloneChild(Cursor)!,
             Into = CloneChild(Into)!,
             Limit = CloneChild(Limit),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -8008,7 +8188,7 @@ public partial class FetchStatement
         return Pair(Cursor, o.Cursor, pending)
             && Pair(Into, o.Into, pending)
             && Pair(Limit, o.Limit, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -8113,6 +8293,7 @@ public partial class FlashbackTableStatement
         if (Tables is not null) foreach (var row in Tables) if (row is not null) foreach (var x in row) yield return x;
         if (Point is not null) yield return Point;
         if (RenameTo is not null) yield return RenameTo;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -8121,6 +8302,7 @@ public partial class FlashbackTableStatement
         if (Tables is not null) foreach (var row in Tables) if (row is not null) foreach (var x in row) x.Accept(visitor);
         Point?.Accept(visitor);
         RenameTo?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8128,6 +8310,7 @@ public partial class FlashbackTableStatement
         SqlNodeRewriter.RewriteNested(rewriter, Tables, "FlashbackTableStatement.Tables");
         Point = SqlNodeRewriter.RewriteOptional(rewriter, Point, "FlashbackTableStatement.Point");
         RenameTo = SqlNodeRewriter.RewriteOptional(rewriter, RenameTo, "FlashbackTableStatement.RenameTo");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "FlashbackTableStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8156,7 +8339,7 @@ public partial class FlashbackTableStatement
             RenameTo = CloneChild(RenameTo),
             Before = Before,
             EnableTriggers = EnableTriggers,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -8171,7 +8354,7 @@ public partial class FlashbackTableStatement
             && Pair(RenameTo, o.RenameTo, pending)
             && Before == o.Before
             && EnableTriggers == o.EnableTriggers
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -8488,6 +8671,7 @@ public partial class ForallStatement
         if (Index is not null) yield return Index;
         if (Bounds is not null) yield return Bounds;
         if (Body is not null) yield return Body;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -8496,6 +8680,7 @@ public partial class ForallStatement
         Index?.Accept(visitor);
         Bounds?.Accept(visitor);
         Body?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8503,6 +8688,7 @@ public partial class ForallStatement
         Index = SqlNodeRewriter.RewriteRequired(rewriter, Index, "ForallStatement.Index");
         Bounds = SqlNodeRewriter.RewriteRequired(rewriter, Bounds, "ForallStatement.Bounds");
         Body = SqlNodeRewriter.RewriteRequired(rewriter, Body, "ForallStatement.Body");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ForallStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8527,7 +8713,7 @@ public partial class ForallStatement
             Bounds = CloneChild(Bounds)!,
             SaveExceptions = SaveExceptions,
             Body = CloneChild(Body)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -8540,7 +8726,7 @@ public partial class ForallStatement
             && Pair(Bounds, o.Bounds, pending)
             && SaveExceptions == o.SaveExceptions
             && Pair(Body, o.Body, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -8849,17 +9035,20 @@ public partial class GotoStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Target is not null) yield return Target;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Target?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Target = SqlNodeRewriter.RewriteRequired(rewriter, Target, "GotoStatement.Target");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "GotoStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8878,7 +9067,7 @@ public partial class GotoStatement
         var c = new GotoStatement
         {
             Target = CloneChild(Target)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -8888,7 +9077,7 @@ public partial class GotoStatement
     {
         var o = (GotoStatement)other;
         return Pair(Target, o.Target, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -8964,6 +9153,7 @@ public partial class GrantStatement
         if (Privileges is not null) foreach (var x in Privileges) yield return x;
         if (Object is not null) foreach (var x in Object) yield return x;
         if (Grantees is not null) foreach (var x in Grantees) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -8972,6 +9162,7 @@ public partial class GrantStatement
         if (Privileges is not null) foreach (var x in Privileges) x.Accept(visitor);
         if (Object is not null) foreach (var x in Object) x.Accept(visitor);
         if (Grantees is not null) foreach (var x in Grantees) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8979,6 +9170,7 @@ public partial class GrantStatement
         SqlNodeRewriter.RewriteList(rewriter, Privileges, "GrantStatement.Privileges");
         SqlNodeRewriter.RewriteList(rewriter, Object, "GrantStatement.Object");
         SqlNodeRewriter.RewriteList(rewriter, Grantees, "GrantStatement.Grantees");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "GrantStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -9019,7 +9211,7 @@ public partial class GrantStatement
             CascadeConstraints = CascadeConstraints,
             Force = Force,
             Container = Container,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -9040,7 +9232,7 @@ public partial class GrantStatement
             && CascadeConstraints == o.CascadeConstraints
             && Force == o.Force
             && Container == o.Container
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -10358,6 +10550,7 @@ public partial class IfStatement
         if (ThenStatements is not null) foreach (var x in ThenStatements) yield return x;
         if (ElsifBranches is not null) foreach (var x in ElsifBranches) yield return x;
         if (ElseStatements is not null) foreach (var x in ElseStatements) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -10367,6 +10560,7 @@ public partial class IfStatement
         if (ThenStatements is not null) foreach (var x in ThenStatements) x.Accept(visitor);
         if (ElsifBranches is not null) foreach (var x in ElsifBranches) x.Accept(visitor);
         if (ElseStatements is not null) foreach (var x in ElseStatements) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -10375,6 +10569,7 @@ public partial class IfStatement
         SqlNodeRewriter.RewriteList(rewriter, ThenStatements, "IfStatement.ThenStatements");
         SqlNodeRewriter.RewriteList(rewriter, ElsifBranches, "IfStatement.ElsifBranches");
         SqlNodeRewriter.RewriteList(rewriter, ElseStatements, "IfStatement.ElseStatements");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "IfStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -10399,7 +10594,7 @@ public partial class IfStatement
             ThenStatements = CloneList(ThenStatements),
             ElsifBranches = CloneList(ElsifBranches),
             ElseStatements = CloneList(ElseStatements),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -10412,7 +10607,7 @@ public partial class IfStatement
             && PairList(ThenStatements, o.ThenStatements, pending)
             && PairList(ElsifBranches, o.ElsifBranches, pending)
             && PairList(ElseStatements, o.ElseStatements, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -10648,17 +10843,20 @@ public partial class InlinePragmaStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Subprogram is not null) yield return Subprogram;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Subprogram?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Subprogram = SqlNodeRewriter.RewriteRequired(rewriter, Subprogram, "InlinePragmaStatement.Subprogram");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "InlinePragmaStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -10679,7 +10877,7 @@ public partial class InlinePragmaStatement
         {
             Subprogram = CloneChild(Subprogram)!,
             Enabled = Enabled,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -10690,7 +10888,7 @@ public partial class InlinePragmaStatement
         var o = (InlinePragmaStatement)other;
         return Pair(Subprogram, o.Subprogram, pending)
             && Enabled == o.Enabled
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -10810,6 +11008,7 @@ public partial class InsertStatement
         if (Hint is not null) yield return Hint;
         if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -10822,6 +11021,7 @@ public partial class InsertStatement
         Hint?.Accept(visitor);
         Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -10833,6 +11033,7 @@ public partial class InsertStatement
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "InsertStatement.Hint");
         Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "InsertStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "InsertStatement.ErrorLogging");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "InsertStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -10863,7 +11064,7 @@ public partial class InsertStatement
             Hint = CloneChild(Hint),
             Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -10879,7 +11080,7 @@ public partial class InsertStatement
             && Pair(Hint, o.Hint, pending)
             && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -11746,6 +11947,7 @@ public partial class LockTableStatement
     {
         if (Tables is not null) foreach (var x in Tables) yield return x;
         if (WaitSeconds is not null) yield return WaitSeconds;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -11753,12 +11955,14 @@ public partial class LockTableStatement
     {
         if (Tables is not null) foreach (var x in Tables) x.Accept(visitor);
         WaitSeconds?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Tables, "LockTableStatement.Tables");
         WaitSeconds = SqlNodeRewriter.RewriteOptional(rewriter, WaitSeconds, "LockTableStatement.WaitSeconds");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "LockTableStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -11783,7 +11987,7 @@ public partial class LockTableStatement
             Mode = Mode,
             Wait = Wait,
             WaitSeconds = CloneChild(WaitSeconds),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -11796,7 +12000,7 @@ public partial class LockTableStatement
             && Mode == o.Mode
             && Wait == o.Wait
             && Pair(WaitSeconds, o.WaitSeconds, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -11839,6 +12043,7 @@ public partial class LoopStatement
         if (Controls is not null) foreach (var x in Controls) yield return x;
         if (Body is not null) foreach (var x in Body) yield return x;
         if (EndLabel is not null) yield return EndLabel;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -11849,6 +12054,7 @@ public partial class LoopStatement
         if (Controls is not null) foreach (var x in Controls) x.Accept(visitor);
         if (Body is not null) foreach (var x in Body) x.Accept(visitor);
         EndLabel?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -11858,6 +12064,7 @@ public partial class LoopStatement
         SqlNodeRewriter.RewriteList(rewriter, Controls, "LoopStatement.Controls");
         SqlNodeRewriter.RewriteList(rewriter, Body, "LoopStatement.Body");
         EndLabel = SqlNodeRewriter.RewriteOptional(rewriter, EndLabel, "LoopStatement.EndLabel");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "LoopStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -11886,7 +12093,7 @@ public partial class LoopStatement
             Controls = CloneList(Controls),
             Body = CloneList(Body),
             EndLabel = CloneChild(EndLabel),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -11901,7 +12108,7 @@ public partial class LoopStatement
             && PairList(Controls, o.Controls, pending)
             && PairList(Body, o.Body, pending)
             && Pair(EndLabel, o.EndLabel, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -12203,6 +12410,7 @@ public partial class MergeStatement
         if (Hint is not null) yield return Hint;
         if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -12215,6 +12423,7 @@ public partial class MergeStatement
         Hint?.Accept(visitor);
         Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -12226,6 +12435,7 @@ public partial class MergeStatement
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "MergeStatement.Hint");
         Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "MergeStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "MergeStatement.ErrorLogging");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "MergeStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -12256,7 +12466,7 @@ public partial class MergeStatement
             Hint = CloneChild(Hint),
             Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -12272,7 +12482,7 @@ public partial class MergeStatement
             && Pair(Hint, o.Hint, pending)
             && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -12567,6 +12777,7 @@ public partial class MultiTableInsertStatement
         if (Hint is not null) yield return Hint;
         if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -12578,6 +12789,7 @@ public partial class MultiTableInsertStatement
         Hint?.Accept(visitor);
         Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -12588,6 +12800,7 @@ public partial class MultiTableInsertStatement
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "MultiTableInsertStatement.Hint");
         Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "MultiTableInsertStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "MultiTableInsertStatement.ErrorLogging");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "MultiTableInsertStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -12620,7 +12833,7 @@ public partial class MultiTableInsertStatement
             Hint = CloneChild(Hint),
             Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -12637,7 +12850,7 @@ public partial class MultiTableInsertStatement
             && Pair(Hint, o.Hint, pending)
             && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -12754,6 +12967,23 @@ public partial class NullOnClause
 
 public partial class NullStatement
 {
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Labels is not null) foreach (var x in Labels) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "NullStatement.Labels");
+    }
+
     internal override NodeProperty[] NodeProperties() =>
     [
         new("Labels", Labels),
@@ -12768,7 +12998,7 @@ public partial class NullStatement
     {
         var c = new NullStatement
         {
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -12777,7 +13007,7 @@ public partial class NullStatement
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (NullStatement)other;
-        return SameStrings(Labels, o.Labels);
+        return PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -12937,6 +13167,7 @@ public partial class OpenStatement
         if (ForQuery is not null) yield return ForQuery;
         if (ForExpression is not null) yield return ForExpression;
         if (Using is not null) foreach (var x in Using) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -12946,6 +13177,7 @@ public partial class OpenStatement
         ForQuery?.Accept(visitor);
         ForExpression?.Accept(visitor);
         if (Using is not null) foreach (var x in Using) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -12954,6 +13186,7 @@ public partial class OpenStatement
         ForQuery = SqlNodeRewriter.RewriteOptional(rewriter, ForQuery, "OpenStatement.ForQuery");
         ForExpression = SqlNodeRewriter.RewriteOptional(rewriter, ForExpression, "OpenStatement.ForExpression");
         SqlNodeRewriter.RewriteList(rewriter, Using, "OpenStatement.Using");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "OpenStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -12978,7 +13211,7 @@ public partial class OpenStatement
             ForQuery = CloneChild(ForQuery),
             ForExpression = CloneChild(ForExpression),
             Using = CloneList(Using),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -12991,7 +13224,7 @@ public partial class OpenStatement
             && Pair(ForQuery, o.ForQuery, pending)
             && Pair(ForExpression, o.ForExpression, pending)
             && PairList(Using, o.Using, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -14482,17 +14715,20 @@ public partial class PipeRowStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Value is not null) yield return Value;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Value?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Value = SqlNodeRewriter.RewriteRequired(rewriter, Value, "PipeRowStatement.Value");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "PipeRowStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -14511,7 +14747,7 @@ public partial class PipeRowStatement
         var c = new PipeRowStatement
         {
             Value = CloneChild(Value)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -14521,7 +14757,7 @@ public partial class PipeRowStatement
     {
         var o = (PipeRowStatement)other;
         return Pair(Value, o.Value, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -14719,6 +14955,7 @@ public partial class PlsqlCaseStatement
         if (Operand is not null) yield return Operand;
         if (Whens is not null) foreach (var x in Whens) yield return x;
         if (ElseStatements is not null) foreach (var x in ElseStatements) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -14727,6 +14964,7 @@ public partial class PlsqlCaseStatement
         Operand?.Accept(visitor);
         if (Whens is not null) foreach (var x in Whens) x.Accept(visitor);
         if (ElseStatements is not null) foreach (var x in ElseStatements) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -14734,6 +14972,7 @@ public partial class PlsqlCaseStatement
         Operand = SqlNodeRewriter.RewriteOptional(rewriter, Operand, "PlsqlCaseStatement.Operand");
         SqlNodeRewriter.RewriteList(rewriter, Whens, "PlsqlCaseStatement.Whens");
         SqlNodeRewriter.RewriteList(rewriter, ElseStatements, "PlsqlCaseStatement.ElseStatements");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "PlsqlCaseStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -14756,7 +14995,7 @@ public partial class PlsqlCaseStatement
             Operand = CloneChild(Operand),
             Whens = CloneList(Whens),
             ElseStatements = CloneList(ElseStatements),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -14768,7 +15007,7 @@ public partial class PlsqlCaseStatement
         return Pair(Operand, o.Operand, pending)
             && PairList(Whens, o.Whens, pending)
             && PairList(ElseStatements, o.ElseStatements, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -14830,17 +15069,20 @@ public partial class ProcedureCallStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Call is not null) yield return Call;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Call?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Call = SqlNodeRewriter.RewriteRequired(rewriter, Call, "ProcedureCallStatement.Call");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ProcedureCallStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -14859,7 +15101,7 @@ public partial class ProcedureCallStatement
         var c = new ProcedureCallStatement
         {
             Call = CloneChild(Call)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -14869,7 +15111,7 @@ public partial class ProcedureCallStatement
     {
         var o = (ProcedureCallStatement)other;
         return Pair(Call, o.Call, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -15050,6 +15292,7 @@ public partial class PurgeStatement
     {
         if (Name is not null) foreach (var x in Name) yield return x;
         if (User is not null) yield return User;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -15057,12 +15300,14 @@ public partial class PurgeStatement
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
         User?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "PurgeStatement.Name");
         User = SqlNodeRewriter.RewriteOptional(rewriter, User, "PurgeStatement.User");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "PurgeStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -15085,7 +15330,7 @@ public partial class PurgeStatement
             Target = Target,
             Name = CloneList(Name),
             User = CloneChild(User),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -15097,7 +15342,7 @@ public partial class PurgeStatement
         return Target == o.Target
             && PairList(Name, o.Name, pending)
             && Pair(User, o.User, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -15363,17 +15608,20 @@ public partial class RaiseStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Exception is not null) foreach (var x in Exception) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Exception is not null) foreach (var x in Exception) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Exception, "RaiseStatement.Exception");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "RaiseStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -15392,7 +15640,7 @@ public partial class RaiseStatement
         var c = new RaiseStatement
         {
             Exception = CloneList(Exception),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -15402,7 +15650,7 @@ public partial class RaiseStatement
     {
         var o = (RaiseStatement)other;
         return PairList(Exception, o.Exception, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -15773,6 +16021,7 @@ public partial class RenameStatement
     {
         if (From is not null) foreach (var x in From) yield return x;
         if (To is not null) foreach (var x in To) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -15780,12 +16029,14 @@ public partial class RenameStatement
     {
         if (From is not null) foreach (var x in From) x.Accept(visitor);
         if (To is not null) foreach (var x in To) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, From, "RenameStatement.From");
         SqlNodeRewriter.RewriteList(rewriter, To, "RenameStatement.To");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "RenameStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -15806,7 +16057,7 @@ public partial class RenameStatement
         {
             From = CloneList(From),
             To = CloneList(To),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -15817,7 +16068,7 @@ public partial class RenameStatement
         var o = (RenameStatement)other;
         return PairList(From, o.From, pending)
             && PairList(To, o.To, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -15885,17 +16136,20 @@ public partial class ReturnStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Value is not null) yield return Value;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Value?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Value = SqlNodeRewriter.RewriteOptional(rewriter, Value, "ReturnStatement.Value");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "ReturnStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -15914,7 +16168,7 @@ public partial class ReturnStatement
         var c = new ReturnStatement
         {
             Value = CloneChild(Value),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -15924,7 +16178,7 @@ public partial class ReturnStatement
     {
         var o = (ReturnStatement)other;
         return Pair(Value, o.Value, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16137,6 +16391,7 @@ public partial class RollbackStatement
     {
         if (ToSavepoint is not null) yield return ToSavepoint;
         if (Force is not null) yield return Force;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -16144,12 +16399,14 @@ public partial class RollbackStatement
     {
         ToSavepoint?.Accept(visitor);
         Force?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         ToSavepoint = SqlNodeRewriter.RewriteOptional(rewriter, ToSavepoint, "RollbackStatement.ToSavepoint");
         Force = SqlNodeRewriter.RewriteOptional(rewriter, Force, "RollbackStatement.Force");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "RollbackStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16172,7 +16429,7 @@ public partial class RollbackStatement
             Work = Work,
             ToSavepoint = CloneChild(ToSavepoint),
             Force = CloneChild(Force),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -16184,7 +16441,7 @@ public partial class RollbackStatement
         return Work == o.Work
             && Pair(ToSavepoint, o.ToSavepoint, pending)
             && Pair(Force, o.Force, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16370,17 +16627,20 @@ public partial class SavepointStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Name is not null) yield return Name;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         Name?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         Name = SqlNodeRewriter.RewriteRequired(rewriter, Name, "SavepointStatement.Name");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "SavepointStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16399,7 +16659,7 @@ public partial class SavepointStatement
         var c = new SavepointStatement
         {
             Name = CloneChild(Name)!,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -16409,7 +16669,7 @@ public partial class SavepointStatement
     {
         var o = (SavepointStatement)other;
         return Pair(Name, o.Name, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16479,6 +16739,7 @@ public partial class SelectStatement
         if (Offset is not null) yield return Offset;
         if (Fetch is not null) yield return Fetch;
         if (ForUpdate is not null) yield return ForUpdate;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -16490,6 +16751,7 @@ public partial class SelectStatement
         Offset?.Accept(visitor);
         Fetch?.Accept(visitor);
         ForUpdate?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -16500,6 +16762,7 @@ public partial class SelectStatement
         Offset = SqlNodeRewriter.RewriteOptional(rewriter, Offset, "SelectStatement.Offset");
         Fetch = SqlNodeRewriter.RewriteOptional(rewriter, Fetch, "SelectStatement.Fetch");
         ForUpdate = SqlNodeRewriter.RewriteOptional(rewriter, ForUpdate, "SelectStatement.ForUpdate");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "SelectStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16528,7 +16791,7 @@ public partial class SelectStatement
             Offset = CloneChild(Offset),
             Fetch = CloneChild(Fetch),
             ForUpdate = CloneChild(ForUpdate),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -16543,7 +16806,7 @@ public partial class SelectStatement
             && Pair(Offset, o.Offset, pending)
             && Pair(Fetch, o.Fetch, pending)
             && Pair(ForUpdate, o.ForUpdate, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16700,17 +16963,20 @@ public partial class SetConstraintsStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Constraints is not null) foreach (var row in Constraints) if (row is not null) foreach (var x in row) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Constraints is not null) foreach (var row in Constraints) if (row is not null) foreach (var x in row) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteNested(rewriter, Constraints, "SetConstraintsStatement.Constraints");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "SetConstraintsStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16733,7 +16999,7 @@ public partial class SetConstraintsStatement
             All = All,
             Constraints = CloneNested(Constraints),
             Deferred = Deferred,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -16745,7 +17011,7 @@ public partial class SetConstraintsStatement
         return All == o.All
             && PairNested(Constraints, o.Constraints, pending)
             && Deferred == o.Deferred
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16869,6 +17135,7 @@ public partial class SetRoleStatement
     {
         if (Except is not null) foreach (var x in Except) yield return x;
         if (Roles is not null) foreach (var x in Roles) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -16876,12 +17143,14 @@ public partial class SetRoleStatement
     {
         if (Except is not null) foreach (var x in Except) x.Accept(visitor);
         if (Roles is not null) foreach (var x in Roles) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Except, "SetRoleStatement.Except");
         SqlNodeRewriter.RewriteList(rewriter, Roles, "SetRoleStatement.Roles");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "SetRoleStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16906,7 +17175,7 @@ public partial class SetRoleStatement
             All = All,
             Except = CloneList(Except),
             Roles = CloneList(Roles),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -16919,7 +17188,7 @@ public partial class SetRoleStatement
             && All == o.All
             && PairList(Except, o.Except, pending)
             && PairList(Roles, o.Roles, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16930,6 +17199,7 @@ public partial class SetTransactionStatement
     {
         if (RollbackSegment is not null) yield return RollbackSegment;
         if (Name is not null) yield return Name;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -16937,12 +17207,14 @@ public partial class SetTransactionStatement
     {
         RollbackSegment?.Accept(visitor);
         Name?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         RollbackSegment = SqlNodeRewriter.RewriteOptional(rewriter, RollbackSegment, "SetTransactionStatement.RollbackSegment");
         Name = SqlNodeRewriter.RewriteOptional(rewriter, Name, "SetTransactionStatement.Name");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "SetTransactionStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -16967,7 +17239,7 @@ public partial class SetTransactionStatement
             Isolation = Isolation,
             RollbackSegment = CloneChild(RollbackSegment),
             Name = CloneChild(Name),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -16980,7 +17252,7 @@ public partial class SetTransactionStatement
             && Isolation == o.Isolation
             && Pair(RollbackSegment, o.RollbackSegment, pending)
             && Pair(Name, o.Name, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -16990,17 +17262,20 @@ public partial class SqlPlusCommandStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Arguments is not null) foreach (var x in Arguments) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Arguments is not null) foreach (var x in Arguments) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Arguments, "SqlPlusCommandStatement.Arguments");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "SqlPlusCommandStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -17021,7 +17296,7 @@ public partial class SqlPlusCommandStatement
         {
             Command = Command,
             Arguments = CloneList(Arguments),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -17032,7 +17307,7 @@ public partial class SqlPlusCommandStatement
         var o = (SqlPlusCommandStatement)other;
         return Command == o.Command
             && PairList(Arguments, o.Arguments, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -18107,17 +18382,20 @@ public partial class TruncateStatement
     public override IEnumerable<SqlNode> GetChildren()
     {
         if (Name is not null) foreach (var x in Name) yield return x;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
         if (Name is not null) foreach (var x in Name) x.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
         SqlNodeRewriter.RewriteList(rewriter, Name, "TruncateStatement.Name");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "TruncateStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -18144,7 +18422,7 @@ public partial class TruncateStatement
             MaterializedViewLog = MaterializedViewLog,
             Storage = Storage,
             Cascade = Cascade,
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -18158,7 +18436,7 @@ public partial class TruncateStatement
             && MaterializedViewLog == o.MaterializedViewLog
             && Storage == o.Storage
             && Cascade == o.Cascade
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 
@@ -18348,6 +18626,7 @@ public partial class UpdateStatement
         if (Hint is not null) yield return Hint;
         if (Returning is not null) yield return Returning;
         if (ErrorLogging is not null) yield return ErrorLogging;
+        if (Labels is not null) foreach (var x in Labels) yield return x;
     }
 
     /// <inheritdoc/>
@@ -18360,6 +18639,7 @@ public partial class UpdateStatement
         Hint?.Accept(visitor);
         Returning?.Accept(visitor);
         ErrorLogging?.Accept(visitor);
+        if (Labels is not null) foreach (var x in Labels) x.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -18371,6 +18651,7 @@ public partial class UpdateStatement
         Hint = SqlNodeRewriter.RewriteOptional(rewriter, Hint, "UpdateStatement.Hint");
         Returning = SqlNodeRewriter.RewriteOptional(rewriter, Returning, "UpdateStatement.Returning");
         ErrorLogging = SqlNodeRewriter.RewriteOptional(rewriter, ErrorLogging, "UpdateStatement.ErrorLogging");
+        SqlNodeRewriter.RewriteList(rewriter, Labels, "UpdateStatement.Labels");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -18401,7 +18682,7 @@ public partial class UpdateStatement
             Hint = CloneChild(Hint),
             Returning = CloneChild(Returning),
             ErrorLogging = CloneChild(ErrorLogging),
-            Labels = CloneStrings(Labels),
+            Labels = CloneList(Labels),
         };
         CopySpan(this, c);
         return c;
@@ -18417,7 +18698,7 @@ public partial class UpdateStatement
             && Pair(Hint, o.Hint, pending)
             && Pair(Returning, o.Returning, pending)
             && Pair(ErrorLogging, o.ErrorLogging, pending)
-            && SameStrings(Labels, o.Labels);
+            && PairList(Labels, o.Labels, pending);
     }
 }
 

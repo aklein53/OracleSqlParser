@@ -13,8 +13,11 @@ public sealed partial class BlockStatement : Statement
     public List<Statement> Statements { get; set; } = [];
     /// <summary>The exception handlers, in source order; empty when there is no <c>EXCEPTION</c> part.</summary>
     public List<ExceptionHandler> Handlers { get; set; } = [];
-    /// <summary>The label or name written after <c>END</c>, or null when absent.</summary>
-    public Identifier? EndName { get; set; }
+    /// <summary>
+    /// The label written after <c>END</c>, or null when absent. When this block is a subprogram body, it holds the subprogram
+    /// name repeated after <c>END</c> instead, since a subprogram body is a block in this tree.
+    /// </summary>
+    public Identifier? EndLabel { get; set; }
 }
 
 /// <summary>One <c>WHEN ... THEN</c> handler of an <c>EXCEPTION</c> section, such as <c>WHEN NO_DATA_FOUND THEN NULL</c>.</summary>
@@ -565,7 +568,7 @@ public sealed partial class CreatePackageStatement : Statement
     public ProgramOptions? Options { get; set; }
     /// <summary>The declarations in the specification, in source order.</summary>
     public List<Declaration> Declarations { get; set; } = [];
-    /// <summary>The name written after <c>END</c>, or null when absent.</summary>
+    /// <summary>The package name repeated after <c>END</c> (a name, not a label), or null when absent.</summary>
     public Identifier? EndName { get; set; }
 }
 
@@ -584,7 +587,7 @@ public sealed partial class CreatePackageBodyStatement : Statement
     public List<Statement> InitStatements { get; set; } = [];
     /// <summary>The exception handlers of the initialization section; empty when absent.</summary>
     public List<ExceptionHandler> InitHandlers { get; set; } = [];
-    /// <summary>The name written after <c>END</c>, or null when absent.</summary>
+    /// <summary>The package body name repeated after <c>END</c> (a name, not a label), or null when absent.</summary>
     public Identifier? EndName { get; set; }
 }
 

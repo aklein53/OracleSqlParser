@@ -38,7 +38,7 @@ public sealed partial class SqlScriptGenerator
             if (b.Handlers.Count > 0) ExceptionPart(b.Handlers);
             PlLine();
             Add("END");
-            if (b.EndName != null) { Sp(); Id(b.EndName); }
+            if (b.EndLabel != null) { Sp(); Id(b.EndLabel); }
         }
 
         private void ExceptionPart(List<ExceptionHandler> handlers)
