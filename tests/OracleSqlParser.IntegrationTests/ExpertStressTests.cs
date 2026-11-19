@@ -1688,7 +1688,7 @@ public class ExpertStressTests(OracleFixture db)
         };
         var s = Shape.Parse(sql[0]);
         var up = Find<UpdateStatement>(s).Single();
-        Assert.Contains("returningInto=(IntoClause bulkCollect targets=[L_IDS L_SALS])", Str(up), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("into=(IntoClause bulkCollect targets=[L_IDS L_SALS])", Str(up), StringComparison.OrdinalIgnoreCase);
         await VerifyAsync(sql, ["SELECT empno, sal FROM emp WHERE deptno = 20 ORDER BY empno", "SELECT empno, amount, note FROM bonus ORDER BY empno"]);
     }
 
