@@ -449,6 +449,122 @@ public class ClauseNodeTests
     }
 
     /// <summary>
+    /// Each grouping kind spans the text it was written as: ROLLUP and its keyword, a parenthesized list, the empty set,
+    /// and a whole GROUPING SETS.
+    /// </summary>
+    [Fact]
+    public void GroupingSpecsSpanWhatWasWritten()
+    {
+        const string sql = "SELECT a FROM t GROUP BY ROLLUP /*c*/ (a, (b, c)), GROUPING SETS ((d, e), ROLLUP(f), ()), (g, h), (), i";
+        var items = Query(sql).GroupBy!.Items;
+
+        var rollup = Assert.IsType<RollupGrouping>(items[0]);
+        Assert.Equal("ROLLUP /*c*/ (a, (b, c))", Text(sql, rollup));
+        Assert.Equal("(b, c)", Text(sql, rollup.Items[1]));
+        var sets = Assert.IsType<GroupingSetsGrouping>(items[1]);
+        Assert.Equal("GROUPING SETS ((d, e), ROLLUP(f), ())", Text(sql, sets));
+        Assert.Equal("ROLLUP(f)", Text(sql, sets.Sets[1]));
+        Assert.Equal("()", Text(sql, sets.Sets[2]));
+        Assert.Equal("(g, h)", Text(sql, items[2]));
+        Assert.Equal("()", Text(sql, items[3]));
+        Assert.Equal("i", Text(sql, items[4]));
+        Assert.IsType<ExpressionGrouping>(items[4]);
+    }
+
+    /// <summary>A single parenthesized expression is an expression grouping that keeps its parentheses, as elsewhere.</summary>
+    [Fact]
+    public void ASingleParenthesizedGroupingIsAnExpression()
+    {
+        var eg = Assert.IsType<ExpressionGrouping>(Query("SELECT a FROM t GROUP BY (a)").GroupBy!.Items[0]);
+
+        Assert.IsType<ParenthesizedExpression>(eg.Expression);
+    }
+
+    [Fact]
+    public void AGroupingSpecRoundTripsAsWritten()
+    {
+        const string text = "SELECT a FROM t GROUP BY ROLLUP(a, (b, c)), CUBE(d), GROUPING SETS((e), (f, g), ROLLUP(h), ()), (i, j), ();";
+        var script = SqlParser.Parse(text).Script;
+
+        Assert.Equal(text, new SqlScriptGenerator().Generate(script).Trim());
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, SqlParser.Parse(new SqlScriptGenerator().Generate(script)).Script));
+    }
+
+    /// <summary>A rewriter can turn a ROLLUP into a CUBE, and remove one set from a GROUPING SETS by returning null for it.</summary>
+    [Fact]
+    public void ARewriterCanReplaceOrRemoveAGroupingSpec()
+    {
+        var replaced = SqlParser.Parse("SELECT a FROM t GROUP BY ROLLUP(a, b)").Script;
+        new RollupToCube().RewriteTree(replaced);
+        Assert.Equal("SELECT a FROM t GROUP BY CUBE(a, b);", new SqlScriptGenerator().Generate(replaced).Trim());
+
+        var removed = SqlParser.Parse("SELECT a FROM t GROUP BY GROUPING SETS ((a), ())").Script;
+        new DropGrandTotal().RewriteTree(removed);
+        Assert.Equal("SELECT a FROM t GROUP BY GROUPING SETS((a));", new SqlScriptGenerator().Generate(removed).Trim());
+    }
+
+    private sealed class RollupToCube : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(RollupGrouping node) => new CubeGrouping { Items = node.Items };
+    }
+
+    private sealed class DropGrandTotal : SqlNodeRewriter
+    {
+        public override SqlNode? Rewrite(GrandTotalGrouping node) => null;
+    }
+
+    /// <summary>Oracle rejects these at parse time, so the parser does too.</summary>
+    [Theory]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP()")]
+    [InlineData("SELECT a FROM t GROUP BY CUBE()")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS()")]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(())")]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(a, ())")]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(GROUPING SETS(a))")]
+    [InlineData("SELECT a FROM t GROUP BY CUBE(GROUPING SETS(a))")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS(GROUPING SETS(a))")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS(((a, b)))")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS((a), ((a, b)))")]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(((a, b)))")]
+    [InlineData("SELECT a FROM t GROUP BY ((a, b), c)")]
+    [InlineData("SELECT a FROM t GROUP BY (a, (b, c))")]
+    [InlineData("SELECT a FROM t GROUP BY (a, ())")]
+    [InlineData("SELECT a FROM t GROUP BY (a, ROLLUP(b))")]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(a) + 1")]
+    public void AGroupingSpecOracleRejectsIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
+    /// <summary>
+    /// Oracle parses a ROLLUP or CUBE written where a grouping item is expected as an ordinary function call, and rejects
+    /// the nonsense only later, so these parse. They are FunctionCall nodes, as Oracle sees them.
+    /// </summary>
+    [Theory]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(ROLLUP(a))")]
+    [InlineData("SELECT a FROM t GROUP BY ROLLUP(CUBE(a))")]
+    [InlineData("SELECT a FROM t GROUP BY (ROLLUP(a))")]
+    [InlineData("SELECT a FROM t GROUP BY GROUPING SETS((ROLLUP(a)))")]
+    public void ARollupCallWhereAnItemIsExpectedIsAFunctionCall(string sql)
+    {
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+        Assert.Contains(r.Script.Descendants().OfType<FunctionCall>(), f => f.Name[0].Value is "ROLLUP" or "CUBE");
+    }
+
+    /// <summary>ROLLUP, CUBE and GROUPING are ordinary names outside a GROUP BY list, and GROUPING() stays a function call.</summary>
+    [Fact]
+    public void GroupingWordsOutsideAGroupByListAreOrdinary()
+    {
+        const string sql = "SELECT rollup, cube, GROUPING(a) g, GROUPING_ID(a, b) gid FROM t GROUP BY ROLLUP(a, b)";
+        var r = SqlParser.Parse(sql);
+        Assert.True(r.Success, string.Join("; ", r.Errors));
+
+        Assert.Equal(new[] { "GROUPING", "GROUPING_ID" }, r.Script.Descendants().OfType<FunctionCall>().Select(f => f.Name[0].Value).ToArray());
+        Assert.Equal(new[] { "ROLLUP", "CUBE" }, Query(sql).SelectList.OfType<ExpressionSelectItem>().Take(2).Select(i => ((ColumnReference)i.Expression).Parts[0].Value).ToArray());
+    }
+
+    /// <summary>
     /// Each MERGE action has its own WHERE clause. The DELETE part's clause starts at its WHERE, not at the DELETE before it.
     /// </summary>
     [Fact]

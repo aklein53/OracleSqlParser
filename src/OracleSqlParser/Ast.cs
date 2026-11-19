@@ -400,8 +400,60 @@ public sealed partial class ConnectByClause : SqlNode
 /// <remarks>Spans the <c>GROUP</c> keyword; see <see cref="FromClause"/>.</remarks>
 public sealed partial class GroupByClause : SqlNode
 {
-    /// <summary>The grouping expressions, in source order. <c>ROLLUP</c>, <c>CUBE</c> and <c>GROUPING SETS</c> are function calls.</summary>
-    public List<Expression> Items { get; set; } = [];
+    /// <summary>The grouping elements, in source order: expressions, composites, <c>()</c>, <c>ROLLUP</c>, <c>CUBE</c> or <c>GROUPING SETS</c>.</summary>
+    public List<GroupingSpec> Items { get; set; } = [];
+}
+
+/// <summary>
+/// One element of a <c>GROUP BY</c> list, or an item inside <c>ROLLUP</c>, <c>CUBE</c> or <c>GROUPING SETS</c>. The concrete
+/// kinds are <see cref="ExpressionGrouping"/>, <see cref="CompositeGrouping"/>, <see cref="GrandTotalGrouping"/>,
+/// <see cref="RollupGrouping"/>, <see cref="CubeGrouping"/> and <see cref="GroupingSetsGrouping"/>.
+/// </summary>
+/// <remarks>Each kind spans the text it was written as, as ScriptDom's grouping specifications do; see <see cref="FromClause"/>.</remarks>
+public abstract partial class GroupingSpec : SqlNode { }
+
+/// <summary>A single grouping expression, such as <c>deptno</c> or <c>(deptno)</c> in <c>GROUP BY deptno</c>.</summary>
+public sealed partial class ExpressionGrouping : GroupingSpec
+{
+    /// <summary>The grouping expression. A parenthesized single expression keeps its <see cref="ParenthesizedExpression"/>.</summary>
+    public required Expression Expression { get; set; }
+}
+
+/// <summary>
+/// A parenthesized list of two or more expressions, such as <c>(a, b)</c>: its items group together as one set.
+/// </summary>
+/// <remarks>
+/// Oracle takes only expressions inside it: a nested list, <c>()</c>, or a <c>ROLLUP</c>, <c>CUBE</c> or <c>GROUPING SETS</c>
+/// call is a parse error. A single parenthesized expression, <c>(a)</c>, is an <see cref="ExpressionGrouping"/>.
+/// </remarks>
+public sealed partial class CompositeGrouping : GroupingSpec
+{
+    /// <summary>The expressions of the list, in source order.</summary>
+    public List<GroupingSpec> Items { get; set; } = [];
+}
+
+/// <summary>The empty grouping set <c>()</c>, which groups every row into one group (the grand total).</summary>
+public sealed partial class GrandTotalGrouping : GroupingSpec { }
+
+/// <summary><c>ROLLUP (items)</c>, such as <c>ROLLUP(a, (b, c))</c>.</summary>
+public sealed partial class RollupGrouping : GroupingSpec
+{
+    /// <summary>The items in the parentheses, each an expression or a <see cref="CompositeGrouping"/>; at least one.</summary>
+    public List<GroupingSpec> Items { get; set; } = [];
+}
+
+/// <summary><c>CUBE (items)</c>, such as <c>CUBE(a, (b, c))</c>.</summary>
+public sealed partial class CubeGrouping : GroupingSpec
+{
+    /// <summary>The items in the parentheses, each an expression or a <see cref="CompositeGrouping"/>; at least one.</summary>
+    public List<GroupingSpec> Items { get; set; } = [];
+}
+
+/// <summary><c>GROUPING SETS (sets)</c>, such as <c>GROUPING SETS((a, b), ROLLUP(c), ())</c>.</summary>
+public sealed partial class GroupingSetsGrouping : GroupingSpec
+{
+    /// <summary>The grouping sets in the parentheses, each a <see cref="RollupGrouping"/>, <see cref="CubeGrouping"/>, <see cref="CompositeGrouping"/>, <see cref="GrandTotalGrouping"/> or expression; at least one.</summary>
+    public List<GroupingSpec> Sets { get; set; } = [];
 }
 
 /// <summary>

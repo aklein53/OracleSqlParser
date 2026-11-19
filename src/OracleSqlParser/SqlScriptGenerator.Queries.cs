@@ -140,6 +140,20 @@ public sealed partial class SqlScriptGenerator
             }
         }
 
+        /// <summary>Writes a grouping spec as it was written: an expression, <c>(a, b)</c>, <c>()</c>, <c>ROLLUP(...)</c>, <c>CUBE(...)</c> or <c>GROUPING SETS(...)</c>.</summary>
+        private void GroupingText(GroupingSpec g)
+        {
+            switch (g)
+            {
+                case ExpressionGrouping e: Expr(e.Expression); break;
+                case CompositeGrouping c: Add("("); Sep(c.Items, GroupingText); Add(")"); break;
+                case GrandTotalGrouping: Add("()"); break;
+                case RollupGrouping r: Add("ROLLUP("); Sep(r.Items, GroupingText); Add(")"); break;
+                case CubeGrouping cube: Add("CUBE("); Sep(cube.Items, GroupingText); Add(")"); break;
+                case GroupingSetsGrouping sets: Add("GROUPING SETS("); Sep(sets.Sets, GroupingText); Add(")"); break;
+            }
+        }
+
         private void Hint(HintClause h)
         {
             var text = h.Text.Length > 0 ? h.Text
@@ -159,7 +173,7 @@ public sealed partial class SqlScriptGenerator
             if (qs.Where is { } where) { ClauseStart(_o.NewLineBeforeWhereClause); Add("WHERE"); ClauseBody(() => Expr(where.Condition)); }
             if (qs.StartWith is { } startWith) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add("START WITH "); Expr(startWith.Condition); }
             if (qs.ConnectBy is { } connectBy) { ClauseStart(_o.NewLineBeforeHierarchicalClause); Add(connectBy.NoCycle ? "CONNECT BY NOCYCLE " : "CONNECT BY "); Expr(connectBy.Condition); }
-            if (qs.GroupBy is { } groupBy) { ClauseStart(_o.NewLineBeforeGroupByClause); Add("GROUP BY"); ClauseBody(() => Sep(groupBy.Items, e => Expr(e))); }
+            if (qs.GroupBy is { } groupBy) { ClauseStart(_o.NewLineBeforeGroupByClause); Add("GROUP BY"); ClauseBody(() => Sep(groupBy.Items, GroupingText)); }
             if (qs.Having is { } having) { ClauseStart(_o.NewLineBeforeHavingClause); Add("HAVING"); ClauseBody(() => Expr(having.Condition)); }
             if (qs.Model != null) { Add(" "); Model(qs.Model); }
         }

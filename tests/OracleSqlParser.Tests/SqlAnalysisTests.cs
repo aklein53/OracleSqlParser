@@ -425,6 +425,15 @@ public class SqlAnalysisTests
         Assert.Equal(["Function UTL.OBJ", "Method FOO"], Functions("BEGIN v := utl.obj(1).foo(); END;"));
     }
 
+    /// <summary>ROLLUP, CUBE and GROUPING SETS in GROUP BY are grouping syntax, not functions. GROUPING() is still one.</summary>
+    [Fact]
+    public void Functions_GroupByGroupingSyntaxIsNotAFunction()
+    {
+        Assert.Equal(
+            ["Function GROUPING"],
+            Functions("SELECT GROUPING(a) FROM t GROUP BY ROLLUP(a), CUBE(b), GROUPING SETS((c), ())"));
+    }
+
     [Fact]
     public void Functions_ProcedureStatements_IncludingBareName()
     {

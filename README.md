@@ -280,6 +280,12 @@ Console.WriteLine($"{where} | {group} | {first.Start}");
   node, not by nulling its condition.
 - The graph pattern `WHERE` (`GraphTable`, `GraphVertexPattern`, `GraphEdgePattern`) stays a bare `Expression`;
   ScriptDom has no nested `WhereClause` either.
+- Other clause nodes: `OffsetClause` (`OFFSET n ROW|ROWS`), `WithinGroupClause` (`WITHIN GROUP (ORDER BY ...)`), `WithClause`
+  (`SelectStatement.With`: the `WITH FUNCTION` declarations and the CTEs), and `IntoClause` for every PL/SQL `INTO`
+  target list (`BULK COLLECT INTO` sets `BulkCollect`).
+- A `GROUP BY` element is a `GroupingSpec`: `ExpressionGrouping`, `CompositeGrouping` (`(a, b)`), `GrandTotalGrouping`
+  (`()`), `RollupGrouping`, `CubeGrouping` or `GroupingSetsGrouping`. `ROLLUP`, `CUBE` and `GROUPING SETS` are not function
+  calls, so `SqlAnalysis.GetFunctions` does not report them.
 
 - `ExplicitVisit(T)` (default: `Visit(node)`, then `node.AcceptChildren(this)`) is where to change how the walk descends, as in ScriptDom's `TSqlFragmentVisitor`.
 - A rewriter changes the tree in place. Keep the original with `node.DeepClone<T>()` first. A wrong replacement type, or removing a required child, throws `InvalidOperationException` naming the property.

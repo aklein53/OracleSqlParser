@@ -123,8 +123,6 @@ public static class QueryGuard
     /// <summary>Prints the rewritten query in normalized form: single line, upper-case keywords and unquoted identifiers.</summary>
     private static readonly SqlScriptGenerator Normalizer = new(new SqlScriptGeneratorOptions { IdentifierCasing = IdentifierCasing.Uppercase });
 
-    private static readonly HashSet<string> StructuralFunctions = new(StringComparer.OrdinalIgnoreCase) { "ROLLUP", "CUBE", "GROUPING SETS" };
-
     /// <summary>Checks a user-supplied query against the policy. Empty result means it is acceptable.</summary>
     public static IReadOnlyList<PolicyViolation> Validate(string sql, QueryPolicy policy)
     {
@@ -207,7 +205,6 @@ public static class QueryGuard
     private static void CheckFunction(FunctionCall fc, QueryPolicy policy, List<PolicyViolation> v)
     {
         var name = string.Join(".", fc.Name.Select(p => p.Value));
-        if (StructuralFunctions.Contains(name)) return;
         if (policy.AllowedFunctions != null)
         {
             if (!policy.AllowedFunctions.Contains(name))

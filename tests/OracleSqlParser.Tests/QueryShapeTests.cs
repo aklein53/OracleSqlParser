@@ -95,9 +95,9 @@ public class QueryShapeTests
 
     [Theory]
     [InlineData("SELECT a FROM t GROUP BY ROLLUP(a, b), CUBE(c), d HAVING COUNT(*) > 1",
-        "groupBy=(GroupByClause items=[(FunctionCall name=[ROLLUP] arguments=[(Argument value=A) (Argument value=B)]) (FunctionCall name=[CUBE] arguments=[(Argument value=C)]) D]) having=(HavingClause condition=(GreaterThan (FunctionCall name=[COUNT] arguments=[(Argument value=*)]) 1))")]
+        "groupBy=(GroupByClause items=[(RollupGrouping items=[(ExpressionGrouping expression=A) (ExpressionGrouping expression=B)]) (CubeGrouping items=[(ExpressionGrouping expression=C)]) (ExpressionGrouping expression=D)]) having=(HavingClause condition=(GreaterThan (FunctionCall name=[COUNT] arguments=[(Argument value=*)]) 1))")]
     [InlineData("SELECT a FROM t GROUP BY GROUPING SETS ((a, b), (a), ())",
-        "groupBy=(GroupByClause items=[(FunctionCall name=[GROUPING SETS] arguments=[(Argument value=(ExpressionList items=[A B])) (Argument value=(ExpressionList items=[A])) (Argument value=(ExpressionList))])])")]
+        "groupBy=(GroupByClause items=[(GroupingSetsGrouping sets=[(CompositeGrouping items=[(ExpressionGrouping expression=A) (ExpressionGrouping expression=B)]) (ExpressionGrouping expression=(paren A)) (GrandTotalGrouping)])])")]
     [InlineData("SELECT empno FROM emp START WITH mgr IS NULL CONNECT BY NOCYCLE PRIOR empno = mgr",
         "startWith=(StartWithClause condition=(IsExpression value=MGR test=Null)) connectBy=(ConnectByClause noCycle condition=(Equals (Prior EMPNO) MGR))")]
     [InlineData("SELECT a INTO x, y FROM t", "into=(IntoClause targets=[X Y])")]

@@ -65,6 +65,15 @@ public class QueryGuardTests
         Assert.Equal([ViolationCode.FunctionNotAllowed], QueryGuard.Validate("SELECT my_f(name) AS n FROM orders", p).Select(v => v.Code).ToArray());
     }
 
+    /// <summary>GROUP BY grouping syntax is not a function call, so an allowlist does not need to name ROLLUP, CUBE or GROUPING SETS.</summary>
+    [Fact]
+    public void GroupingSyntax_NeedsNoFunctionAllowlistEntry()
+    {
+        var p = new QueryPolicy { AllowedTables = new HashSet<string>(["ORDERS"], StringComparer.OrdinalIgnoreCase), AllowedFunctions = new HashSet<string>(["SUM"], StringComparer.OrdinalIgnoreCase) };
+        Assert.Empty(QueryGuard.Validate("SELECT SUM(amount) FROM orders GROUP BY ROLLUP(id), CUBE(id), GROUPING SETS((id), ())", p));
+        Assert.Equal([ViolationCode.FunctionNotAllowed], QueryGuard.Validate("SELECT SUM(amount) FROM orders GROUP BY ROLLUP(ROLLUP(id))", p).Select(v => v.Code).ToArray());
+    }
+
     [Fact]
     public void Violations_CarryPositions()
     {

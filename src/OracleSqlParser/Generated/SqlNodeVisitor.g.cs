@@ -568,6 +568,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="CompositeGrouping"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(CompositeGrouping node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="CompositeGrouping"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(CompositeGrouping node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="CompressAttribute"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(CompressAttribute node) => Visit((SqlNode)node);
 
@@ -938,6 +948,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="CubeGrouping"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(CubeGrouping node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="CubeGrouping"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(CubeGrouping node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="CurrentOfExpression"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(CurrentOfExpression node) => Visit((SqlNode)node);
 
@@ -1148,6 +1168,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="ExpressionGrouping"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(ExpressionGrouping node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="ExpressionGrouping"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(ExpressionGrouping node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="ExpressionList"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(ExpressionList node) => Visit((SqlNode)node);
 
@@ -1338,6 +1368,16 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
+    /// <summary>Called for a <see cref="GrandTotalGrouping"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(GrandTotalGrouping node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="GrandTotalGrouping"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(GrandTotalGrouping node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
     /// <summary>Called for a <see cref="GrantPrivilege"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
     public virtual void Visit(GrantPrivilege node) => Visit((SqlNode)node);
 
@@ -1523,6 +1563,16 @@ public abstract partial class SqlNodeVisitor
 
     /// <summary>Entry point for a <see cref="GroupItem"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
     public virtual void ExplicitVisit(GroupItem node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="GroupingSetsGrouping"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(GroupingSetsGrouping node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="GroupingSetsGrouping"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(GroupingSetsGrouping node)
     {
         Visit(node);
         node.AcceptChildren(this);
@@ -2563,6 +2613,16 @@ public abstract partial class SqlNodeVisitor
 
     /// <summary>Entry point for a <see cref="RollbackStatement"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
     public virtual void ExplicitVisit(RollbackStatement node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="RollupGrouping"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(RollupGrouping node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="RollupGrouping"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(RollupGrouping node)
     {
         Visit(node);
         node.AcceptChildren(this);

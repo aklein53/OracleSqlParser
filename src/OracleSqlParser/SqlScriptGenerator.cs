@@ -147,6 +147,7 @@ public sealed partial class SqlScriptGenerator
                 case Expression e: Expr(e); break;
                 case SelectItem si: Item(si); break;
                 case OrderByItem o: OrderItem(o); break;
+                case GroupingSpec g: GroupingText(g); break;
                 case Identifier id: Id(id); break;
                 case DataType dt: Type(dt); break;
                 case Declaration d: Declaration(d); break;

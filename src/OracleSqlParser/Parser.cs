@@ -707,7 +707,7 @@ public sealed partial class SqlParser
             {
                 var kw = Next(); Next();
                 var groupBy = new GroupByClause();
-                do groupBy.Items.Add(ParseGroupByItem()); while (AcceptOp(","));
+                do groupBy.Items.Add(ParseGroupingSpec(GroupingContext.Element)); while (AcceptOp(","));
                 qs.GroupBy = Fin(groupBy, kw);
             }
             else if (IsKw("HAVING") && qs.Having == null)
@@ -721,17 +721,6 @@ public sealed partial class SqlParser
         return Fin(qs, start);
     }
 
-    /// <summary>An element of GROUPING SETS: a parenthesized column list (always an ExpressionList, even with one item or none), or a ROLLUP/CUBE/expression.</summary>
-    private Expression ParseGroupingSetElement()
-    {
-        var start = Cur;
-        if (!IsOp("(")) return ParseGroupByItem();
-        Next();
-        var list = new ExpressionList();
-        if (!IsOp(")")) do list.Items.Add(ParseExpr()); while (AcceptOp(","));
-        ExpectOp(")");
-        return Fin(list, start);
-    }
 
     /// <summary>True when the next tokens are <c>INTO</c> or <c>BULK COLLECT INTO</c>.</summary>
     private bool IsIntoStart() => IsKw("INTO") || (IsKw("BULK") && IsKwAt(1, "COLLECT"));
@@ -750,21 +739,79 @@ public sealed partial class SqlParser
         return Fin(into, start);
     }
 
-    private Expression ParseGroupByItem()
+    /// <summary>Where a grouping spec is written. Oracle accepts different things in each place.</summary>
+    private enum GroupingContext
+    {
+        /// <summary>An element of <c>GROUP BY</c>: any kind, including <c>ROLLUP</c>, <c>CUBE</c>, <c>GROUPING SETS</c> and <c>()</c>.</summary>
+        Element,
+        /// <summary>A grouping set inside <c>GROUPING SETS</c>: <c>ROLLUP</c>, <c>CUBE</c> and <c>()</c> are allowed, <c>GROUPING SETS</c> is not.</summary>
+        Set,
+        /// <summary>An item of <c>ROLLUP</c> or <c>CUBE</c>: a bare <c>ROLLUP(...)</c> here is a function call, as Oracle parses it, and neither <c>()</c> nor <c>GROUPING SETS</c> is allowed.</summary>
+        Argument,
+    }
+
+    /// <summary>
+    /// One grouping spec as Oracle's grammar allows it in <paramref name="context"/>. Parenthesized lists must hold plain
+    /// expressions; a nested list, <c>()</c> inside a list, or <c>GROUPING SETS</c> inside a list or another set is a parse error.
+    /// </summary>
+    private GroupingSpec ParseGroupingSpec(GroupingContext context)
     {
         var start = Cur;
-        if (IsOp("(") && IsOpAt(1, ")")) { Next(); Next(); return Fin(new ExpressionList(), start); }
-        if ((IsKw("ROLLUP") || IsKw("CUBE")) && IsOpAt(1, "(")) return ParseExpr(); // parsed as function call
-        if (IsKw("GROUPING") && IsKwAt(1, "SETS") && IsOpAt(2, "("))
+        if (context != GroupingContext.Argument && (IsKw("ROLLUP") || IsKw("CUBE")) && IsOpAt(1, "("))
+        {
+            bool rollup = IsKw("ROLLUP");
+            Next(); Next();
+            var items = new List<GroupingSpec>();
+            do items.Add(ParseGroupingSpec(GroupingContext.Argument)); while (AcceptOp(","));
+            ExpectOp(")");
+            return rollup ? Fin(new RollupGrouping { Items = items }, start) : Fin(new CubeGrouping { Items = items }, start);
+        }
+        if (context == GroupingContext.Element && IsKw("GROUPING") && IsKwAt(1, "SETS") && IsOpAt(2, "("))
         {
             Next(); Next(); Next();
-            var fc = new FunctionCall { Name = [new Identifier { Value = "GROUPING SETS", Start = start.Start, End = start.End, FirstTokenIndex = start.TokenIndex, LastTokenIndex = start.TokenIndex }] };
-            if (!IsOp(")"))
-                do { var a = Cur; fc.Arguments.Add(Fin(new Argument { Value = ParseGroupingSetElement() }, a)); } while (AcceptOp(","));
+            var sets = new List<GroupingSpec>();
+            do sets.Add(ParseGroupingSpec(GroupingContext.Set)); while (AcceptOp(","));
             ExpectOp(")");
-            return Fin(fc, start);
+            return Fin(new GroupingSetsGrouping { Sets = sets }, start);
         }
-        return ParseExpr();
+        if (context != GroupingContext.Argument && IsOp("(") && IsOpAt(1, ")"))
+        {
+            Next(); Next();
+            return Fin(new GrandTotalGrouping(), start);
+        }
+        if (IsKw("GROUPING") && IsKwAt(1, "SETS")) throw Fail("GROUPING SETS cannot be nested in another grouping");
+
+        var e = ParseExpr();
+        if (e is ExpressionList list) return ParseCompositeGrouping(list, start);
+        if (e is ParenthesizedExpression { Inner: ExpressionList }) throw Fail("A parenthesized list cannot be grouped inside another list");
+        return Fin(new ExpressionGrouping { Expression = e }, start);
+    }
+
+    /// <summary>A parenthesized expression list, which must hold plain expressions and at least one of them.</summary>
+    private CompositeGrouping ParseCompositeGrouping(ExpressionList list, Token start)
+    {
+        if (list.Items.Count == 0) throw Fail("Expected an expression, not an empty list");
+        var items = new List<GroupingSpec>();
+        foreach (var item in list.Items)
+        {
+            bool nested = item is ExpressionList || item is ParenthesizedExpression { Inner: ExpressionList };
+            bool routine = item is FunctionCall { Name: [var name] } && (name.Value.Equals("ROLLUP", StringComparison.OrdinalIgnoreCase) || name.Value.Equals("CUBE", StringComparison.OrdinalIgnoreCase));
+            if (nested || routine) throw Fail("Only plain expressions can be grouped together in parentheses");
+            items.Add(SpanOf(new ExpressionGrouping { Expression = item }, item));
+        }
+        return Fin(new CompositeGrouping { Items = items }, start);
+    }
+
+    /// <summary>Gives a wrapper node the span of the node it wraps, for a wrapper that adds no text of its own.</summary>
+    private static T SpanOf<T>(T node, SqlNode source) where T : SqlNode
+    {
+        node.Start = source.Start;
+        node.End = source.End;
+        node.Line = source.Line;
+        node.Column = source.Column;
+        node.FirstTokenIndex = source.FirstTokenIndex;
+        node.LastTokenIndex = source.LastTokenIndex;
+        return node;
     }
 
     private SelectItem ParseSelectItem()

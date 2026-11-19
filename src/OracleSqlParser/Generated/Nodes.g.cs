@@ -3453,6 +3453,52 @@ public partial class CompilationErrorStatement
     }
 }
 
+public partial class CompositeGrouping
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Items is not null) foreach (var x in Items) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Items is not null) foreach (var x in Items) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Items, "CompositeGrouping.Items");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Items", Items),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new CompositeGrouping
+        {
+            Items = CloneList(Items),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (CompositeGrouping)other;
+        return PairList(Items, o.Items, pending);
+    }
+}
+
 public partial class CompressAttribute
 {
     /// <inheritdoc/>
@@ -6211,6 +6257,52 @@ public partial class CreateViewStatement
     }
 }
 
+public partial class CubeGrouping
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Items is not null) foreach (var x in Items) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Items is not null) foreach (var x in Items) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Items, "CubeGrouping.Items");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Items", Items),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new CubeGrouping
+        {
+            Items = CloneList(Items),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (CubeGrouping)other;
+        return PairList(Items, o.Items, pending);
+    }
+}
+
 public partial class CurrentOfExpression
 {
     /// <inheritdoc/>
@@ -7457,6 +7549,52 @@ public partial class ExpressionControl
     }
 }
 
+public partial class ExpressionGrouping
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Expression is not null) yield return Expression;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        Expression?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        Expression = SqlNodeRewriter.RewriteRequired(rewriter, Expression, "ExpressionGrouping.Expression");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Expression", Expression),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new ExpressionGrouping
+        {
+            Expression = CloneChild(Expression)!,
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (ExpressionGrouping)other;
+        return Pair(Expression, o.Expression, pending);
+    }
+}
+
 public partial class ExpressionList
 {
     /// <inheritdoc/>
@@ -8641,6 +8779,21 @@ public partial class GotoStatement
     }
 }
 
+public partial class GrandTotalGrouping
+{
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new GrandTotalGrouping();
+        CopySpan(this, c);
+        return c;
+    }
+}
+
 public partial class GrantPrivilege
 {
     /// <inheritdoc/>
@@ -9752,6 +9905,52 @@ public partial class GroupItem
     {
         var o = (GroupItem)other;
         return PairList(Items, o.Items, pending);
+    }
+}
+
+public partial class GroupingSetsGrouping
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Sets is not null) foreach (var x in Sets) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Sets is not null) foreach (var x in Sets) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Sets, "GroupingSetsGrouping.Sets");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Sets", Sets),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new GroupingSetsGrouping
+        {
+            Sets = CloneList(Sets),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (GroupingSetsGrouping)other;
+        return PairList(Sets, o.Sets, pending);
     }
 }
 
@@ -15756,6 +15955,52 @@ public partial class RollbackStatement
             && Pair(ToSavepoint, o.ToSavepoint, pending)
             && Pair(Force, o.Force, pending)
             && SameStrings(Labels, o.Labels);
+    }
+}
+
+public partial class RollupGrouping
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Items is not null) foreach (var x in Items) yield return x;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Items is not null) foreach (var x in Items) x.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Items, "RollupGrouping.Items");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Items", Items),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new RollupGrouping
+        {
+            Items = CloneList(Items),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (RollupGrouping)other;
+        return PairList(Items, o.Items, pending);
     }
 }
 
