@@ -6007,9 +6007,7 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.Conditional
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptions! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ConditionalProgramOptionsBranch! node) -> void
-
 OracleSqlParser.KeepClause.OrderBy.get -> OracleSqlParser.OrderByClause!
-
 OracleSqlParser.OffsetClause
 OracleSqlParser.OffsetClause.Offset.get -> OracleSqlParser.Expression!
 OracleSqlParser.OffsetClause.Offset.set -> void
@@ -6021,11 +6019,9 @@ override OracleSqlParser.OffsetClause.GetChildren() -> System.Collections.Generi
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.OffsetClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.OffsetClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.OffsetClause! node) -> void
-
 OracleSqlParser.MergeClause.DeleteWhere.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.MergeClause.InsertWhere.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.MergeClause.UpdateWhere.get -> OracleSqlParser.WhereClause?
-
 OracleSqlParser.FunctionCall.WithinGroup.get -> OracleSqlParser.WithinGroupClause?
 OracleSqlParser.WithinGroupClause
 OracleSqlParser.WithinGroupClause.OrderBy.get -> OracleSqlParser.OrderByClause!
@@ -6037,7 +6033,6 @@ override OracleSqlParser.WithinGroupClause.GetChildren() -> System.Collections.G
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.WithinGroupClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.WithinGroupClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WithinGroupClause! node) -> void
-
 OracleSqlParser.DmlStatement.ReturningInto.get -> OracleSqlParser.IntoClause?
 OracleSqlParser.ExecuteImmediateStatement.Into.get -> OracleSqlParser.IntoClause?
 OracleSqlParser.ExecuteImmediateStatement.ReturningInto.get -> OracleSqlParser.IntoClause?
@@ -6055,7 +6050,6 @@ override OracleSqlParser.IntoClause.GetChildren() -> System.Collections.Generic.
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.IntoClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.IntoClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.IntoClause! node) -> void
-
 OracleSqlParser.SelectStatement.With.get -> OracleSqlParser.WithClause?
 OracleSqlParser.WithClause
 OracleSqlParser.WithClause.Ctes.get -> System.Collections.Generic.List<OracleSqlParser.CommonTableExpression!>!
@@ -6069,7 +6063,6 @@ override OracleSqlParser.WithClause.GetChildren() -> System.Collections.Generic.
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.WithClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.WithClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.WithClause! node) -> void
-
 OracleSqlParser.CompositeGrouping
 OracleSqlParser.CompositeGrouping.CompositeGrouping() -> void
 OracleSqlParser.CompositeGrouping.Items.get -> System.Collections.Generic.List<OracleSqlParser.GroupingSpec!>!
