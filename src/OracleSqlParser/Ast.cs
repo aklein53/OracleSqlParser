@@ -597,8 +597,8 @@ public sealed partial class InsertStatement : DmlStatement
 {
     /// <summary>The table or view that receives the rows.</summary>
     public required TableReference Target { get; set; }
-    /// <summary>The column list in parentheses; empty when absent.</summary>
-    public List<Identifier> Columns { get; set; } = [];
+    /// <summary>The column list in parentheses, each optionally qualified by the target name or alias (<c>INSERT INTO t x (x.a)</c>); empty when absent.</summary>
+    public List<ColumnReference> Columns { get; set; } = [];
     /// <summary>
     /// The <c>VALUES</c> clause, or null for the <c>SELECT</c> form. Exactly one of <see cref="Values"/> and
     /// <see cref="Query"/> is set.

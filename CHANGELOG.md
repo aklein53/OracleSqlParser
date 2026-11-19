@@ -29,7 +29,9 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `InsertStatement.Values` (new) | n/a | `ValuesClause?`; exactly one of `Values` and `Query` is set |
   | `InsertIntoClause.Values` | `List<Expression>` | `ValuesClause?` (one row) |
   | `ValuesQuery.Rows`, `ValuesTable.Rows` | `List<List<Expression>>` | `List<RowValue>` (`.Values`) |
-  - New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
+  | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
+
+  New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
 
 ## [1.0.0-rc.3] - 2026-11-18
 

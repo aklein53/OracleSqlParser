@@ -1056,7 +1056,7 @@ public sealed partial class SqlParser
         var st = new InsertStatement { Hint = hint, Target = target };
         if (IsOp("(") && !LooksLikeQueryAfterParen())
         {
-            Next(); st.Columns = ParseIdentifierList(); ExpectOp(")");
+            Next(); do st.Columns.Add(ParseColumnReferenceOnly()); while (AcceptOp(",")); ExpectOp(")");
         }
         if (IsKw("VALUES"))
         {

@@ -128,6 +128,28 @@ public class ApiConsistencyTests
             node.Values[0] is Literal { Value: "1" } ? new RowValue { Values = [new Literal { Kind = LiteralKind.Number, Value = "9" }] } : null;
     }
 
+    /// <summary>An INSERT's column list holds column references, so a qualified name such as <c>x.a</c> is kept (Oracle accepts it).</summary>
+    [Fact]
+    public void InsertColumnsAreQualifiedColumnReferences()
+    {
+        const string sql = "INSERT INTO t x (x.a, b) VALUES (1, 2)";
+        var columns = Assert.IsType<InsertStatement>(Parsed(sql).Statements[0]).Columns;
+
+        Assert.Equal(["x.a", "b"], columns.Select(c => Text(sql, c)));
+        Assert.Equal(2, columns[0].Parts.Count);
+    }
+
+    [Theory]
+    [InlineData("INSERT INTO t x (x.a, b) VALUES (1, 2)")]
+    [InlineData("INSERT INTO t (t.a) VALUES (1)")]
+    [InlineData("INSERT ALL INTO t (t.a) VALUES (1) SELECT 1 FROM dual")]
+    public void InsertColumnListRoundTrips(string sql)
+    {
+        var script = Parsed(sql);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

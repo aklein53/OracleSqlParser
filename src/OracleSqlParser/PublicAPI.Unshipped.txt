@@ -2201,14 +2201,12 @@ OracleSqlParser.InquiryDirective.InquiryDirective() -> void
 OracleSqlParser.InquiryDirective.Name.get -> OracleSqlParser.Identifier!
 OracleSqlParser.InquiryDirective.Name.set -> void
 OracleSqlParser.InsertIntoClause
-OracleSqlParser.InsertIntoClause.Columns.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 OracleSqlParser.InsertIntoClause.Columns.set -> void
 OracleSqlParser.InsertIntoClause.InsertIntoClause() -> void
 OracleSqlParser.InsertIntoClause.Table.get -> OracleSqlParser.TableReference!
 OracleSqlParser.InsertIntoClause.Table.set -> void
 OracleSqlParser.InsertIntoClause.Values.set -> void
 OracleSqlParser.InsertStatement
-OracleSqlParser.InsertStatement.Columns.get -> System.Collections.Generic.List<OracleSqlParser.Identifier!>!
 OracleSqlParser.InsertStatement.Columns.set -> void
 OracleSqlParser.InsertStatement.InsertStatement() -> void
 OracleSqlParser.InsertStatement.Query.get -> OracleSqlParser.SelectStatement?
@@ -6152,3 +6150,5 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.RowValue! n
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ValuesClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.RowValue! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ValuesClause! node) -> void
+OracleSqlParser.InsertIntoClause.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
+OracleSqlParser.InsertStatement.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!

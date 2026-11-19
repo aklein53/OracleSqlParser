@@ -90,7 +90,7 @@ public sealed partial class SqlScriptGenerator
         {
             Add("INSERT"); DmlHint(i);
             Add(" INTO "); Table(i.Target);
-            if (i.Columns.Count > 0) { Add(" ("); IdList(i.Columns); Add(")"); }
+            if (i.Columns.Count > 0) { Add(" ("); Sep(i.Columns, col => Expr(col)); Add(")"); }
             if (i.Values is { } values) { ClauseStart(_o.NewLineBeforeValuesClause); ValuesText(values); }
             else if (i.Query != null) { ClauseStart(_o.NewLineBeforeValuesClause); Select(i.Query); }
             DmlTail(i);
@@ -110,7 +110,7 @@ public sealed partial class SqlScriptGenerator
         private void InsertInto(InsertIntoClause c)
         {
             Add("INTO "); Table(c.Table);
-            if (c.Columns.Count > 0) { Add(" ("); IdList(c.Columns); Add(")"); }
+            if (c.Columns.Count > 0) { Add(" ("); Sep(c.Columns, col => Expr(col)); Add(")"); }
             if (c.Values is { } values) { Add(" "); ValuesText(values); }
         }
 

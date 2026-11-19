@@ -764,7 +764,7 @@ public sealed partial class SqlParser
         {
             var s = Next();
             var ic = new InsertIntoClause { Table = ParseTablePrimary() };
-            if (IsOp("(")) { Next(); ic.Columns = ParseIdentifierList(); ExpectOp(")"); }
+            if (IsOp("(")) { Next(); do ic.Columns.Add(ParseColumnReferenceOnly()); while (AcceptOp(",")); ExpectOp(")"); }
             if (IsKw("VALUES"))
             {
                 var vs = Cur;

@@ -772,8 +772,8 @@ public sealed partial class InsertIntoClause : SqlNode
 {
     /// <summary>The table inserted into.</summary>
     public required TableReference Table { get; set; }
-    /// <summary>The column list, in source order; empty when absent.</summary>
-    public List<Identifier> Columns { get; set; } = [];
+    /// <summary>The column list, in source order, each optionally qualified by the target name or alias; empty when absent.</summary>
+    public List<ColumnReference> Columns { get; set; } = [];
     /// <summary>The <c>VALUES</c> clause, or null when absent. A multitable INSERT takes one row, so its clause has one row.</summary>
     public ValuesClause? Values { get; set; }
 }
