@@ -653,10 +653,11 @@ public class ClauseNodeTests
         Assert.True(r.Success, string.Join("; ", r.Errors));
         var clauses = Assert.IsType<MergeStatement>(r.Script.Statements[0]).Clauses;
 
-        Assert.Equal("WHERE s.v > 0", Text(sql, clauses[0].UpdateWhere!));
-        Assert.Equal("WHERE t.v = 0", Text(sql, clauses[0].DeleteWhere!));
-        Assert.Null(clauses[0].InsertWhere);
-        Assert.Equal("WHERE s.id > 1", Text(sql, clauses[1].InsertWhere!));
+        var matched = Assert.IsType<MergeMatchedClause>(clauses[0]);
+        var notMatched = Assert.IsType<MergeNotMatchedClause>(clauses[1]);
+        Assert.Equal("WHERE s.v > 0", Text(sql, matched.UpdateWhere!));
+        Assert.Equal("WHERE t.v = 0", Text(sql, matched.DeleteWhere!));
+        Assert.Equal("WHERE s.id > 1", Text(sql, notMatched.Where!));
     }
 
     /// <summary>The DELETE WHERE of an update action starts at its own WHERE, past a comment.</summary>
@@ -664,7 +665,7 @@ public class ClauseNodeTests
     public void TheMergeDeleteWhereStartsAtItsWhere()
     {
         const string sql = "MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = 1 DELETE /* d */ WHERE /* e */ t.y = 2";
-        var clause = Assert.Single(Assert.IsType<MergeStatement>(SqlParser.Parse(sql).Script.Statements[0]).Clauses);
+        var clause = Assert.IsType<MergeMatchedClause>(Assert.Single(Assert.IsType<MergeStatement>(SqlParser.Parse(sql).Script.Statements[0]).Clauses));
 
         Assert.Equal("WHERE /* e */ t.y = 2", Text(sql, clause.DeleteWhere!));
         Assert.Null(clause.UpdateWhere);

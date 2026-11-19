@@ -1127,7 +1127,7 @@ public class ExpertStressTests(OracleFixture db)
         var s = Shape.Parse(sql[1]);
         var clauses = Find<MergeClause>(s).ToList();
         Assert.Equal(2, clauses.Count);
-        Assert.NotNull(clauses[0].DeleteWhere);
+        Assert.NotNull(((MergeMatchedClause)clauses[0]).DeleteWhere);
         Assert.Contains("STOCK_ERR", Str(Find<ErrorLogging>(s).Single()));
         await VerifyAsync(sql, ["SELECT sku, qty, price FROM stock ORDER BY sku", "SELECT COUNT(*) FROM stock_err"]);
     }
@@ -1975,10 +1975,10 @@ public class ExpertStressTests(OracleFixture db)
             """,
         };
         var s = Shape.Parse(sql[0]);
-        var clause = Find<MergeClause>(s).Single(c => c.Matched && c.UpdateWhere is not null);
+        var clause = Find<MergeMatchedClause>(s).Single(c => c.UpdateWhere is not null);
         Assert.Equal("WHERE s.sal > 1000", sql[0][clause.UpdateWhere!.Start..clause.UpdateWhere.End]);
         Assert.Equal("WHERE b.amount > 3000", sql[0][clause.DeleteWhere!.Start..clause.DeleteWhere.End]);
-        var insertWhere = Find<MergeClause>(s).Single(c => !c.Matched).InsertWhere!;
+        var insertWhere = Find<MergeNotMatchedClause>(s).Single().Where!;
         Assert.Equal("WHERE s.deptno = 10", sql[0][insertWhere.Start..insertWhere.End]);
         await VerifyAsync(sql, ["SELECT empno, amount, note FROM bonus ORDER BY empno"]);
     }

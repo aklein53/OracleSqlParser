@@ -680,15 +680,19 @@ public sealed partial class MergeStatement : DmlStatement
     public List<MergeClause> Clauses { get; set; } = [];
 }
 
-/// <summary>One <c>WHEN [NOT] MATCHED THEN</c> clause of a <c>MERGE</c> statement.</summary>
-public sealed partial class MergeClause : SqlNode
+/// <summary>One <c>WHEN [NOT] MATCHED THEN</c> clause of a <c>MERGE</c> statement: <see cref="MergeMatchedClause"/> or <see cref="MergeNotMatchedClause"/>.</summary>
+/// <remarks>Spans <c>WHEN</c> through the end of its action; see <see cref="FromClause"/>.</remarks>
+public abstract partial class MergeClause : SqlNode
 {
-    /// <summary>True for <c>WHEN MATCHED</c>; false for <c>WHEN NOT MATCHED</c>.</summary>
-    public bool Matched { get; set; }
-    /// <summary>The condition after <c>AND</c>, or null when absent.</summary>
+    /// <summary>The condition after <c>AND</c> in <c>WHEN MATCHED AND cond</c> or <c>WHEN NOT MATCHED AND cond</c>, or null when absent.</summary>
     public Expression? AndCondition { get; set; }
-    // WHEN MATCHED THEN UPDATE
-    /// <summary>The <c>UPDATE SET</c> assignments; empty for the insert and delete forms.</summary>
+}
+
+/// <summary><c>WHEN MATCHED THEN UPDATE SET ... [WHERE ...] [DELETE WHERE ...]</c>.</summary>
+/// <remarks>Spans <c>WHEN</c> through the end of its action; see <see cref="FromClause"/>.</remarks>
+public sealed partial class MergeMatchedClause : MergeClause
+{
+    /// <summary>The <c>UPDATE SET</c> assignments.</summary>
     public List<SetClause> Set { get; set; } = [];
     /// <summary>The <c>WHERE</c> clause of the update, or null when absent.</summary>
     public WhereClause? UpdateWhere { get; set; }
@@ -697,13 +701,18 @@ public sealed partial class MergeClause : SqlNode
     /// Oracle has no delete-only action (<c>WHEN MATCHED THEN DELETE</c> is a syntax error), so this is set only on an update.
     /// </summary>
     public WhereClause? DeleteWhere { get; set; }
-    // WHEN NOT MATCHED THEN INSERT
+}
+
+/// <summary><c>WHEN NOT MATCHED THEN INSERT (cols) VALUES (...) [WHERE ...]</c>.</summary>
+/// <remarks>Spans <c>WHEN</c> through the end of its action; see <see cref="FromClause"/>.</remarks>
+public sealed partial class MergeNotMatchedClause : MergeClause
+{
     /// <summary>The column list of the insert, each optionally qualified by the target alias (<c>INSERT (p.a, p.b)</c>); empty when absent.</summary>
-    public List<ColumnReference> InsertColumns { get; set; } = [];
-    /// <summary>The values of the insert, in source order; empty for the update and delete forms.</summary>
-    public List<Expression> InsertValues { get; set; } = [];
+    public List<ColumnReference> Columns { get; set; } = [];
+    /// <summary>The <c>VALUES</c> clause of the insert: one row.</summary>
+    public required ValuesClause Values { get; set; }
     /// <summary>The <c>WHERE</c> clause of the insert, or null when absent.</summary>
-    public WhereClause? InsertWhere { get; set; }
+    public WhereClause? Where { get; set; }
 }
 
 // ---------- Table references ----------

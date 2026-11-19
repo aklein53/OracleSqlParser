@@ -176,26 +176,23 @@ public sealed partial class SqlScriptGenerator
             foreach (var c in m.Clauses)
             {
                 ClauseStart(_o.NewLineBeforeSetClause);
-                Add(c.Matched ? "WHEN MATCHED" : "WHEN NOT MATCHED");
+                Add(c is MergeMatchedClause ? "WHEN MATCHED" : "WHEN NOT MATCHED");
                 if (c.AndCondition != null) { Add(" AND "); Expr(c.AndCondition); }
                 Add(" THEN ");
-                if (c.Matched && c.Set.Count > 0)
+                switch (c)
                 {
-                    Add("UPDATE SET "); Sep(c.Set, SetClauseText);
-                    if (c.UpdateWhere is { } updateWhere) { Add(" WHERE "); Expr(updateWhere.Condition); }
-                    if (c.DeleteWhere is { } deleteWhere) { Add(" DELETE WHERE "); Expr(deleteWhere.Condition); }
-                }
-                else if (c.Matched)
-                {
-                    Add("DELETE");
-                    if (c.DeleteWhere is { } deleteOnlyWhere) { Add(" WHERE "); Expr(deleteOnlyWhere.Condition); }
-                }
-                else
-                {
-                    Add("INSERT");
-                    if (c.InsertColumns.Count > 0) { Add(" ("); Sep(c.InsertColumns, col => Expr(col)); Add(")"); }
-                    Add(" VALUES ("); Sep(c.InsertValues, e => Expr(e)); Add(")");
-                    if (c.InsertWhere is { } insertWhere) { Add(" WHERE "); Expr(insertWhere.Condition); }
+                    case MergeMatchedClause matched:
+                        Add("UPDATE SET "); Sep(matched.Set, SetClauseText);
+                        if (matched.UpdateWhere is { } updateWhere) { Add(" WHERE "); Expr(updateWhere.Condition); }
+                        if (matched.DeleteWhere is { } deleteWhere) { Add(" DELETE WHERE "); Expr(deleteWhere.Condition); }
+                        break;
+                    case MergeNotMatchedClause notMatched:
+                        Add("INSERT");
+                        if (notMatched.Columns.Count > 0) { Add(" ("); Sep(notMatched.Columns, col => Expr(col)); Add(")"); }
+                        Add(" "); ValuesText(notMatched.Values);
+                        if (notMatched.Where is { } insertWhere) { Add(" WHERE "); Expr(insertWhere.Condition); }
+                        break;
+                    default: throw Unsupported(c);
                 }
             }
             DmlTail(m);

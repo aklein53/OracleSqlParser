@@ -1235,28 +1235,34 @@ public sealed partial class SqlParser
         while (IsKw("WHEN") && Progress(ref prog105))
         {
             var cs = Next();
-            var mc = new MergeClause();
-            if (AcceptKw("NOT")) mc.Matched = false; else mc.Matched = true;
+            bool matched = !AcceptKw("NOT");
             ExpectKw("MATCHED");
-            if (AcceptKw("AND")) mc.AndCondition = ParseExpr();
+            Expression? andCondition = AcceptKw("AND") ? ParseExpr() : null;
             ExpectKw("THEN");
-            if (AcceptKw("UPDATE"))
+            MergeClause mc;
+            if (matched)
             {
+                if (!IsKw("UPDATE")) throw FailExpected($"Expected UPDATE but found {Describe(Cur)}", "UPDATE");
+                Next();
+                var matchedClause = new MergeMatchedClause();
                 ExpectKw("SET");
-                mc.Set = ParseSetClauses();
-                mc.UpdateWhere = ParseOptionalWhere();
-                if (AcceptKw("DELETE")) mc.DeleteWhere = ParseWhere();
+                matchedClause.Set = ParseSetClauses();
+                matchedClause.UpdateWhere = ParseOptionalWhere();
+                if (AcceptKw("DELETE")) matchedClause.DeleteWhere = ParseWhere();
+                mc = matchedClause;
             }
-            else if (AcceptKw("INSERT"))
+            else
             {
-                if (IsOp("(")) mc.InsertColumns = ParseColumnRefList(true); // the parenthesized column list, consumed to its ')'
+                if (!IsKw("INSERT")) throw FailExpected($"Expected INSERT but found {Describe(Cur)}", "INSERT");
+                Next();
+                List<ColumnReference> columns = IsOp("(") ? ParseColumnRefList(true) : [];
+                var valuesStart = Cur;
                 ExpectKw("VALUES");
-                ExpectOp("(");
-                do mc.InsertValues.Add(ParseExpr()); while (AcceptOp(","));
-                ExpectOp(")");
-                mc.InsertWhere = ParseOptionalWhere();
+                var values = new ValuesClause();
+                values.Rows.Add(ParseRowValue());
+                mc = new MergeNotMatchedClause { Columns = columns, Values = Fin(values, valuesStart), Where = ParseOptionalWhere() };
             }
-            else throw FailExpected($"Expected UPDATE or INSERT but found {Describe(Cur)}", "UPDATE", "INSERT");
+            mc.AndCondition = andCondition;
             st.Clauses.Add(Fin(mc, cs));
         }
         if (st.Clauses.Count == 0) throw FailExpected("Expected WHEN clause in MERGE", "WHEN");

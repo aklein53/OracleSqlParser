@@ -150,6 +150,41 @@ public class ApiConsistencyTests
         Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
     }
 
+    /// <summary>Each MERGE clause spans WHEN through the end of its action, and the two kinds are separate node types.</summary>
+    [Fact]
+    public void MergeClausesSpanWhenThroughTheirAction()
+    {
+        const string sql = "MERGE INTO t USING s ON (t.id = s.id) " +
+            "WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0 " +
+            "WHEN NOT MATCHED THEN INSERT (t.id) VALUES (s.id) WHERE s.id > 1";
+        var clauses = Assert.IsType<MergeStatement>(Parsed(sql).Statements[0]).Clauses;
+
+        Assert.Equal("WHEN MATCHED AND s.v > 0 THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0", Text(sql, clauses[0]));
+        Assert.Equal("WHEN NOT MATCHED THEN INSERT (t.id) VALUES (s.id) WHERE s.id > 1", Text(sql, clauses[1]));
+        Assert.IsType<MergeMatchedClause>(clauses[0]);
+        Assert.Equal("s.v > 0", Text(sql, clauses[0].AndCondition!));
+        Assert.Equal("VALUES (s.id)", Text(sql, Assert.IsType<MergeNotMatchedClause>(clauses[1]).Values));
+    }
+
+    [Theory]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN DELETE")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN INSERT (id) VALUES (1)")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED THEN UPDATE SET t.v = 1")]
+    public void AMergeActionThatIsNotUpdateOrInsertIsRejected(string sql)
+    {
+        Assert.False(SqlParser.Parse(sql).Success);
+    }
+
+    [Theory]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 1 DELETE WHERE t.v = 0")]
+    [InlineData("MERGE INTO t USING s ON (t.id = s.id) WHEN NOT MATCHED AND s.id > 0 THEN INSERT (t.id) VALUES (s.id)")]
+    public void MergeClausesRoundTrip(string sql)
+    {
+        var script = Parsed(sql);
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()

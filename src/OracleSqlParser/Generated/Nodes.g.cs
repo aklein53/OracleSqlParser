@@ -11943,53 +11943,40 @@ public partial class MemberAccess
     }
 }
 
-public partial class MergeClause
+public partial class MergeMatchedClause
 {
     /// <inheritdoc/>
     public override IEnumerable<SqlNode> GetChildren()
     {
-        if (AndCondition is not null) yield return AndCondition;
         if (Set is not null) foreach (var x in Set) yield return x;
         if (UpdateWhere is not null) yield return UpdateWhere;
         if (DeleteWhere is not null) yield return DeleteWhere;
-        if (InsertColumns is not null) foreach (var x in InsertColumns) yield return x;
-        if (InsertValues is not null) foreach (var x in InsertValues) yield return x;
-        if (InsertWhere is not null) yield return InsertWhere;
+        if (AndCondition is not null) yield return AndCondition;
     }
 
     /// <inheritdoc/>
     public override void AcceptChildren(SqlNodeVisitor visitor)
     {
-        AndCondition?.Accept(visitor);
         if (Set is not null) foreach (var x in Set) x.Accept(visitor);
         UpdateWhere?.Accept(visitor);
         DeleteWhere?.Accept(visitor);
-        if (InsertColumns is not null) foreach (var x in InsertColumns) x.Accept(visitor);
-        if (InsertValues is not null) foreach (var x in InsertValues) x.Accept(visitor);
-        InsertWhere?.Accept(visitor);
+        AndCondition?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
     {
-        AndCondition = SqlNodeRewriter.RewriteOptional(rewriter, AndCondition, "MergeClause.AndCondition");
-        SqlNodeRewriter.RewriteList(rewriter, Set, "MergeClause.Set");
-        UpdateWhere = SqlNodeRewriter.RewriteOptional(rewriter, UpdateWhere, "MergeClause.UpdateWhere");
-        DeleteWhere = SqlNodeRewriter.RewriteOptional(rewriter, DeleteWhere, "MergeClause.DeleteWhere");
-        SqlNodeRewriter.RewriteList(rewriter, InsertColumns, "MergeClause.InsertColumns");
-        SqlNodeRewriter.RewriteList(rewriter, InsertValues, "MergeClause.InsertValues");
-        InsertWhere = SqlNodeRewriter.RewriteOptional(rewriter, InsertWhere, "MergeClause.InsertWhere");
+        SqlNodeRewriter.RewriteList(rewriter, Set, "MergeMatchedClause.Set");
+        UpdateWhere = SqlNodeRewriter.RewriteOptional(rewriter, UpdateWhere, "MergeMatchedClause.UpdateWhere");
+        DeleteWhere = SqlNodeRewriter.RewriteOptional(rewriter, DeleteWhere, "MergeMatchedClause.DeleteWhere");
+        AndCondition = SqlNodeRewriter.RewriteOptional(rewriter, AndCondition, "MergeMatchedClause.AndCondition");
     }
 
     internal override NodeProperty[] NodeProperties() =>
     [
-        new("Matched", Matched),
-        new("AndCondition", AndCondition),
         new("Set", Set),
         new("UpdateWhere", UpdateWhere),
         new("DeleteWhere", DeleteWhere),
-        new("InsertColumns", InsertColumns),
-        new("InsertValues", InsertValues),
-        new("InsertWhere", InsertWhere),
+        new("AndCondition", AndCondition),
     ];
 
     /// <inheritdoc/>
@@ -11999,16 +11986,12 @@ public partial class MergeClause
 
     internal override SqlNode CloneCore()
     {
-        var c = new MergeClause
+        var c = new MergeMatchedClause
         {
-            Matched = Matched,
-            AndCondition = CloneChild(AndCondition),
             Set = CloneList(Set),
             UpdateWhere = CloneChild(UpdateWhere),
             DeleteWhere = CloneChild(DeleteWhere),
-            InsertColumns = CloneList(InsertColumns),
-            InsertValues = CloneList(InsertValues),
-            InsertWhere = CloneChild(InsertWhere),
+            AndCondition = CloneChild(AndCondition),
         };
         CopySpan(this, c);
         return c;
@@ -12016,15 +11999,75 @@ public partial class MergeClause
 
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
-        var o = (MergeClause)other;
-        return Matched == o.Matched
-            && Pair(AndCondition, o.AndCondition, pending)
-            && PairList(Set, o.Set, pending)
+        var o = (MergeMatchedClause)other;
+        return PairList(Set, o.Set, pending)
             && Pair(UpdateWhere, o.UpdateWhere, pending)
             && Pair(DeleteWhere, o.DeleteWhere, pending)
-            && PairList(InsertColumns, o.InsertColumns, pending)
-            && PairList(InsertValues, o.InsertValues, pending)
-            && Pair(InsertWhere, o.InsertWhere, pending);
+            && Pair(AndCondition, o.AndCondition, pending);
+    }
+}
+
+public partial class MergeNotMatchedClause
+{
+    /// <inheritdoc/>
+    public override IEnumerable<SqlNode> GetChildren()
+    {
+        if (Columns is not null) foreach (var x in Columns) yield return x;
+        if (Values is not null) yield return Values;
+        if (Where is not null) yield return Where;
+        if (AndCondition is not null) yield return AndCondition;
+    }
+
+    /// <inheritdoc/>
+    public override void AcceptChildren(SqlNodeVisitor visitor)
+    {
+        if (Columns is not null) foreach (var x in Columns) x.Accept(visitor);
+        Values?.Accept(visitor);
+        Where?.Accept(visitor);
+        AndCondition?.Accept(visitor);
+    }
+
+    internal override void RewriteChildren(SqlNodeRewriter rewriter)
+    {
+        SqlNodeRewriter.RewriteList(rewriter, Columns, "MergeNotMatchedClause.Columns");
+        Values = SqlNodeRewriter.RewriteRequired(rewriter, Values, "MergeNotMatchedClause.Values");
+        Where = SqlNodeRewriter.RewriteOptional(rewriter, Where, "MergeNotMatchedClause.Where");
+        AndCondition = SqlNodeRewriter.RewriteOptional(rewriter, AndCondition, "MergeNotMatchedClause.AndCondition");
+    }
+
+    internal override NodeProperty[] NodeProperties() =>
+    [
+        new("Columns", Columns),
+        new("Values", Values),
+        new("Where", Where),
+        new("AndCondition", AndCondition),
+    ];
+
+    /// <inheritdoc/>
+    public override void Accept(SqlNodeVisitor visitor) => visitor.ExplicitVisit(this);
+
+    internal override SqlNode? AcceptRewriter(SqlNodeRewriter rewriter) => rewriter.Rewrite(this);
+
+    internal override SqlNode CloneCore()
+    {
+        var c = new MergeNotMatchedClause
+        {
+            Columns = CloneList(Columns),
+            Values = CloneChild(Values)!,
+            Where = CloneChild(Where),
+            AndCondition = CloneChild(AndCondition),
+        };
+        CopySpan(this, c);
+        return c;
+    }
+
+    internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
+    {
+        var o = (MergeNotMatchedClause)other;
+        return PairList(Columns, o.Columns, pending)
+            && Pair(Values, o.Values, pending)
+            && Pair(Where, o.Where, pending)
+            && Pair(AndCondition, o.AndCondition, pending);
     }
 }
 

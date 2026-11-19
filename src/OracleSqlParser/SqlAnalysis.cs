@@ -573,16 +573,24 @@ public static class SqlAnalysis
                     foreach (var clause in node.Clauses)
                     {
                         clause.AndCondition?.Accept(this);
-                        foreach (var set in clause.Set)
+                        switch (clause)
                         {
-                            foreach (var column in set.Columns) AddColumn(column, column.Parts, write: true, target);
-                            set.Value.Accept(this);
+                            case MergeMatchedClause matched:
+                                foreach (var set in matched.Set)
+                                {
+                                    foreach (var column in set.Columns) AddColumn(column, column.Parts, write: true, target);
+                                    set.Value.Accept(this);
+                                }
+                                matched.UpdateWhere?.Accept(this);
+                                matched.DeleteWhere?.Accept(this);
+                                break;
+                            case MergeNotMatchedClause notMatched:
+                                foreach (var column in notMatched.Columns) AddColumn(column, column.Parts, write: true, target);
+                                foreach (var row in notMatched.Values.Rows)
+                                    foreach (var value in row.Values) value.Accept(this);
+                                notMatched.Where?.Accept(this);
+                                break;
                         }
-                        clause.UpdateWhere?.Accept(this);
-                        clause.DeleteWhere?.Accept(this);
-                        foreach (var column in clause.InsertColumns) AddColumn(column, column.Parts, write: true, target);
-                        foreach (var value in clause.InsertValues) value.Accept(this);
-                        clause.InsertWhere?.Accept(this);
                     }
                 });
                 WalkReturning(node, target);

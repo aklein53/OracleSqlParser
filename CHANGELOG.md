@@ -33,6 +33,18 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
   New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
 
+- `MERGE` clauses are two node types, so each has only the members it uses. Each spans `WHEN` through the end of its action.
+
+  | Property | Was | Is |
+  |---|---|---|
+  | `MergeClause` | one class for both kinds | abstract base with `AndCondition`; `MergeMatchedClause` and `MergeNotMatchedClause` derive from it |
+  | `MergeClause.Matched` | `bool` | removed; the type says it (`WHEN MATCHED` is `MergeMatchedClause`) |
+  | `MergeClause.Set`, `UpdateWhere`, `DeleteWhere` | on `MergeClause` | `MergeMatchedClause.Set`, `.UpdateWhere`, `.DeleteWhere` |
+  | `MergeClause.InsertColumns`, `InsertValues`, `InsertWhere` | on `MergeClause` | `MergeNotMatchedClause.Columns`, `.Values` (`ValuesClause`, one row), `.Where` |
+
+- The parser rejects `WHEN MATCHED THEN INSERT` and `WHEN NOT MATCHED THEN UPDATE`, which used to parse. Oracle rejects both
+  (ORA-02000). A `DELETE` action without `UPDATE` is still rejected.
+
 ## [1.0.0-rc.3] - 2026-11-18
 
 Third release candidate. `OracleSqlParser.Guard` 0.10.0-preview.1 is released alongside it: Guard 0.9 reads the clause

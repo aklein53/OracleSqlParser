@@ -58,8 +58,8 @@ public class DmlAndSessionShapeTests
     public void Merge_Shape() =>
         Assert.Equal(
             "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
-            "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)] updateWhere=(WhereClause condition=(GreaterThan S.V 0)) deleteWhere=(WhereClause condition=(Equals T.V 0))) " +
-            "(MergeClause insertColumns=[ID V] insertValues=[S.ID S.V] insertWhere=(WhereClause condition=(GreaterThan S.V 1)))])",
+            "(MergeMatchedClause set=[(SetClause columns=[T.V] value=S.V)] updateWhere=(WhereClause condition=(GreaterThan S.V 0)) deleteWhere=(WhereClause condition=(Equals T.V 0))) " +
+            "(MergeNotMatchedClause columns=[ID V] values=(ValuesClause rows=[(RowValue values=[S.ID S.V])]) where=(WhereClause condition=(GreaterThan S.V 1)))])",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v WHERE s.v > 0 DELETE WHERE t.v = 0 WHEN NOT MATCHED THEN INSERT (id, v) VALUES (s.id, s.v) WHERE s.v > 1")
                 );
 
@@ -67,7 +67,7 @@ public class DmlAndSessionShapeTests
     public void Merge_LogErrors_Shape() =>
         Assert.Equal(
             "(MergeStatement target=(NamedTable name=[T]) source=(SubqueryTable query=(SelectStatement body=(QuerySpecification selectList=[(StarSelectItem)] from=(FromClause tables=[(NamedTable name=[S])]))) alias=S) on=(paren (Equals T.ID S.ID)) clauses=[" +
-            "(MergeClause matched set=[(SetClause columns=[T.V] value=S.V)])] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
+            "(MergeMatchedClause set=[(SetClause columns=[T.V] value=S.V)])] errorLogging=(ErrorLogging table=[ERR_T] tag='x' rejectLimit=5))",
             Shape.Of("MERGE INTO t USING (SELECT * FROM s) s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.v = s.v LOG ERRORS INTO err_t ('x') REJECT LIMIT 5"));
 
     [Theory]

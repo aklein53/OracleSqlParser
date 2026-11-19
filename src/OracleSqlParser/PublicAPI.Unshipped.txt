@@ -2521,17 +2521,7 @@ OracleSqlParser.MemberModifiers.Static = 2 -> OracleSqlParser.MemberModifiers
 OracleSqlParser.MergeClause
 OracleSqlParser.MergeClause.AndCondition.get -> OracleSqlParser.Expression?
 OracleSqlParser.MergeClause.AndCondition.set -> void
-OracleSqlParser.MergeClause.DeleteWhere.set -> void
-OracleSqlParser.MergeClause.InsertColumns.set -> void
-OracleSqlParser.MergeClause.InsertValues.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
-OracleSqlParser.MergeClause.InsertValues.set -> void
-OracleSqlParser.MergeClause.InsertWhere.set -> void
-OracleSqlParser.MergeClause.Matched.get -> bool
-OracleSqlParser.MergeClause.Matched.set -> void
 OracleSqlParser.MergeClause.MergeClause() -> void
-OracleSqlParser.MergeClause.Set.get -> System.Collections.Generic.List<OracleSqlParser.SetClause!>!
-OracleSqlParser.MergeClause.Set.set -> void
-OracleSqlParser.MergeClause.UpdateWhere.set -> void
 OracleSqlParser.MergeStatement
 OracleSqlParser.MergeStatement.Clauses.get -> System.Collections.Generic.List<OracleSqlParser.MergeClause!>!
 OracleSqlParser.MergeStatement.Clauses.set -> void
@@ -4634,9 +4624,6 @@ override OracleSqlParser.MatchRecognizeTable.GetChildren() -> System.Collections
 override OracleSqlParser.MemberAccess.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.MemberAccess.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.MemberAccess.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
-override OracleSqlParser.MergeClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
-override OracleSqlParser.MergeClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
-override OracleSqlParser.MergeClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
 override OracleSqlParser.MergeStatement.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.MergeStatement.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
 override OracleSqlParser.MergeStatement.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
@@ -5161,7 +5148,6 @@ virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.LoggingAttribute
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.LoopStatement! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MatchRecognizeTable! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MemberAccess! node) -> OracleSqlParser.SqlNode?
-virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MergeClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MergeStatement! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MethodCall! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.ModelClause! node) -> OracleSqlParser.SqlNode?
@@ -5462,7 +5448,6 @@ virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.LoggingAttr
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.LoopStatement! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MatchRecognizeTable! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MemberAccess! node) -> void
-virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MergeClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MergeStatement! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MethodCall! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.ModelClause! node) -> void
@@ -5763,7 +5748,6 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.LoggingAttribute! n
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.LoopStatement! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MatchRecognizeTable! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MemberAccess! node) -> void
-virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MergeClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MergeStatement! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MethodCall! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ModelClause! node) -> void
@@ -5932,7 +5916,6 @@ OracleSqlParser.DataType.Ref.get -> bool
 OracleSqlParser.DataType.Ref.set -> void
 OracleSqlParser.FunctionCall.PartitionBy.get -> System.Collections.Generic.List<OracleSqlParser.Expression!>!
 OracleSqlParser.FunctionCall.PartitionBy.set -> void
-OracleSqlParser.MergeClause.InsertColumns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
 OracleSqlParser.ParseOptions.SqlPlusScript.get -> bool
 OracleSqlParser.ParseOptions.SqlPlusScript.init -> void
 OracleSqlParser.TypeKind.Incomplete = 4 -> OracleSqlParser.TypeKind
@@ -6000,9 +5983,6 @@ override OracleSqlParser.OffsetClause.GetChildren() -> System.Collections.Generi
 virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.OffsetClause! node) -> OracleSqlParser.SqlNode?
 virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.OffsetClause! node) -> void
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.OffsetClause! node) -> void
-OracleSqlParser.MergeClause.DeleteWhere.get -> OracleSqlParser.WhereClause?
-OracleSqlParser.MergeClause.InsertWhere.get -> OracleSqlParser.WhereClause?
-OracleSqlParser.MergeClause.UpdateWhere.get -> OracleSqlParser.WhereClause?
 OracleSqlParser.FunctionCall.WithinGroup.get -> OracleSqlParser.WithinGroupClause?
 OracleSqlParser.WithinGroupClause
 OracleSqlParser.WithinGroupClause.OrderBy.get -> OracleSqlParser.OrderByClause!
@@ -6152,3 +6132,31 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.RowValue! node) -> 
 virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ValuesClause! node) -> void
 OracleSqlParser.InsertIntoClause.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
 OracleSqlParser.InsertStatement.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
+OracleSqlParser.MergeMatchedClause
+OracleSqlParser.MergeMatchedClause.DeleteWhere.get -> OracleSqlParser.WhereClause?
+OracleSqlParser.MergeMatchedClause.DeleteWhere.set -> void
+OracleSqlParser.MergeMatchedClause.MergeMatchedClause() -> void
+OracleSqlParser.MergeMatchedClause.Set.get -> System.Collections.Generic.List<OracleSqlParser.SetClause!>!
+OracleSqlParser.MergeMatchedClause.Set.set -> void
+OracleSqlParser.MergeMatchedClause.UpdateWhere.get -> OracleSqlParser.WhereClause?
+OracleSqlParser.MergeMatchedClause.UpdateWhere.set -> void
+OracleSqlParser.MergeNotMatchedClause
+OracleSqlParser.MergeNotMatchedClause.Columns.get -> System.Collections.Generic.List<OracleSqlParser.ColumnReference!>!
+OracleSqlParser.MergeNotMatchedClause.Columns.set -> void
+OracleSqlParser.MergeNotMatchedClause.MergeNotMatchedClause() -> void
+OracleSqlParser.MergeNotMatchedClause.Values.get -> OracleSqlParser.ValuesClause!
+OracleSqlParser.MergeNotMatchedClause.Values.set -> void
+OracleSqlParser.MergeNotMatchedClause.Where.get -> OracleSqlParser.WhereClause?
+OracleSqlParser.MergeNotMatchedClause.Where.set -> void
+override OracleSqlParser.MergeMatchedClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.MergeMatchedClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.MergeMatchedClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+override OracleSqlParser.MergeNotMatchedClause.Accept(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.MergeNotMatchedClause.AcceptChildren(OracleSqlParser.SqlNodeVisitor! visitor) -> void
+override OracleSqlParser.MergeNotMatchedClause.GetChildren() -> System.Collections.Generic.IEnumerable<OracleSqlParser.SqlNode!>!
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MergeMatchedClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeRewriter.Rewrite(OracleSqlParser.MergeNotMatchedClause! node) -> OracleSqlParser.SqlNode?
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MergeMatchedClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.ExplicitVisit(OracleSqlParser.MergeNotMatchedClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MergeMatchedClause! node) -> void
+virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.MergeNotMatchedClause! node) -> void

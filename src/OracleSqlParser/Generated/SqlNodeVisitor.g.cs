@@ -1928,11 +1928,21 @@ public abstract partial class SqlNodeVisitor
         node.AcceptChildren(this);
     }
 
-    /// <summary>Called for a <see cref="MergeClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
-    public virtual void Visit(MergeClause node) => Visit((SqlNode)node);
+    /// <summary>Called for a <see cref="MergeMatchedClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(MergeMatchedClause node) => Visit((SqlNode)node);
 
-    /// <summary>Entry point for a <see cref="MergeClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
-    public virtual void ExplicitVisit(MergeClause node)
+    /// <summary>Entry point for a <see cref="MergeMatchedClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(MergeMatchedClause node)
+    {
+        Visit(node);
+        node.AcceptChildren(this);
+    }
+
+    /// <summary>Called for a <see cref="MergeNotMatchedClause"/>. The default forwards to <see cref="Visit(SqlNode)"/>.</summary>
+    public virtual void Visit(MergeNotMatchedClause node) => Visit((SqlNode)node);
+
+    /// <summary>Entry point for a <see cref="MergeNotMatchedClause"/>. The default calls <c>Visit(node)</c> and then visits the children.</summary>
+    public virtual void ExplicitVisit(MergeNotMatchedClause node)
     {
         Visit(node);
         node.AcceptChildren(this);

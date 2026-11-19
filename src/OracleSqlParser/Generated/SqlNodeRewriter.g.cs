@@ -1352,8 +1352,15 @@ public abstract partial class SqlNodeRewriter
         return node;
     }
 
-    /// <summary>Rewrites a <see cref="MergeClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
-    public virtual SqlNode? Rewrite(MergeClause node)
+    /// <summary>Rewrites a <see cref="MergeMatchedClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(MergeMatchedClause node)
+    {
+        node.RewriteChildren(this);
+        return node;
+    }
+
+    /// <summary>Rewrites a <see cref="MergeNotMatchedClause"/>: by default rewrites its children and returns it. Return another node to replace it, or null to remove it.</summary>
+    public virtual SqlNode? Rewrite(MergeNotMatchedClause node)
     {
         node.RewriteChildren(this);
         return node;
