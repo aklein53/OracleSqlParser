@@ -7912,7 +7912,7 @@ public partial class FetchClause
 
     internal override NodeProperty[] NodeProperties() =>
     [
-        new("Next", Next),
+        new("Next", Next, SpellingOnly: true),
         new("Count", Count),
         new("Percent", Percent),
         new("WithTies", WithTies),
@@ -7943,8 +7943,7 @@ public partial class FetchClause
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (FetchClause)other;
-        return Next == o.Next
-            && Pair(Count, o.Count, pending)
+        return Pair(Count, o.Count, pending)
             && Percent == o.Percent
             && WithTies == o.WithTies
             && Accuracy == o.Accuracy

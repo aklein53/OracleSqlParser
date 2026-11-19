@@ -550,8 +550,12 @@ public sealed partial class OffsetClause : SqlNode
 /// <summary>A row limiting clause, such as <c>FETCH NEXT 10 ROWS ONLY</c> or <c>FETCH FIRST 5 PERCENT ROWS WITH TIES</c>.</summary>
 public sealed partial class FetchClause : SqlNode
 {
-    /// <summary>True for <c>NEXT</c>; false for <c>FIRST</c>.</summary>
-    public bool Next { get; set; }
+    /// <summary>
+    /// True when <c>NEXT</c> is written; false for <c>FIRST</c>. <c>NEXT</c> and <c>FIRST</c> are synonyms, so this records
+    /// the spelling only and is left out of structural comparison: <c>FETCH NEXT</c> and <c>FETCH FIRST</c> with the same
+    /// count compare equal.
+    /// </summary>
+    [SpellingOnly] public bool Next { get; set; }
     /// <summary>The row or percent count, or null when absent.</summary>
     public Expression? Count { get; set; }
     /// <summary>True when <c>PERCENT</c> is written.</summary>

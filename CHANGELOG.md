@@ -21,6 +21,7 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `DmlStatement.Returning` | `List<ReturningItem>` | `ReturningClause?` (`.Items`, `.Into`) |
   | `DmlStatement.ReturningInto` | `IntoClause?` | removed; use `Returning.Into` |
   | `ExecuteImmediateStatement.ReturningInto` | `IntoClause?` | unchanged; documented as the `RETURNING INTO` of the dynamic SQL |
+  | `FetchClause.Next` | `bool`, compared structurally | `bool`, marked spelling only: `FETCH NEXT n` and `FETCH FIRST n` compare equal |
 
 ## [1.0.0-rc.3] - 2026-11-18
 

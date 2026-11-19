@@ -52,6 +52,19 @@ public class ApiConsistencyTests
         Assert.True(SqlNodeComparer.StructurallyEqual(script, Parsed(Generate(script))), Generate(script));
     }
 
+    /// <summary>NEXT and FIRST are synonyms: the spelling is kept for generation, but the two compare structurally equal.</summary>
+    [Fact]
+    public void FetchNextAndFirstCompareEqualButKeepTheirSpelling()
+    {
+        var next = Parsed("SELECT a FROM t FETCH NEXT 10 ROWS ONLY");
+        var first = Parsed("SELECT a FROM t FETCH FIRST 10 ROWS ONLY");
+
+        Assert.True(SqlNodeComparer.StructurallyEqual(next, first));
+        Assert.True(Assert.IsType<FetchClause>(Assert.IsType<SelectStatement>(next.Statements[0]).Fetch).Next);
+        Assert.Contains("FETCH NEXT 10", Generate(next));
+        Assert.Contains("FETCH FIRST 10", Generate(first));
+    }
+
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>
     [Fact]
     public void ARewriterCanDropTheReturningClause()
