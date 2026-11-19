@@ -8,6 +8,11 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+## [1.0.0-rc.3] - 2026-11-18
+
+Third release candidate. `OracleSqlParser.Guard` 0.10.0-preview.1 is released alongside it: Guard 0.9 reads the clause
+properties changed below and does not work with this version of the core library.
+
 ### Changed (breaking)
 - The remaining query and DML clauses are nodes that span their keyword, as ScriptDom's are: `OFFSET`, `WITHIN GROUP`,
   `WITH`, `INTO` and the grouping elements of `GROUP BY`. Each one is taken as written, or replaced, without a search for
