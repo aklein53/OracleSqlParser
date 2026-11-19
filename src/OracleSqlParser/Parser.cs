@@ -577,7 +577,7 @@ public sealed partial class SqlParser
         {
             var offsetTok = Next();
             var count = ParseAdditive();
-            if (!AcceptKw("ROWS")) AcceptKw("ROW");
+            if (!AcceptKw("ROWS") && !AcceptKw("ROW")) throw FailExpected("Expected ROW or ROWS after the OFFSET count", "ROW", "ROWS");
             stmt.Offset = Fin(new OffsetClause { Offset = count }, offsetTok);
         }
         if (IsKw("FETCH"))

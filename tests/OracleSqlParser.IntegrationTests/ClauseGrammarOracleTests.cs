@@ -12,7 +12,10 @@ namespace OracleSqlParser.IntegrationTests;
 [Collection(OracleCollection.Name)]
 public class ClauseGrammarOracleTests(OracleFixture db)
 {
-    /// <summary>Oracle takes these only as a whole element, so the parser rejects them: nested lists, empty lists, nested GROUPING SETS.</summary>
+    /// <summary>
+    /// Forms the parser rejects: nested and empty grouping lists, a nested GROUPING SETS, an OFFSET without ROW or ROWS, a
+    /// MERGE action that is DELETE without UPDATE, and the WITH and CTE forms Oracle rejects.
+    /// </summary>
     private static readonly string[] Rejected =
     [
         "SELECT COUNT(*) FROM t GROUP BY ROLLUP()",
@@ -35,6 +38,10 @@ public class ClauseGrammarOracleTests(OracleFixture db)
         "WITH SELECT 1 FROM dual",
         "WITH (SELECT 1 FROM dual) SELECT 1 FROM dual",
         "SELECT a FROM t OFFSET ROWS",
+        "SELECT COUNT(*) FROM t OFFSET 5",
+        "SELECT id FROM t ORDER BY id OFFSET 5 FETCH FIRST 2 ROWS ONLY",
+        "MERGE INTO t USING t s ON (t.id = s.id) WHEN MATCHED THEN DELETE WHERE t.a = 1",
+        "MERGE INTO t USING t s ON (t.id = s.id) WHEN NOT MATCHED THEN DELETE WHERE s.a = 1",
     ];
 
     /// <summary>

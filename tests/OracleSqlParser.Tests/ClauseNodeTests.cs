@@ -209,10 +209,13 @@ public class ClauseNodeTests
         public override SqlNode? Rewrite(OffsetClause node) => null;
     }
 
+    /// <summary>Oracle requires ROW or ROWS after the count (ORA-03047), so a bare count is a parse error, as are a missing count and a stray ROWS.</summary>
     [Theory]
     [InlineData("SELECT a FROM t OFFSET")]
     [InlineData("SELECT a FROM t OFFSET ROWS")]
-    public void AnOffsetWithoutACountIsRejected(string sql)
+    [InlineData("SELECT a FROM t OFFSET 5")]
+    [InlineData("SELECT a FROM t OFFSET 5 FETCH FIRST 2 ROWS ONLY")]
+    public void AnOffsetWithoutRowOrRowsIsRejected(string sql)
     {
         Assert.False(SqlParser.Parse(sql).Success);
     }
