@@ -971,7 +971,7 @@ public static class SqlAnalysis
 
         /// <summary>Oracle pseudo-columns and parameterless functions that are reserved words, so they are never column names when unqualified.</summary>
         private static readonly HashSet<string> PseudoColumns =
-            ["ROWNUM", "ROWID", "ORA_ROWSCN", "SYSDATE", "SYSTIMESTAMP", "CURRENT_DATE", "CURRENT_TIMESTAMP", "LOCALTIMESTAMP", "USER", "UID"];
+            ["ROWNUM", "ROWID", "ORA_ROWSCN", "SYSDATE", "SYSTIMESTAMP", "CURRENT_DATE", "CURRENT_TIMESTAMP", "LOCALTIMESTAMP", "DBTIMEZONE", "SESSIONTIMEZONE", "USER", "UID"];
 
         /// <summary>Pseudo-columns that are only pseudo-columns in a hierarchical (CONNECT BY or START WITH) query block.</summary>
         private static readonly HashSet<string> HierarchicalPseudoColumns = ["LEVEL", "CONNECT_BY_ISLEAF", "CONNECT_BY_ISCYCLE"];

@@ -807,6 +807,14 @@ public class SqlAnalysisTests
     }
 
     [Fact]
+    public void Columns_DbAndSessionTimezone_ArePseudoColumns()
+    {
+        Assert.Equal(
+            ["DBTIMEZONE:PseudoColumn:NotApplicable:-", "SESSIONTIMEZONE:PseudoColumn:NotApplicable:-"],
+            Columns("SELECT DBTIMEZONE, SESSIONTIMEZONE FROM dual"));
+    }
+
+    [Fact]
     public void Columns_VersionsPseudoColumns_OnlyInVersionsQuery()
     {
         Assert.Equal(
