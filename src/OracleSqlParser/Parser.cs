@@ -357,7 +357,9 @@ public sealed partial class SqlParser
     private T Fin<T>(T node, Token start) where T : SqlNode
     {
         node.Start = start.Start;
-        node.End = Prev.End;
+        // A node that consumed no tokens is empty. It sits where the next token starts: Prev is the token before it,
+        // so Prev.End would lie before Start.
+        node.End = _p <= start.TokenIndex ? start.Start : Prev.End;
         node.Line = start.Line;
         node.Column = start.Column;
         node.FirstTokenIndex = start.TokenIndex;
