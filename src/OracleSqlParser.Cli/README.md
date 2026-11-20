@@ -1,13 +1,13 @@
 # OracleSqlParser.Cli
 
-Command-line tool for [OracleSqlParser](https://github.com/aklein53/plsqlparser), a parser for Oracle SQL
+Command-line tool for [OracleSqlParser](https://github.com/aklein53/OracleSqlParser), a parser for Oracle SQL
 and PL/SQL. It parses the input and prints the abstract syntax tree, either as JSON or as the compact tree used by the
 library's shape tests.
 
 ## Install
 
 ```
-dotnet tool install -g OracleSqlParser.Cli --prerelease
+dotnet tool install -g OracleSqlParser.Cli
 oraclesqlparser -e "SELECT 1 FROM dual"
 ```
 
@@ -41,5 +41,5 @@ oraclesqlparser -f migration.sql --positions > migration.json
 echo "UPDATE emp SET sal = sal * 1.1 WHERE deptno = 10" | oraclesqlparser --shape
 ```
 
-See the [main README](https://github.com/aklein53/plsqlparser/blob/main/README.md) for the library API and the
-[coverage matrix](https://github.com/aklein53/plsqlparser/blob/main/COVERAGE.md).
+See the [main README](https://github.com/aklein53/OracleSqlParser/blob/main/README.md) for the library API and the
+[coverage matrix](https://github.com/aklein53/OracleSqlParser/blob/main/COVERAGE.md).

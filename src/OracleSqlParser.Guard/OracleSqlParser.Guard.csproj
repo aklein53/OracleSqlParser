@@ -10,12 +10,12 @@
   <PropertyGroup>
     <PackageId>OracleSqlParser.Guard</PackageId>
     <!-- Versioned independently of the core library (stays 0.x while experimental); not tied to the release tag. -->
-    <Version>0.11.0-preview.1</Version>
+    <Version>0.11.1-preview.1</Version>
     <Authors>aklein53</Authors>
     <Description>EXPERIMENTAL: policy validation and access-restriction rewriting for user-supplied Oracle SELECT queries, built on OracleSqlParser. Not a security boundary; see README.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/aklein53/plsqlparser</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/aklein53/plsqlparser</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/aklein53/OracleSqlParser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/aklein53/OracleSqlParser</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>oracle;sql;plsql;parser;ast;experimental</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>

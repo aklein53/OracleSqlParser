@@ -11,12 +11,12 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>oraclesqlparser</ToolCommandName>
     <PackageId>OracleSqlParser.Cli</PackageId>
-    <Version>1.0.0-rc.4</Version>
+    <Version>1.0.0</Version>
     <Authors>aklein53</Authors>
     <Description>Command-line tool for OracleSqlParser: parses Oracle SQL and PL/SQL and prints the AST as JSON or as a compact tree.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/aklein53/plsqlparser</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/aklein53/plsqlparser</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/aklein53/OracleSqlParser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/aklein53/OracleSqlParser</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>oracle;sql;plsql;parser;ast;cli;dotnet-tool</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>

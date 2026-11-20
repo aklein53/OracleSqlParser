@@ -8,6 +8,17 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-20
+
+First stable release. The public API of `OracleSqlParser` is frozen: it is the API of 1.0.0-rc.4, now recorded in
+`PublicAPI.Shipped.txt`, and from here on a breaking change needs a new major version (see "Versioning and
+compatibility" and "Guarantees" in the README). `OracleSqlParser.Guard` 0.11.1-preview.1 is released alongside it,
+unchanged except that it depends on the stable 1.0.0 (Guard stays experimental and 0.x).
+
+### Changed
+- The packages are stable: install without `--prerelease`.
+- Package and README links point to the renamed repository, `github.com/aklein53/OracleSqlParser`.
+
 ## [1.0.0-rc.4] - 2026-11-20
 
 Fourth release candidate, and the last with breaking changes: 1.0.0 freezes the public API (see "Versioning and

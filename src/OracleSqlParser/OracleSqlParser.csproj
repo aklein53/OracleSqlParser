@@ -11,12 +11,12 @@
 
   <PropertyGroup>
     <PackageId>OracleSqlParser</PackageId>
-    <Version>1.0.0-rc.4</Version>
+    <Version>1.0.0</Version>
     <Authors>aklein53</Authors>
     <Description>Oracle SQL and PL/SQL parser producing a typed AST, with a SQL script generator (SqlScriptGenerator) for every statement.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/aklein53/plsqlparser</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/aklein53/plsqlparser</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/aklein53/OracleSqlParser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/aklein53/OracleSqlParser</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>oracle;sql;plsql;parser;ast</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>

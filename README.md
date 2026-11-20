@@ -6,7 +6,7 @@ A lexer and recursive-descent parser for Oracle SQL that builds an abstract synt
 ## Installing
 
 ```
-dotnet add package OracleSqlParser --prerelease
+dotnet add package OracleSqlParser
 ```
 
 The NuGet package, the C# namespace and the assembly are all named `OracleSqlParser`.
@@ -15,7 +15,7 @@ The NuGet package, the C# namespace and the assembly are all named `OracleSqlPar
 
 The packages were renamed to match the namespace: `PlsqlParser` is now `OracleSqlParser`, and `PlsqlParser.Guard` is now
 `OracleSqlParser.Guard`. To migrate, replace the package reference (`dotnet remove package PlsqlParser`, then
-`dotnet add package OracleSqlParser --prerelease`). Namespaces are unchanged, so no `using` directives change.
+`dotnet add package OracleSqlParser`). Namespaces are unchanged, so no `using` directives change.
 
 ## Public API changes
 
@@ -29,7 +29,8 @@ fails the build with `RS0016` (a public member that is not declared in the file)
   Populate it from the analyzer's own output: the `RS0016` messages of a build (or the code fix in an IDE). Do not rely on
   `dotnet format analyzers` alone, which skips generated `override` members. Then check the diff for accidental members
   (helpers, implicit constructors, record-generated members) before committing.
-- `PublicAPI.Shipped.txt` lists the API of released versions. It is empty until 1.0.0 (the preview versions are not frozen).
+- `PublicAPI.Shipped.txt` lists the API of released versions. For `OracleSqlParser` it holds the API frozen at 1.0.0;
+  `OracleSqlParser.Guard` is still 0.x, so its shipped file stays empty.
 - At the 1.0.0 release, move every line of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` and leave the
   unshipped file with only its `#nullable enable` header. From then on the public API is frozen until 2.0: a breaking
   change needs a new major version, and additions are added to the unshipped file.
@@ -189,22 +190,22 @@ var r = SqlParser.Parse("SELECT 1 FROM dual WHERE (1 = 1) IS TRUE", new ParseOpt
 
 SQL_MACRO is gated at 21, although table macros were backported to 19.7 and later release updates. Users on a patched 19c should target `Oracle21` or ignore that diagnostic.
 
-The gated constructs and their versions are listed in [COVERAGE.md](https://github.com/aklein53/plsqlparser/blob/main/COVERAGE.md#version-gates).
+The gated constructs and their versions are listed in [COVERAGE.md](https://github.com/aklein53/OracleSqlParser/blob/main/COVERAGE.md#version-gates).
 
 ## CLI
 
 The command-line tool is packaged as the .NET tool `OracleSqlParser.Cli` (command `oraclesqlparser`):
 
 ```
-dotnet tool install -g OracleSqlParser.Cli --prerelease
+dotnet tool install -g OracleSqlParser.Cli
 oraclesqlparser [--shape] [--positions] [--compact] [-f file | -e "sql"]   # or stdin
 ```
 Prints the AST as JSON (or the compact tree with `--shape`); syntax errors go to stderr with exit code 1. See the
-[tool README](https://github.com/aklein53/plsqlparser/blob/main/src/OracleSqlParser.Cli/README.md) for every flag.
+[tool README](https://github.com/aklein53/OracleSqlParser/blob/main/src/OracleSqlParser.Cli/README.md) for every flag.
 
 ## Coverage
 
-See [COVERAGE.md](https://github.com/aklein53/plsqlparser/blob/main/COVERAGE.md): every statement in Oracle's statement index, the node that represents it, whether
+See [COVERAGE.md](https://github.com/aklein53/OracleSqlParser/blob/main/COVERAGE.md): every statement in Oracle's statement index, the node that represents it, whether
 it is fully typed or a typed header with a token-tree body, and the known gaps. `oraclesqlparser --shape -e "..."` prints the compact tree used by the shape tests.
 
 ## Tests
@@ -215,7 +216,7 @@ corpus (`SmokeCorpusTests.cs`) that only checks inputs parse.
 ## Query guard (experimental, separate package)
 
 An experimental package, `OracleSqlParser.Guard`, validates and rewrites user-supplied SELECT queries. It is **not a
-security boundary**; read its [README](https://github.com/aklein53/plsqlparser/blob/main/src/OracleSqlParser.Guard/README.md) before using it.
+security boundary**; read its [README](https://github.com/aklein53/OracleSqlParser/blob/main/src/OracleSqlParser.Guard/README.md) before using it.
 
 
 ## Generating SQL
@@ -446,7 +447,7 @@ Console.WriteLine(r.Tokens[stmt.LastTokenIndex].Text);            // t
 
 ## Roadmap
 
-See [ROADMAP.md](https://github.com/aklein53/plsqlparser/blob/main/ROADMAP.md) for planned work.
+See [ROADMAP.md](https://github.com/aklein53/OracleSqlParser/blob/main/ROADMAP.md) for planned work.
 
 ## Integration tests
 
