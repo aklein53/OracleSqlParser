@@ -55,12 +55,24 @@ public sealed partial class SqlParser
         try { toks = Lexer.Tokenize(tok.Value); }
         catch (ParseException) { return h; }
         var sub = new SqlParser(toks, tok.Value, new ParseOptions { MaxNestingDepth = _maxDepth, OracleVersion = _version });
+        // The sub-parser counts offsets within the hint text. Its tokens start after "/*+" and any blanks, so its spans
+        // are moved by this base to become offsets in the source. Its token indexes refer to the sub-token list, so they are cleared.
+        int bodyStart = tok.Start + 3 + (tok.Text[3..^2].Length - tok.Text[3..^2].TrimStart().Length);
         while (sub.Cur.Type != TokenType.EOF)
         {
             if (sub.Cur.Type == TokenType.Identifier)
             {
                 var item = new HintItem { Name = sub.Next().Value, Start = tok.Start, End = tok.End, FirstTokenIndex = tok.TokenIndex, LastTokenIndex = tok.TokenIndex };
-                if (sub.IsOp("(")) item.Arguments = ((GroupItem)sub.ParseSyntaxItem()).Items;
+                if (sub.IsOp("("))
+                {
+                    item.Arguments = ((GroupItem)sub.ParseSyntaxItem()).Items;
+                    foreach (var arg in item.Arguments)
+                        foreach (var n in arg.Descendants())
+                        {
+                            n.Start += bodyStart; n.End += bodyStart;
+                            n.FirstTokenIndex = -1; n.LastTokenIndex = -1;
+                        }
+                }
                 h.Items.Add(item);
             }
             else sub.Next();

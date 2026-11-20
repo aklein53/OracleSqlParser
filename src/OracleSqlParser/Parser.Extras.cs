@@ -69,9 +69,9 @@ public sealed partial class SqlParser
                 var a = ParseOptionalAlias();
                 if (a != null) { t.Alias = a; continue; }
             }
-            if (IsKw("PIVOT") && (IsOpAt(1, "(") || IsKwAt(1, "XML"))) { t = ParsePivot(t, start); continue; }
-            if (IsKw("UNPIVOT") && (IsOpAt(1, "(") || IsKwAt(1, "INCLUDE") || IsKwAt(1, "EXCLUDE"))) { t = ParseUnpivot(t, start); continue; }
-            if (IsKw("MATCH_RECOGNIZE") && IsOpAt(1, "(")) { t = ParseMatchRecognize(t, start); continue; }
+            if (IsKw("PIVOT") && (IsOpAt(1, "(") || IsKwAt(1, "XML"))) { t = ParsePivot(Fin(t, start), start); continue; }
+            if (IsKw("UNPIVOT") && (IsOpAt(1, "(") || IsKwAt(1, "INCLUDE") || IsKwAt(1, "EXCLUDE"))) { t = ParseUnpivot(Fin(t, start), start); continue; }
+            if (IsKw("MATCH_RECOGNIZE") && IsOpAt(1, "(")) { t = ParseMatchRecognize(Fin(t, start), start); continue; }
             break;
         }
         return Fin(t, start);
