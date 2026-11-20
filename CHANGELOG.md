@@ -12,6 +12,10 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 - README: a "Versioning and compatibility" section stating what counts as a breaking change from 1.0.0 on.
 
 ### Changed (breaking)
+- Two names now denote different nodes. Code that still compiles, such as `Visit(ReturningClause)` or `OfType<SetClause>()`,
+  changes meaning without an error: `ReturningClause` was the JSON/XML `RETURNING type` clause and is now the DML `RETURNING`
+  clause (the JSON one is `ReturningTypeClause`); `SetClause` was one `col = expr` assignment and is now the whole `SET` clause
+  (the assignment is `SetItem`). Search for both names when you upgrade.
 - The DML `RETURNING` clause is a node that spans its keyword through its `INTO` target, as the other clauses do. The
   JSON and XML `RETURNING type` clause, which was also called `ReturningClause`, is renamed.
 
@@ -30,9 +34,13 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `InsertIntoClause.Values` | `List<Expression>` | `ValuesClause?` (one row) |
   | `ValuesQuery.Rows`, `ValuesTable.Rows` | `List<List<Expression>>` | `List<RowValue>` (`.Values`) |
   | `UpdateStatement.Set` | `List<SetClause>` | `SetClause` (required, spans `SET`; `.Items` holds the assignments) |
-  | `SetClause` (one assignment, `col = expr`) | class `SetClause` | class `SetItem` (same members: `Columns`, `Value`, `Row`) |
+  | `SetClause` (one assignment, `col = expr`) | class `SetClause` | class `SetItem` (same members: `Columns`, `Value`, `Row`). The new `SetClause.Items` is required |
   | `WindowSpec.PartitionBy`, `FunctionCall.PartitionBy`, `MatchRecognizeTable.PartitionBy` | `List<Expression>` | `PartitionByClause?` (`.Items`, spanning `PARTITION BY`) |
   | `JoinTable.LeftPartitionBy`, `JoinTable.RightPartitionBy` | `List<Expression>` | `PartitionByClause?` (`.Items`, spanning `PARTITION BY (...)`) |
+
+  | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
+
+  New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
 
   `ModelClause.PartitionBy` stays a list of select items, since a model's partitioning takes aliased expressions.
 
@@ -58,19 +66,25 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | Property | Was | Is |
   |---|---|---|
   | `ErrorLogging` (class; `DmlStatement.ErrorLogging` keeps its name) | `ErrorLogging` | `ErrorLoggingClause` |
+  | `PivotTable.InSubquery` | `SelectStatement?` | `SelectStatement?` as `.InQuery`, as `InExpression.Query` and `ExistsExpression.Query` are named |
 
 - Pairs of flags that are one choice are enums:
 
   | Property | Was | Is |
   |---|---|---|
   | `FunctionCall.IgnoreNulls`, `FunctionCall.RespectNulls` | `bool`, `bool` | `NullTreatment?` (`enum NullTreatment { Ignore, Respect }`) |
-  | `FunctionCall.FromLast` | `bool?` | `NthValueFrom?` `NthFrom` (`enum NthValueFrom { First, Last }`) |
+  | `FunctionCall.FromLast` | `bool?` | `FirstOrLast?` `NthFrom` (`enum FirstOrLast { First, Last }`, shared with KEEP) |
+  | `KeepClause.First` | `bool` | `FirstOrLast` `Position` (required: KEEP always writes FIRST or LAST) |
   | `ForUpdateClause.NoWait`, `ForUpdateClause.SkipLocked` | `bool`, `bool` | removed; `ForUpdateClause.Wait` is `LockWait?` (`enum LockWait { NoWait, Wait, SkipLocked }`) |
   | `ForUpdateClause.Wait` (seconds) | `Expression?` | `Expression?` as `WaitSeconds`, set with `LockWait.Wait` |
   | `LockTableStatement.NoWait` | `bool` | removed; `LockTableStatement.Wait` is `LockWait?` |
   | `LockTableStatement.Wait` (seconds) | `Expression?` | `Expression?` as `WaitSeconds`, set with `LockWait.Wait` |
 
   `CommitWrite.Wait` keeps its `WaitMode` (`Wait`, `NoWait`), which is unchanged.
+
+- `ForUpdateClause.Wait` and `LockTableStatement.Wait` keep their names, but their type changed from `Expression?` to `LockWait?`.
+  So `Wait != null` now also matches `NOWAIT` and, for `FOR UPDATE`, `SKIP LOCKED`. Code that tested for a wait must test for
+  `LockWait.Wait`, and reads the seconds from `WaitSeconds`, which is set exactly when `Wait` is `LockWait.Wait`.
 
 - Labels are names, and are typed as names:
 
@@ -79,6 +93,21 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   | `Statement.Labels` | `List<string>` (upper-cased value) | `List<Identifier>`, so a label keeps its spelling and quoting (`Value`, `Text`, `Quoted`) |
 
   `BlockStatement.EndName` (the label after `END`, or the subprogram name of a subprogram body) and the package `EndName`s keep their names.
+
+- Statement labels are `Identifier` nodes, so the visitor and rewriter visit them, and `SqlNodeComparer` compares them with
+  their quoting: `<<a>>` and `<<"a">>` are different labels. A labelled statement's span starts at its first `<<`, as a labelled
+  block's does, so `SourceEditor.Replace` on a labelled statement replaces the label with it; replacing with text that
+  repeats the label duplicates it.
+- Visitor and rewriter overloads follow the type changes: `MergeClause` is abstract, with `MergeMatchedClause` and
+  `MergeNotMatchedClause` as its subclasses, and `ErrorLogging` is `ErrorLoggingClause`.
+- `FunctionCall`'s children come out in source order: `PartitionBy` (of `APPROX_RANK`) comes before `OrderBy`, and `Over` last.
+- `IGNORE NULLS` and `RESPECT NULLS` together on one call are rejected, as Oracle rejects them (ORA-30484):
+  `LAG(x) IGNORE NULLS RESPECT NULLS OVER (...)` and `LAG(x RESPECT NULLS) IGNORE NULLS OVER (...)`. The parser used to accept
+  them and the generator dropped one of the two.
+- `SqlScriptGenerator` throws `InvalidOperationException` for an `InsertStatement` with neither or both of `Values` and `Query`
+  set, instead of writing an empty or ambiguous INSERT.
+- `KEEP (DENSE_RANK ...)` and `NTH_VALUE ... FROM FIRST|LAST` share one enum, `FirstOrLast`. `NullsOrdering` (`NULLS FIRST|LAST`)
+  and `WaitMode` are unchanged.
 
 - Anchored types take an enum:
 
@@ -89,9 +118,6 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
   `ColumnReference.Attribute` and `FunctionCall.Attribute` stay strings, because cursor attributes (`%FOUND`, `%ROWCOUNT`,
   `%BULK_EXCEPTIONS`) are an open set. Their XML docs list the common values and say that `SQL%FOUND` parses as a
   `ColumnReference` with `Attribute` set. `SqlAnalysis.GetColumns` already leaves those out, so its output is unchanged.
-  | `InsertStatement.Columns`, `InsertIntoClause.Columns` | `List<Identifier>` | `List<ColumnReference>`, so `INSERT INTO t x (x.a)` keeps its qualifier (Oracle 23 accepts it; the parser does not reject it) |
-
-  New nodes: `ValuesClause` (spans `VALUES` through its last row or record) and `RowValue` (spans one row's parentheses).
 
 - `MERGE` clauses are two node types, so each has only the members it uses. Each spans `WHEN` through the end of its action.
 
