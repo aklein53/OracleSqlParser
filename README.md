@@ -63,6 +63,36 @@ version, code that compiles and works against one release keeps compiling and wo
 `OracleSqlParser.Guard` is experimental (`[Experimental]`) and stays 0.x: any release may change it. Each Guard release
 requires the core version it was built against.
 
+## Guarantees
+
+These hold from 1.0.0 on. The test suite checks them on the smoke and real-world corpora and on a deterministic fuzz run
+(`SpanInvariantTests`, `TraversalCompletenessTests`, `SourceEditorPreservationTests`).
+
+**Spans.** On every parse, successful or failed, every node and token satisfies `0 <= Start <= End <= source.Length`,
+where `source` is `ParseResult.Source`. A node that consumed no tokens is empty and has `Start == End`. On a successful
+parse, each child's span lies within its parent's span. Spans of a failed parse may cover incomplete text, so do not
+splice into the source of a failed parse.
+
+**Traversal.** `GetChildren()` returns every child node held in a node's properties; lists are flattened into it.
+`root.Accept(visitor)` reaches every node, each once. The visitor and the rewriter recurse once per level of the tree,
+so for pathologically deep trees (a chain of several thousand terms) use `Descendants()`, which is iterative.
+
+**Editing.** `SourceEditor` keeps every byte outside the edited ranges. After `Replace(node, text)` the source is
+`source[..node.Start] + text + source[node.End..]`, so comments, layout and keyword casing outside the range are unchanged.
+
+**Printing.** `SqlScriptGenerator` is a canonical printer, not a formatter. It drops comments, normalises whitespace and
+line breaks, and keeps identifier spelling (`IdentifierCasing.Preserve` is the default). Its output parses back to a
+structurally equal tree.
+
+**Identifiers.** `Identifier.Value` is the folded name: an unquoted name is upper-cased, and a quoted name is kept exactly.
+`Identifier.Text` is the name as written. `Identifier.Quoted` is true for a quoted name.
+
+**Pseudo-columns.** Oracle's keyword pseudo-columns written without parentheses parse as `ColumnReference`, not
+`FunctionCall`: `SYSDATE`, `SYSTIMESTAMP`, `CURRENT_DATE`, `CURRENT_TIMESTAMP`, `LOCALTIMESTAMP`, `DBTIMEZONE`,
+`SESSIONTIMEZONE`, `USER`, `UID`, `ROWNUM`, `ROWID` and `ORA_ROWSCN`. `SqlAnalysis.GetColumns` reports them as
+`ColumnUseKind.PseudoColumn`. `LEVEL` is a `ColumnReference` everywhere and a pseudo-column only in a hierarchical
+(`CONNECT BY` or `START WITH`) query block.
+
 ## Releasing
 
 Publishing uses nuget.org Trusted Publishing (GitHub OIDC) bound to `.github/workflows/build.yml`; no API key

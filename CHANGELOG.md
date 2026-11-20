@@ -10,6 +10,9 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ### Added
 - README: a "Versioning and compatibility" section stating what counts as a breaking change from 1.0.0 on.
+- README: a "Guarantees" section (spans, traversal, SourceEditor preservation, the canonical printer, identifier
+  spelling and folding, and the keyword pseudo-columns). Each guarantee is checked by a test: `SpanInvariantTests`,
+  `TraversalCompletenessTests` and `SourceEditorPreservationTests`, over the corpora and a deterministic fuzz run.
 
 ### Changed (breaking)
 - Two names now denote different nodes. Code that still compiles, such as `Visit(ReturningClause)` or `OfType<SetClause>()`,
@@ -132,6 +135,15 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 - The parser rejects `WHEN MATCHED THEN INSERT`, `WHEN NOT MATCHED THEN UPDATE` and the `AND` condition form, which used to parse. Oracle rejects all three
   (ORA-02000). A `DELETE` action without `UPDATE` is still rejected.
+
+### Fixed
+- Span bug: a node that consumed no tokens had `End` before `Start` on the parse (for example the empty `DatafileSpec` of
+  `CREATE TEMPORARY TABLESPACE tmp TEMPFILE DROP 't.dbf' SIZE 5M REUSE`, which parsed, and the empty `GrantPrivilege` of
+  `GRANT TO PROCEDURE ...`, which failed). Such a node is now zero-width at the next token. The table under `PIVOT`,
+  `UNPIVOT` or `MATCH_RECOGNIZE` had a `[0,0)` span, and hint arguments had offsets relative to the hint text. Both now
+  have source offsets.
+- `DBTIMEZONE` and `SESSIONTIMEZONE` are reported as `ColumnUseKind.PseudoColumn` by `SqlAnalysis.GetColumns`, as the other
+  keyword pseudo-columns are. They were reported as `Column`.
 
 ## [1.0.0-rc.3] - 2026-11-18
 
