@@ -2339,8 +2339,6 @@ OracleSqlParser.JsonTransformOperation.Path.set -> void
 OracleSqlParser.JsonTransformOperation.Value.get -> OracleSqlParser.Expression?
 OracleSqlParser.JsonTransformOperation.Value.set -> void
 OracleSqlParser.KeepClause
-OracleSqlParser.KeepClause.First.get -> bool
-OracleSqlParser.KeepClause.First.set -> void
 OracleSqlParser.KeepClause.KeepClause() -> void
 OracleSqlParser.KeepClause.OrderBy.set -> void
 OracleSqlParser.KeywordCasing
@@ -2970,8 +2968,6 @@ OracleSqlParser.PivotTable.InAny.get -> bool
 OracleSqlParser.PivotTable.InAny.set -> void
 OracleSqlParser.PivotTable.InItems.get -> System.Collections.Generic.List<OracleSqlParser.PivotInItem!>!
 OracleSqlParser.PivotTable.InItems.set -> void
-OracleSqlParser.PivotTable.InSubquery.get -> OracleSqlParser.SelectStatement?
-OracleSqlParser.PivotTable.InSubquery.set -> void
 OracleSqlParser.PivotTable.PivotTable() -> void
 OracleSqlParser.PivotTable.Source.get -> OracleSqlParser.TableReference!
 OracleSqlParser.PivotTable.Source.set -> void
@@ -6189,7 +6185,6 @@ virtual OracleSqlParser.SqlNodeVisitor.Visit(OracleSqlParser.ErrorLoggingClause!
 OracleSqlParser.ForUpdateClause.Wait.get -> OracleSqlParser.LockWait?
 OracleSqlParser.ForUpdateClause.WaitSeconds.get -> OracleSqlParser.Expression?
 OracleSqlParser.ForUpdateClause.WaitSeconds.set -> void
-OracleSqlParser.FunctionCall.NthFrom.get -> OracleSqlParser.NthValueFrom?
 OracleSqlParser.FunctionCall.NthFrom.set -> void
 OracleSqlParser.FunctionCall.NullTreatment.get -> OracleSqlParser.NullTreatment?
 OracleSqlParser.FunctionCall.NullTreatment.set -> void
@@ -6200,9 +6195,6 @@ OracleSqlParser.LockWait
 OracleSqlParser.LockWait.NoWait = 0 -> OracleSqlParser.LockWait
 OracleSqlParser.LockWait.SkipLocked = 2 -> OracleSqlParser.LockWait
 OracleSqlParser.LockWait.Wait = 1 -> OracleSqlParser.LockWait
-OracleSqlParser.NthValueFrom
-OracleSqlParser.NthValueFrom.First = 0 -> OracleSqlParser.NthValueFrom
-OracleSqlParser.NthValueFrom.Last = 1 -> OracleSqlParser.NthValueFrom
 OracleSqlParser.NullTreatment
 OracleSqlParser.NullTreatment.Ignore = 0 -> OracleSqlParser.NullTreatment
 OracleSqlParser.NullTreatment.Respect = 1 -> OracleSqlParser.NullTreatment
@@ -6217,3 +6209,11 @@ OracleSqlParser.TypeAnchor.Type = 0 -> OracleSqlParser.TypeAnchor
 OracleSqlParser.BlockStatement.EndName.get -> OracleSqlParser.Identifier?
 OracleSqlParser.BlockStatement.EndName.set -> void
 OracleSqlParser.ReturningClause.Into.get -> OracleSqlParser.IntoClause!
+OracleSqlParser.FirstOrLast
+OracleSqlParser.FirstOrLast.First = 0 -> OracleSqlParser.FirstOrLast
+OracleSqlParser.FirstOrLast.Last = 1 -> OracleSqlParser.FirstOrLast
+OracleSqlParser.FunctionCall.NthFrom.get -> OracleSqlParser.FirstOrLast?
+OracleSqlParser.KeepClause.Position.get -> OracleSqlParser.FirstOrLast
+OracleSqlParser.KeepClause.Position.set -> void
+OracleSqlParser.PivotTable.InQuery.get -> OracleSqlParser.SelectStatement?
+OracleSqlParser.PivotTable.InQuery.set -> void

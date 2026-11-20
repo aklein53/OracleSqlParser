@@ -23,6 +23,8 @@ public class ApiConsistencyOracleTests(OracleFixture db)
         "SELECT SUM(a) OVER (PARTITION BY ORDER BY b) FROM t",
         "SELECT * FROM t FOR UPDATE WAIT",
         "LOCK TABLE t IN SHARE MODE WAIT",
+        "SELECT LAG(x) IGNORE NULLS RESPECT NULLS OVER (ORDER BY y) FROM t",
+        "SELECT LAG(x RESPECT NULLS) IGNORE NULLS OVER (ORDER BY y) FROM t",
     ];
 
     /// <summary>Forms the parser accepts in SQL, which Oracle must accept at syntax analysis.</summary>

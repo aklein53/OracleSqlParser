@@ -92,8 +92,12 @@ public sealed partial class SqlScriptGenerator
             Add("INSERT"); DmlHint(i);
             Add(" INTO "); Table(i.Target);
             if (i.Columns.Count > 0) { Add(" ("); Sep(i.Columns, col => Expr(col)); Add(")"); }
+            // Exactly one of Values and Query is the source of the rows; a tree with neither or both cannot be written.
+            if (i.Values != null && i.Query != null)
+                throw new InvalidOperationException("InsertStatement has both Values and Query set; exactly one must be set.");
             if (i.Values is { } values) { ClauseStart(_o.NewLineBeforeValuesClause); ValuesText(values); }
             else if (i.Query != null) { ClauseStart(_o.NewLineBeforeValuesClause); Select(i.Query); }
+            else throw new InvalidOperationException("InsertStatement has neither Values nor Query set; exactly one must be set.");
             DmlTail(i);
         }
 

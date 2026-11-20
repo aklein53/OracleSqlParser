@@ -587,7 +587,7 @@ public sealed partial class ForUpdateClause : SqlNode
     public List<ColumnReference> Of { get; set; } = [];
     /// <summary>How a locked row is handled: <see cref="LockWait.NoWait"/>, <see cref="LockWait.Wait"/> or <see cref="LockWait.SkipLocked"/>; null when absent (wait forever).</summary>
     public LockWait? Wait { get; set; }
-    /// <summary>The number of seconds after <c>WAIT</c> (<see cref="Wait"/> is <see cref="LockWait.Wait"/>), or null otherwise.</summary>
+    /// <summary>The seconds after <c>WAIT</c>. Set exactly when <see cref="Wait"/> is <see cref="LockWait.Wait"/>; null for NOWAIT, SKIP LOCKED and no wait clause.</summary>
     public Expression? WaitSeconds { get; set; }
 }
 
@@ -602,8 +602,8 @@ public enum LockWait
     SkipLocked,
 }
 
-/// <summary>The direction of <c>NTH_VALUE</c>: <c>FROM FIRST</c> or <c>FROM LAST</c>.</summary>
-public enum NthValueFrom
+/// <summary>FIRST or LAST: the direction of <c>NTH_VALUE ... FROM FIRST|LAST</c> and of <c>KEEP (DENSE_RANK FIRST|LAST ...)</c>.</summary>
+public enum FirstOrLast
 {
     /// <summary><c>FROM FIRST</c>.</summary>
     First,
@@ -680,7 +680,7 @@ public sealed partial class UpdateStatement : DmlStatement
 public sealed partial class SetClause : SqlNode
 {
     /// <summary>The assignments, in source order.</summary>
-    public List<SetItem> Items { get; set; } = [];
+    public required List<SetItem> Items { get; set; }
 }
 
 /// <summary>One assignment of a <c>SET</c> clause: <c>col = expr</c> or <c>(c1, c2) = (subquery)</c>.</summary>
@@ -749,7 +749,7 @@ public sealed partial class MergeNotMatchedClause : MergeClause
 {
     /// <summary>The column list of the insert, each optionally qualified by the target alias (<c>INSERT (p.a, p.b)</c>); empty when absent.</summary>
     public List<ColumnReference> Columns { get; set; } = [];
-    /// <summary>The <c>VALUES</c> clause of the insert: one row.</summary>
+    /// <summary>The <c>VALUES</c> clause of the insert: exactly one row (<see cref="ValuesClause.Rows"/> has one entry) and no <see cref="ValuesClause.Record"/>.</summary>
     public required ValuesClause Values { get; set; }
     /// <summary>The <c>WHERE</c> clause of the insert, or null when absent.</summary>
     public WhereClause? Where { get; set; }
@@ -1477,19 +1477,19 @@ public sealed partial class FunctionCall : Expression
     /// <summary>The arguments, in source order; empty for a call without arguments.</summary>
     public List<Argument> Arguments { get; set; } = [];
     /// <summary><c>NTH_VALUE</c>'s <c>FROM FIRST</c> or <c>FROM LAST</c>, or null when absent.</summary>
-    public NthValueFrom? NthFrom { get; set; }
+    public FirstOrLast? NthFrom { get; set; }
     /// <summary>The <c>IGNORE NULLS</c> or <c>RESPECT NULLS</c> option of a window function, or null when absent.</summary>
     public NullTreatment? NullTreatment { get; set; }
     /// <summary>The <c>WITHIN GROUP (ORDER BY ...)</c> clause, as in <c>LISTAGG</c>; null when absent.</summary>
     public WithinGroupClause? WithinGroup { get; set; }
     /// <summary>KEEP (DENSE_RANK FIRST|LAST ORDER BY ...)</summary>
     public KeepClause? Keep { get; set; }
-    /// <summary>The <c>OVER</c> window of an analytic call, or null when absent.</summary>
-    public WindowSpec? Over { get; set; }
-    /// <summary>The <c>ORDER BY</c> written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; null when absent.</summary>
-    public OrderByClause? OrderBy { get; set; }
     /// <summary>The <c>PARTITION BY</c> clause of a hypothetical-rank call, such as <c>APPROX_RANK(PARTITION BY owner ORDER BY x)</c>; null when absent.</summary>
     public PartitionByClause? PartitionBy { get; set; }
+    /// <summary>The <c>ORDER BY</c> written inside the call, such as <c>XMLAGG(x ORDER BY y)</c>; null when absent.</summary>
+    public OrderByClause? OrderBy { get; set; }
+    /// <summary>The <c>OVER</c> window of an analytic call, or null when absent.</summary>
+    public WindowSpec? Over { get; set; }
 }
 
 /// <summary>The keyword that introduces a special argument of an XML or JSON function.</summary>
@@ -1529,8 +1529,8 @@ public sealed partial class Argument : SqlNode
 /// <summary>The <c>KEEP (DENSE_RANK FIRST | LAST ORDER BY ...)</c> clause of an aggregate.</summary>
 public sealed partial class KeepClause : SqlNode
 {
-    /// <summary>True for <c>FIRST</c>; false for <c>LAST</c>.</summary>
-    public bool First { get; set; }
+    /// <summary><c>FIRST</c> or <c>LAST</c>: the DENSE_RANK position the aggregate keeps. Always written.</summary>
+    public required FirstOrLast Position { get; set; }
     /// <summary>The <c>ORDER BY</c> of the <c>KEEP</c> clause.</summary>
     public required OrderByClause OrderBy { get; set; }
 }

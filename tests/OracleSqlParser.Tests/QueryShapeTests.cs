@@ -151,7 +151,7 @@ public class QueryShapeTests
     [InlineData("SELECT * FROM s PIVOT XML (SUM(a) FOR (x, y) IN (ANY, ANY))",
         "(PivotTable source=(NamedTable name=[S]) xml aggregates=[(PivotAggregate function=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] forColumns=[X Y] inAny)")]
     [InlineData("SELECT * FROM s PIVOT (SUM(a) FOR x IN (SELECT DISTINCT x FROM t))",
-        "(PivotTable source=(NamedTable name=[S]) aggregates=[(PivotAggregate function=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] forColumns=[X] inSubquery=(SelectStatement body=(QuerySpecification quantifier=Distinct selectList=[(ExpressionSelectItem expression=X)] from=(FromClause tables=[(NamedTable name=[T])]))))")]
+        "(PivotTable source=(NamedTable name=[S]) aggregates=[(PivotAggregate function=(FunctionCall name=[SUM] arguments=[(Argument value=A)]))] forColumns=[X] inQuery=(SelectStatement body=(QuerySpecification quantifier=Distinct selectList=[(ExpressionSelectItem expression=X)] from=(FromClause tables=[(NamedTable name=[T])]))))")]
     [InlineData("SELECT * FROM t UNPIVOT INCLUDE NULLS (val FOR col IN (a AS 'A', b AS 'B'))",
         "(UnpivotTable source=(NamedTable name=[T]) includeNulls valueColumns=[VAL] forColumns=[COL] inItems=[(UnpivotInItem columns=[A] aliasValue='A') (UnpivotInItem columns=[B] aliasValue='B')])")]
     [InlineData("SELECT * FROM t UNPIVOT ((x, y) FOR c IN ((a, b) AS 'ab'))",

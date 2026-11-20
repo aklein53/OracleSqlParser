@@ -1117,7 +1117,7 @@ public sealed partial class SqlParser
     {
         var start = Cur;
         ExpectKw("SET");
-        var clause = new SetClause();
+        var items = new List<SetItem>();
         do
         {
             var s = Cur;
@@ -1125,7 +1125,7 @@ public sealed partial class SqlParser
             {
                 Next(); Next();
                 var rowValue = ParseExpr();
-                clause.Items.Add(Fin(new SetItem { Row = true, Value = rowValue }, s));
+                items.Add(Fin(new SetItem { Row = true, Value = rowValue }, s));
                 continue;
             }
             var columns = new List<ColumnReference>();
@@ -1137,9 +1137,9 @@ public sealed partial class SqlParser
             else columns.Add(ParseColumnReferenceOnly());
             ExpectOp("=");
             var value = ParseExpr();
-            clause.Items.Add(Fin(new SetItem { Columns = columns, Value = value }, s));
+            items.Add(Fin(new SetItem { Columns = columns, Value = value }, s));
         } while (AcceptOp(","));
-        return Fin(clause, start);
+        return Fin(new SetClause { Items = items }, start);
     }
 
     private DeleteStatement ParseDelete()

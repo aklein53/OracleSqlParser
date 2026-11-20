@@ -209,7 +209,7 @@ public class ExpertStressTests(OracleFixture db)
         Assert.Contains("nullTreatment=Ignore", Str(lag));
         Assert.DoesNotContain("(WindowFrame", Str(lag));
         var keep = Find<KeepClause>(s).Single();
-        Assert.False(keep.First);
+        Assert.Equal(FirstOrLast.Last, keep.Position);
         Assert.Contains("keep=", Str(fns.Single(f => Str(f).StartsWith("(FunctionCall name=[MAX]"))));
         await VerifyAsync(sql, []);
     }

@@ -8931,9 +8931,9 @@ public partial class FunctionCall
         if (Arguments is not null) foreach (var x in Arguments) yield return x;
         if (WithinGroup is not null) yield return WithinGroup;
         if (Keep is not null) yield return Keep;
-        if (Over is not null) yield return Over;
-        if (OrderBy is not null) yield return OrderBy;
         if (PartitionBy is not null) yield return PartitionBy;
+        if (OrderBy is not null) yield return OrderBy;
+        if (Over is not null) yield return Over;
     }
 
     /// <inheritdoc/>
@@ -8945,9 +8945,9 @@ public partial class FunctionCall
         if (Arguments is not null) foreach (var x in Arguments) x.Accept(visitor);
         WithinGroup?.Accept(visitor);
         Keep?.Accept(visitor);
-        Over?.Accept(visitor);
-        OrderBy?.Accept(visitor);
         PartitionBy?.Accept(visitor);
+        OrderBy?.Accept(visitor);
+        Over?.Accept(visitor);
     }
 
     internal override void RewriteChildren(SqlNodeRewriter rewriter)
@@ -8958,9 +8958,9 @@ public partial class FunctionCall
         SqlNodeRewriter.RewriteList(rewriter, Arguments, "FunctionCall.Arguments");
         WithinGroup = SqlNodeRewriter.RewriteOptional(rewriter, WithinGroup, "FunctionCall.WithinGroup");
         Keep = SqlNodeRewriter.RewriteOptional(rewriter, Keep, "FunctionCall.Keep");
-        Over = SqlNodeRewriter.RewriteOptional(rewriter, Over, "FunctionCall.Over");
-        OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "FunctionCall.OrderBy");
         PartitionBy = SqlNodeRewriter.RewriteOptional(rewriter, PartitionBy, "FunctionCall.PartitionBy");
+        OrderBy = SqlNodeRewriter.RewriteOptional(rewriter, OrderBy, "FunctionCall.OrderBy");
+        Over = SqlNodeRewriter.RewriteOptional(rewriter, Over, "FunctionCall.Over");
     }
 
     internal override NodeProperty[] NodeProperties() =>
@@ -8976,9 +8976,9 @@ public partial class FunctionCall
         new("NullTreatment", NullTreatment),
         new("WithinGroup", WithinGroup),
         new("Keep", Keep),
-        new("Over", Over),
-        new("OrderBy", OrderBy),
         new("PartitionBy", PartitionBy),
+        new("OrderBy", OrderBy),
+        new("Over", Over),
     ];
 
     /// <inheritdoc/>
@@ -9001,9 +9001,9 @@ public partial class FunctionCall
             NullTreatment = NullTreatment,
             WithinGroup = CloneChild(WithinGroup),
             Keep = CloneChild(Keep),
-            Over = CloneChild(Over),
-            OrderBy = CloneChild(OrderBy),
             PartitionBy = CloneChild(PartitionBy),
+            OrderBy = CloneChild(OrderBy),
+            Over = CloneChild(Over),
         };
         CopySpan(this, c);
         return c;
@@ -9023,9 +9023,9 @@ public partial class FunctionCall
             && NullTreatment == o.NullTreatment
             && Pair(WithinGroup, o.WithinGroup, pending)
             && Pair(Keep, o.Keep, pending)
-            && Pair(Over, o.Over, pending)
+            && Pair(PartitionBy, o.PartitionBy, pending)
             && Pair(OrderBy, o.OrderBy, pending)
-            && Pair(PartitionBy, o.PartitionBy, pending);
+            && Pair(Over, o.Over, pending);
     }
 }
 
@@ -11779,7 +11779,7 @@ public partial class KeepClause
 
     internal override NodeProperty[] NodeProperties() =>
     [
-        new("First", First),
+        new("Position", Position),
         new("OrderBy", OrderBy),
     ];
 
@@ -11792,7 +11792,7 @@ public partial class KeepClause
     {
         var c = new KeepClause
         {
-            First = First,
+            Position = Position,
             OrderBy = CloneChild(OrderBy)!,
         };
         CopySpan(this, c);
@@ -11802,7 +11802,7 @@ public partial class KeepClause
     internal override bool ShapeEquals(SqlNode other, Stack<(SqlNode, SqlNode)> pending)
     {
         var o = (KeepClause)other;
-        return First == o.First
+        return Position == o.Position
             && Pair(OrderBy, o.OrderBy, pending);
     }
 }
@@ -14862,7 +14862,7 @@ public partial class PivotTable
         if (Aggregates is not null) foreach (var x in Aggregates) yield return x;
         if (ForColumns is not null) foreach (var x in ForColumns) yield return x;
         if (InItems is not null) foreach (var x in InItems) yield return x;
-        if (InSubquery is not null) yield return InSubquery;
+        if (InQuery is not null) yield return InQuery;
         if (Alias is not null) yield return Alias;
     }
 
@@ -14873,7 +14873,7 @@ public partial class PivotTable
         if (Aggregates is not null) foreach (var x in Aggregates) x.Accept(visitor);
         if (ForColumns is not null) foreach (var x in ForColumns) x.Accept(visitor);
         if (InItems is not null) foreach (var x in InItems) x.Accept(visitor);
-        InSubquery?.Accept(visitor);
+        InQuery?.Accept(visitor);
         Alias?.Accept(visitor);
     }
 
@@ -14883,7 +14883,7 @@ public partial class PivotTable
         SqlNodeRewriter.RewriteList(rewriter, Aggregates, "PivotTable.Aggregates");
         SqlNodeRewriter.RewriteList(rewriter, ForColumns, "PivotTable.ForColumns");
         SqlNodeRewriter.RewriteList(rewriter, InItems, "PivotTable.InItems");
-        InSubquery = SqlNodeRewriter.RewriteOptional(rewriter, InSubquery, "PivotTable.InSubquery");
+        InQuery = SqlNodeRewriter.RewriteOptional(rewriter, InQuery, "PivotTable.InQuery");
         Alias = SqlNodeRewriter.RewriteOptional(rewriter, Alias, "PivotTable.Alias");
     }
 
@@ -14895,7 +14895,7 @@ public partial class PivotTable
         new("ForColumns", ForColumns),
         new("InItems", InItems),
         new("InAny", InAny),
-        new("InSubquery", InSubquery),
+        new("InQuery", InQuery),
         new("Alias", Alias),
     ];
 
@@ -14914,7 +14914,7 @@ public partial class PivotTable
             ForColumns = CloneList(ForColumns),
             InItems = CloneList(InItems),
             InAny = InAny,
-            InSubquery = CloneChild(InSubquery),
+            InQuery = CloneChild(InQuery),
             Alias = CloneChild(Alias),
         };
         CopySpan(this, c);
@@ -14930,7 +14930,7 @@ public partial class PivotTable
             && PairList(ForColumns, o.ForColumns, pending)
             && PairList(InItems, o.InItems, pending)
             && InAny == o.InAny
-            && Pair(InSubquery, o.InSubquery, pending)
+            && Pair(InQuery, o.InQuery, pending)
             && Pair(Alias, o.Alias, pending);
     }
 }

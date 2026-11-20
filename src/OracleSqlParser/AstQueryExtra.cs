@@ -150,7 +150,7 @@ public sealed partial class PivotTable : TableReference
     /// <summary>True for <c>IN (ANY)</c>.</summary>
     public bool InAny { get; set; }
     /// <summary>The subquery of <c>IN (subquery)</c>, or null when the values are listed.</summary>
-    public SelectStatement? InSubquery { get; set; }
+    public SelectStatement? InQuery { get; set; }
 }
 
 /// <summary>One aggregate in a <c>PIVOT</c> clause, such as <c>SUM(sal) AS total</c>.</summary>
@@ -774,6 +774,6 @@ public sealed partial class InsertIntoClause : SqlNode
     public required TableReference Table { get; set; }
     /// <summary>The column list, in source order, each optionally qualified by the target name or alias; empty when absent.</summary>
     public List<ColumnReference> Columns { get; set; } = [];
-    /// <summary>The <c>VALUES</c> clause, or null when absent. A multitable INSERT takes one row, so its clause has one row.</summary>
+    /// <summary>The <c>VALUES</c> clause, or null when absent. A multitable INSERT takes one row and no record, so its clause has exactly one row and a null <see cref="ValuesClause.Record"/>.</summary>
     public ValuesClause? Values { get; set; }
 }

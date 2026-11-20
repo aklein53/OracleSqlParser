@@ -250,9 +250,9 @@ public sealed partial class LockTableStatement : Statement
     public List<TableReference> Tables { get; set; } = [];
     /// <summary>The lock mode.</summary>
     public LockMode Mode { get; set; }
-    /// <summary>How a locked table is handled: <see cref="LockWait.NoWait"/> or <see cref="LockWait.Wait"/>; null when absent (wait forever).</summary>
+    /// <summary>How a locked table is handled: <see cref="LockWait.NoWait"/> or <see cref="LockWait.Wait"/>, never <see cref="LockWait.SkipLocked"/> (that is <c>FOR UPDATE</c> only); null when absent (wait forever).</summary>
     public LockWait? Wait { get; set; }
-    /// <summary>The number of seconds after <c>WAIT</c> (<see cref="Wait"/> is <see cref="LockWait.Wait"/>), or null otherwise.</summary>
+    /// <summary>The seconds after <c>WAIT</c>. Set exactly when <see cref="Wait"/> is <see cref="LockWait.Wait"/>; null otherwise.</summary>
     public Expression? WaitSeconds { get; set; }
 }
 

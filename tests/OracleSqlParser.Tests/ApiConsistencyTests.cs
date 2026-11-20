@@ -370,9 +370,9 @@ public class ApiConsistencyTests
 
     /// <summary>NTH_VALUE's FROM FIRST or FROM LAST is an enum, and the direction round trips.</summary>
     [Theory]
-    [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY y) FROM t", NthValueFrom.Last)]
-    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY y) FROM t", NthValueFrom.First)]
-    public void NthValueFromIsAnEnum(string sql, NthValueFrom expected)
+    [InlineData("SELECT NTH_VALUE(x, 2) FROM LAST OVER (ORDER BY y) FROM t", FirstOrLast.Last)]
+    [InlineData("SELECT NTH_VALUE(x, 2 FROM FIRST) OVER (ORDER BY y) FROM t", FirstOrLast.First)]
+    public void FirstOrLastIsAnEnum(string sql, FirstOrLast expected)
     {
         var call = Assert.Single(Parsed(sql).Descendants().OfType<FunctionCall>());
 
@@ -462,6 +462,66 @@ public class ApiConsistencyTests
         var attributes = script.Descendants().OfType<ColumnReference>().Where(c => c.Attribute is not null).Select(c => c.Attribute).ToList();
         Assert.Equal(["FOUND", "ROWCOUNT"], attributes);
         Assert.Empty(SqlAnalysis.GetColumns(script));
+    }
+
+    /// <summary>A function takes one of IGNORE NULLS or RESPECT NULLS: a second option is rejected, as Oracle rejects it (ORA-30484).</summary>
+    [Theory]
+    [InlineData("SELECT LAG(x) IGNORE NULLS RESPECT NULLS OVER (ORDER BY y) FROM t")]
+    [InlineData("SELECT LAG(x RESPECT NULLS) IGNORE NULLS OVER (ORDER BY y) FROM t")]
+    [InlineData("SELECT LAG(x) RESPECT NULLS IGNORE NULLS OVER (ORDER BY y) FROM t")]
+    public void ASecondNullTreatmentIsRejected(string sql)
+    {
+        var r = SqlParser.Parse(sql);
+
+        Assert.False(r.Success);
+        Assert.Contains(r.Errors, e => e.Message.Contains("not both"));
+    }
+
+    /// <summary>A labelled statement's span starts at its first label, so cutting the span keeps the label.</summary>
+    [Fact]
+    public void ALabelledStatementSpansItsLabel()
+    {
+        const string sql = "BEGIN <<lbl>> NULL; END;";
+        var stmt = Assert.IsType<NullStatement>(Assert.IsType<BlockStatement>(Parsed(sql).Statements[0]).Statements[0]);
+
+        Assert.StartsWith("<<lbl>>", Text(sql, stmt));
+    }
+
+    /// <summary>Replacing a labelled statement with SourceEditor keeps one copy of its label.</summary>
+    [Fact]
+    public void ReplacingALabelledStatementDoesNotDuplicateTheLabel()
+    {
+        var r = SqlParser.Parse("BEGIN <<lbl>> NULL; END;");
+        var stmt = r.Script.Descendants().OfType<NullStatement>().Single();
+        var editor = new SourceEditor(r);
+        editor.Replace(stmt, "<<lbl>> NULL");
+
+        Assert.Equal("BEGIN <<lbl>> NULL; END;", editor.Apply());
+    }
+
+    /// <summary>Children come out in source order: a function's PARTITION BY (APPROX_RANK) comes before its ORDER BY.</summary>
+    [Fact]
+    public void FunctionCallChildrenAreInSourceOrder()
+    {
+        const string sql = "SELECT APPROX_RANK(PARTITION BY owner ORDER BY x) WITHIN GROUP (ORDER BY y) FROM t";
+        var call = Assert.IsType<FunctionCall>(Assert.IsType<ExpressionSelectItem>(Parsed(sql).Descendants().OfType<QuerySpecification>().Single().SelectList[0]).Expression);
+        var children = call.GetChildren().ToList();
+        int partition = children.IndexOf(call.PartitionBy!);
+        int order = children.IndexOf(call.OrderBy!);
+
+        Assert.True(partition >= 0 && order > partition, $"PartitionBy at {partition}, OrderBy at {order}");
+    }
+
+    /// <summary>An INSERT with neither or both of VALUES and Query cannot be generated: the generator throws.</summary>
+    [Fact]
+    public void InsertWithNeitherOrBothSourcesCannotBeGenerated()
+    {
+        var neither = new InsertStatement { Target = new NamedTable { Name = [new Identifier { Value = "T" }] } };
+        Assert.Throws<InvalidOperationException>(() => new SqlScriptGenerator().Generate(neither));
+
+        var both = Assert.IsType<InsertStatement>(Parsed("INSERT INTO t VALUES (1)").Statements[0]);
+        both.Query = Assert.IsType<InsertStatement>(Parsed("INSERT INTO t SELECT 1 FROM dual").Statements[0]).Query;
+        Assert.Throws<InvalidOperationException>(() => new SqlScriptGenerator().Generate(both));
     }
 
     /// <summary>A rewriter removes the RETURNING clause, with its INTO, by returning null for it.</summary>

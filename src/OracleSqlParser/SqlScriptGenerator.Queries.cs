@@ -354,7 +354,7 @@ public sealed partial class SqlScriptGenerator
             Sep(pv.Aggregates, a => { Expr(a.Function); if (a.Alias != null) { Add(" AS "); Id(a.Alias); } });
             Add(" FOR "); ColList(pv.ForColumns); Add(" IN (");
             if (pv.InAny) Sep(pv.ForColumns, _ => Add("ANY")); // Oracle wants one ANY per FOR column
-            else if (pv.InSubquery != null) Select(pv.InSubquery);
+            else if (pv.InQuery != null) Select(pv.InQuery);
             else Sep(pv.InItems, i => { Expr(i.Value); if (i.Alias != null) { Add(" AS "); Id(i.Alias); } });
             Add("))");
             Alias(pv);

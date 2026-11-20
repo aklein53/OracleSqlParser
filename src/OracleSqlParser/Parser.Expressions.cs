@@ -573,7 +573,7 @@ public sealed partial class SqlParser
                 && fc.Name.Count > 0 && fc.Name[^1].Value == "NTH_VALUE" && !fc.Name[^1].Quoted)
             {
                 Next();
-                fc.NthFrom = Next().Value == "LAST" ? NthValueFrom.Last : NthValueFrom.First;
+                fc.NthFrom = Next().Value == "LAST" ? FirstOrLast.Last : FirstOrLast.First;
             }
             ParseNullTreatment(fc);
             if (IsKw("ORDER") && IsKwAt(1, "BY"))
@@ -609,7 +609,7 @@ public sealed partial class SqlParser
                 ExpectKw("ORDER"); ExpectKw("BY");
                 var orderBy = Fin(new OrderByClause { Items = ParseOrderByList() }, orderKeyword);
                 ExpectOp(")");
-                fc.Keep = Fin(new KeepClause { First = first, OrderBy = orderBy }, ks);
+                fc.Keep = Fin(new KeepClause { Position = first ? FirstOrLast.First : FirstOrLast.Last, OrderBy = orderBy }, ks);
             }
             // NTH_VALUE(x, n) FROM FIRST|LAST: only when an analytic tail follows, so FROM <table named FIRST/LAST> is never taken
             else if (fc.NthFrom == null && IsKw("FROM") && (IsKwAt(1, "FIRST") || IsKwAt(1, "LAST"))
@@ -617,7 +617,7 @@ public sealed partial class SqlParser
                      && fc.Name.Count > 0 && fc.Name[^1].Value == "NTH_VALUE" && !fc.Name[^1].Quoted)
             {
                 Next();
-                fc.NthFrom = Next().Value == "LAST" ? NthValueFrom.Last : NthValueFrom.First;
+                fc.NthFrom = Next().Value == "LAST" ? FirstOrLast.Last : FirstOrLast.First;
             }
             else if (IsKw("IGNORE") || IsKw("RESPECT")) ParseNullTreatment(fc);
             else if (IsKw("OVER") && (IsOpAt(1, "(") || PeekTok().Type is TokenType.Identifier or TokenType.QuotedIdentifier))
@@ -700,6 +700,7 @@ public sealed partial class SqlParser
     {
         if (IsKw("IGNORE") || IsKw("RESPECT"))
         {
+            if (fc.NullTreatment != null) throw Fail("A function takes one of IGNORE NULLS or RESPECT NULLS, not both (ORA-30484)", ParseErrorCodes.InvalidCombination);
             bool ignore = Next().Value == "IGNORE";
             ExpectKw("NULLS");
             fc.NullTreatment = ignore ? NullTreatment.Ignore : NullTreatment.Respect;

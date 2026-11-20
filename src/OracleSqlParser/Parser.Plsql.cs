@@ -831,10 +831,19 @@ public sealed partial class SqlParser
 
     private Statement ParsePlsqlStatement()
     {
+        // A labelled statement's span starts at its first label, as a labelled block's does, so cutting the span keeps the labels.
+        var first = Cur;
         var labels = ParseLabels();
         var start = Cur;
         Statement st = ParsePlsqlStatementCore(start);
-        if (labels.Count > 0) st.Labels = labels;
+        if (labels.Count > 0)
+        {
+            st.Labels = labels;
+            st.Start = first.Start;
+            st.Line = first.Line;
+            st.Column = first.Column;
+            st.FirstTokenIndex = first.TokenIndex;
+        }
         return st;
     }
 

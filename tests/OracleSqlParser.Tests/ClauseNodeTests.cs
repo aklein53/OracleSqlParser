@@ -721,7 +721,7 @@ public class ClauseNodeTests
 
         Assert.Equal("KEEP (DENSE_RANK LAST /* c */ ORDER BY b)", Text(sql, keep));
         Assert.Equal("ORDER BY b", Text(sql, keep.OrderBy));
-        Assert.False(keep.First);
+        Assert.Equal(FirstOrLast.Last, keep.Position);
     }
 
     [Fact]

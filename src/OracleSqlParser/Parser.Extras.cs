@@ -130,7 +130,7 @@ public sealed partial class SqlParser
             int prog121 = -1;
             while (AcceptOp(",") && Progress(ref prog121)) ExpectKw("ANY");
         }
-        else if (LooksLikeQuery()) pt.InSubquery = ParseSelectStatement();
+        else if (LooksLikeQuery()) pt.InQuery = ParseSelectStatement();
         else
         {
             do
