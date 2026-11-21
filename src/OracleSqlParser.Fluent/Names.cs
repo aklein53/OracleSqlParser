@@ -36,6 +36,8 @@ internal static class Names
         var parts = column.Parts.Select(p => new Identifier { Value = p.Value, Quoted = p.Quoted, Text = p.Text }).ToList();
         if (parts.Any(p => p.Quoted && p.Value.Length == 0))
             throw new ArgumentException($"'{name}' has an empty quoted name, which Oracle does not allow.", paramName);
+        if (parts.Any(p => p.Quoted && p.Value.Contains('"')))
+            throw new ArgumentException($"'{name}' has a double quote inside a quoted name, which Oracle does not allow.", paramName);
         return parts;
     }
 

@@ -125,6 +125,12 @@ public class NameTests
     }
 
     [Fact]
+    public void DoubleQuoteInsideQuotedNameIsRejected()
+    {
+        Assert.Throws<ArgumentException>(() => Sql.Col("\"a\"\"b\""));
+    }
+
+    [Fact]
     public void ColPartsHappyPathRoundTrips()
     {
         RoundTrip.AssertExpression(
