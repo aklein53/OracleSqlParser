@@ -19,6 +19,7 @@
 - Build gate: `dotnet build OracleSqlParser.slnx -c Release -warnaserror` clean. Existing tests unchanged and passing.
 - Round-trip guarantee: for every built node `n`, `SqlNodeComparer.StructurallyEqual(n, SqlParser.ParseStatement(n.ToSql()))` (or `ParseExpression` for expressions).
 - Names given as strings go through the core parser; invalid names throw `ArgumentException`.
+- Only `Sql.Expr` takes SQL text. Every other `string` parameter is a name, an alias, a bind name or a literal value. `new Identifier` and `new BindVariable` appear only in `Names.cs` and `Sql.Expressions.cs`; no hand-rolled `ToUpperInvariant()` identifier folding anywhere.
 - Nodes passed into fluent methods are inserted as-is (not cloned). The Fluent README says to not reuse one node in two places, and to call `DeepClone<T>()` before editing when the original is still needed.
 - Code style: match `src/OracleSqlParser.Guard/QueryGuard.cs` (file-scoped namespace, XML docs on every public member, short `<summary>`s).
 
@@ -68,8 +69,8 @@
 **Interfaces:**
 - Consumes: `Names.Parse`, `Sql.Col`, `RoundTrip`.
 - Produces on `Sql`:
-  - `Bind(string name) -> BindVariable`
-  - `Lit(int|long|decimal|double|string|bool) -> Expression`. Negative numbers become `UnaryExpression(Minus, Literal)`, and numbers are formatted with `CultureInfo.InvariantCulture`. `Lit(double)` throws `ArgumentOutOfRangeException` for NaN and Infinity.
+  - `Bind(string name) -> BindVariable`. The name is checked by parsing `":" + name` with `SqlParser.ParseExpression`, which must return a `BindVariable`, so `Bind("a b")` and `Bind("")` throw `ArgumentException`. Accept `name` with or without a leading `:`.
+  - `Lit(int|long|decimal|double|string|bool) -> Expression`. Numbers are formatted with `CultureInfo.InvariantCulture` (`double` with `"R"`). A negative number becomes `UnaryExpression(Minus, Literal(text without the leading '-'))`. Take the sign off the formatted string, never by negating the value, because `-int.MinValue` overflows. `Lit(double)` throws `ArgumentOutOfRangeException` for NaN and Infinity.
   - `Null -> Literal` (static property)
   - `Func(string name, params Expression[] args) -> FunctionCall`. It throws `ArgumentException` for names the parser treats as special forms. Build the reject list by reading `Parser.Expressions.cs:~400-420`: at least CAST, TRIM, EXTRACT, TREAT and any others routed there.
   - `Star() -> StarExpression`, `Star(string qualifier) -> StarExpression`
@@ -84,7 +85,12 @@
   - `Between(Expression low, Expression high)`, `Like(Expression pattern)`, `NotLike(Expression pattern)`
   - `IsNull()`, `IsNotNull()`
   - `As(string alias) -> ExpressionSelectItem`
-- Produces (internal): `Parens.Wrap(Expression operand, int parentPrecedence, bool rightSide) -> Expression` and `Parens.Precedence(Expression) -> int`. They mirror `SqlScriptGenerator.Expressions.cs:85-111` exactly. An operand is wrapped in `ParenthesizedExpression` when its precedence is below the parent's, or when it is the right operand with equal precedence. Tasks 3 and 4 use `Conditions.And(Expression? existing, Expression added) -> Expression` and `Conditions.Or(...)` (internal, in `Parens.cs`) for `AndWhere`/`OrWhere`: a null `existing` returns `added`.
+- Produces (internal): `Parens.Precedence(Expression) -> int`, a copy of `Prec` at `SqlScriptGenerator.Expressions.cs:85-102`, and `Parens.Wrap(Expression operand, int minPrec) -> Expression`, which wraps `operand` in `ParenthesizedExpression` when `Precedence(operand) < minPrec`. Choosing `minPrec` is mechanical:
+  - Find every `Child(e, minPrec)` call in `SqlScriptGenerator.Expressions.cs` (there are 17).
+  - The matching operand slot in each fluent factory passes through `Parens.Wrap` with the same `minPrec`. This covers unary minus, NOT, BETWEEN value/low/high, LIKE value/pattern/escape, IN value, IS value, and both sides of a binary operator.
+  - Binary operators get one extra rule, because the parser is left-associative but the generator does not parenthesize a right operand of the same precedence for AND/OR (`Binary`, lines 256-271). Pass the left operand with `minPrec = p` and the right operand with `minPrec = p + 1` for **every** binary operator, including AND and OR.
+  - Then `a.And(b.And(c))` builds `And(a, Paren(And(b, c)))`. Do not change that test to make it pass; the rule is what makes it pass.
+  - An operand that is already a `ParenthesizedExpression` is never wrapped again (its precedence is 100). Tasks 3 and 4 use `Conditions.And(Expression? existing, Expression added) -> Expression` and `Conditions.Or(...)` (internal, in `Parens.cs`) for `AndWhere`/`OrWhere`: a null `existing` returns `added`.
 - For each operator method, the exact `BinaryOperator`/`UnaryOperator`/`LikeKind`/`IsTest` value is the one the parser produces for the same SQL. Check with `oraclesqlparser --shape -e "..."` or by parsing in a test.
 
 - [ ] **Step 1: Write failing `ExpressionTests`**, each using `RoundTrip.AssertExpression`:
@@ -92,7 +98,11 @@
   - `Col("a").Eq(Lit(1)).Or(Col("b").Eq(Lit(2))).And(Col("c").Eq(Lit(3)))` gives `(a = 1 OR b = 2) AND c = 3`.
   - `Col("a").Minus(Col("b").Minus(Col("c")))` gives `a - (b - c)`.
   - `Col("a").And(Col("b").And(Col("c")))` gives `a AND (b AND c)`.
-  - `Lit(-1)` gives `-1`.
+  - `Lit(-1)` gives `-1`, and `Lit(int.MinValue)` and `Lit(long.MinValue)` round-trip.
+  - `Col("a").Plus(Col("b")).Times(Col("c"))` gives `(a + b) * c`.
+  - `Col("a").Eq(Lit(1)).Or(Col("b").Eq(Lit(2))).Not()` gives `NOT (a = 1 OR b = 2)`.
+  - `Col("a").Between(Col("b").Or(Col("c")), Lit(2))` round-trips, which exercises a wrapped BETWEEN operand.
+  - `Bind("a b")` throws `ArgumentException`, and `Bind(":x")` equals `Bind("x")`.
   - `Lit(1.5m)` under `CultureInfo.CurrentCulture = new("de-DE")` gives `1.5`.
   - `Lit("O'Brien")` gives `'O''Brien'`, and `Lit("naïve €")` round-trips.
   - `Lit(true)` gives `TRUE`, and `Null` gives `NULL`.
@@ -116,7 +126,7 @@
 **Interfaces:**
 - Consumes: Task 1 and 2 APIs, `Conditions.And/Or`, `Parens`.
 - Produces on `Sql`:
-  - `Select(params string[] columns)`. Each string is read by `Sql.Expr` and becomes an `ExpressionSelectItem`, so `"e.name"`, `"count(*)"` and `"*"` all work. `"*"` and `"e.*"` become `StarSelectItem`.
+  - `Select(params string[] columns)`. Each string is a **name**, never SQL text: `"*"` and `"e.*"` become `StarSelectItem`, and anything else goes through `Names.Parse` and becomes an `ExpressionSelectItem(ColumnReference)`. `Select("count(*)")` and `Select("a; drop table t")` throw `ArgumentException`; callers write `Sql.Func("COUNT", Sql.Star())` or `Sql.Expr("count(*)")`. The same rule applies to every `string` overload in Tasks 3 and 4 that names a column (`OrderBy`, `GroupBy`, `AddColumn`, `Columns`, `Set`, `Returning` columns): only `Sql.Expr` takes SQL text.
   - `Select(params SelectItem[] items)` and `Select(params Expression[] expressions)`. A `StarExpression` becomes a `StarSelectItem`.
   - All three return a `SelectStatement` whose `Body` is a `QuerySpecification`.
 - Produces on `SelectExtensions` (each `this SelectStatement s`, returns `SelectStatement`):
@@ -142,6 +152,7 @@
   - `Union` where the operand has `FetchFirst(1)`: the operand is wrapped in a paren query.
   - `Offset(5).FetchFirst(10)`.
   - Throws: `Select("a").Join("b", null, ...)` with no `FROM`, and `Select("a").From("t").OrderBy("a").Union(other)`.
+  - `Select("count(*)")` and `OrderBy("1; drop table t")` throw `ArgumentException`.
 - [ ] **Step 2: Write failing `SelectEditTests`**, on `(SelectStatement)SqlParser.ParseStatement(...)`:
   - `AndWhere` on `SELECT * FROM t` gives `... WHERE x = 1`.
   - `AndWhere` on `... WHERE a = 1 OR b = 2` gives `... WHERE (a = 1 OR b = 2) AND c = 3`.
@@ -161,7 +172,11 @@
 **Interfaces:**
 - Consumes: Task 1 and 2 APIs, `Conditions.And/Or`.
 - Produces on `Sql`: `InsertInto(string table, string? alias = null) -> InsertStatement`, `Update(string table, string? alias = null) -> UpdateStatement`, `DeleteFrom(string table, string? alias = null) -> DeleteStatement`, `MergeInto(string table, string? alias = null) -> MergeStatement`. Each also has a `TableReference` overload.
-- Required properties start as placeholders. `UpdateStatement.Set` is `new SetClause { Items = [] }`. `MergeStatement.Source` is an empty `NamedTable`, and `On` is a placeholder. Use an internal sentinel `Literal` instance (`Placeholders.Missing`) that Task 5's `Validate` detects by reference.
+- Required properties start as placeholders. Each placeholder is a fresh node in a shape the parser never produces, so it is still detected after `DeepClone`; never use a shared static instance or a reference check:
+  - `UpdateStatement.Set` is `new SetClause { Items = [] }`.
+  - `MergeStatement.Source` is `new NamedTable()`, with an empty `Name`.
+  - `MergeStatement.On` is `new ColumnReference()`, with empty `Parts`.
+  - An internal `Placeholders` class has `IsMissing(TableReference)` and `IsMissing(Expression)`, which Task 5's `Validate` uses.
 - Produces on `DmlExtensions`:
   - `InsertStatement`: `Columns(params string[])`, `Values(params Expression[])` (appends a `RowValue`; repeatable), `Query(SelectStatement)`. Mixing `Values` and `Query` throws `InvalidOperationException`.
   - `UpdateStatement`: `Set(string column, Expression value)` (repeatable).
@@ -205,6 +220,8 @@
   1. **Completeness.** Walk `node.Descendants()` (include `node`). An `UpdateStatement` with no `Set.Items`, a `MergeStatement` whose `On` or `Source` is a placeholder or that has no clauses, an `InsertStatement` with neither `Values` nor `Query`, and a `QuerySpecification` with an empty `SelectList` all throw `InvalidOperationException`. The message names the statement and the missing part.
   2. **Version.** Print with default generator options, then reparse with `SqlParser.Parse(text, new ParseOptions { OracleVersion = target })`. A `node` that is an `Expression` is parsed with `ParseExpression`; check that it accepts `ParseOptions`, and wrap in `SELECT <expr> FROM dual` if not. On any errors, throw `InvalidOperationException` listing each `ParseError.Message`, joined by `"; "`.
 - `ToSql` validates, then returns `new SqlScriptGenerator(options ?? new()).Generate(node)`.
+- A node that is not a `SqlScript`, a `Statement` or an `Expression` (for example a `WhereClause`) gets the completeness check only, not the version reparse. The XML doc says so.
+- Completeness detects placeholders with `Placeholders.IsMissing` (by shape). A test checks that `Sql.MergeInto("t").DeepClone<MergeStatement>().ToSql()` still throws.
 
 - [ ] **Step 1: Write failing `ValidationTests`:**
   - `Sql.Update("t").ToSql()` throws, and the message contains `SET`.
