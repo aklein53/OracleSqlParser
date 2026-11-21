@@ -346,10 +346,6 @@ does not work with this version of the core library).
 
 ## [0.5.0-preview.1] - 2026-11-14
 
-### Changed (breaking)
-- Packages renamed to match the namespace: `PlsqlParser` → `OracleSqlParser`, `PlsqlParser.Guard` →
-  `OracleSqlParser.Guard`. Namespaces are unchanged; update the package reference only.
-
 ### Added
 - `ParseError.Code` (PSP0001–PSP0099), `Length`, `Expected`, `FormatWithCaret`; `ParseException.Errors`.
 - `SqlParser.TryParse`, `ParseSelect`, `TryParseSelect`.
@@ -398,7 +394,7 @@ does not work with this version of the core library).
 - Robustness: no hangs, no stack overflows (nesting limit), `Parse` never throws; error recovery across `/`.
 
 ### Changed
-- QueryGuard moved to the experimental `PlsqlParser.Guard` package; its README no longer makes security claims.
+- QueryGuard moved to a separate, experimental Guard package; its README no longer makes security claims.
 
 ## [0.1.0-preview.1] - 2026-11-13
 

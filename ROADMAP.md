@@ -90,8 +90,7 @@ fuzz) and were re-verified where cited.
   `TryParse`, `ParseSelect`, `TryParseSelect`; `ParseException.Errors`.
 - [x] `SqlAnalysis` discovery helpers: `GetTables` (read/written, CTE-aware scoping), `GetColumns` (resolved only when
   unambiguous; never guesses), `GetBinds`, `GetFunctions`.
-- [x] Three-name problem resolved: packages renamed to `OracleSqlParser`, `OracleSqlParser.Guard` (namespaces unchanged);
-  deprecate the old `PlsqlParser` packages on nuget.org pointing to the new IDs (manual owner step).
+- [x] One name: the package, namespace and assembly are all `OracleSqlParser` (plus `OracleSqlParser.Guard`).
 - [x] CLI published as a `dotnet tool` (`OracleSqlParser.Cli`, command `oraclesqlparser`); NuGet READMEs state the real
   target frameworks; test projects not packable.
 - [x] XML docs on the public entry points; missing docs fail the build for the parser API files and `SqlAnalysis`

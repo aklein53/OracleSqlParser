@@ -11,12 +11,6 @@ dotnet add package OracleSqlParser
 
 The NuGet package, the C# namespace and the assembly are all named `OracleSqlParser`.
 
-### Migrating from PlsqlParser
-
-The packages were renamed to match the namespace: `PlsqlParser` is now `OracleSqlParser`, and `PlsqlParser.Guard` is now
-`OracleSqlParser.Guard`. To migrate, replace the package reference (`dotnet remove package PlsqlParser`, then
-`dotnet add package OracleSqlParser`). Namespaces are unchanged, so no `using` directives change.
-
 ## Public API changes
 
 The public API of `OracleSqlParser` and `OracleSqlParser.Guard` is checked by
