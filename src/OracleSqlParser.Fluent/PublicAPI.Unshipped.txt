@@ -1,0 +1,5 @@
+OracleSqlParser.Fluent.Sql
+static OracleSqlParser.Fluent.Sql.Col(params OracleSqlParser.Identifier![]! parts) -> OracleSqlParser.ColumnReference!
+static OracleSqlParser.Fluent.Sql.Col(string! name) -> OracleSqlParser.ColumnReference!
+static OracleSqlParser.Fluent.Sql.Id(string! name) -> OracleSqlParser.Identifier!
+static OracleSqlParser.Fluent.Sql.Table(string! name, string? alias = null) -> OracleSqlParser.NamedTable!
