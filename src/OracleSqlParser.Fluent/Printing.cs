@@ -7,8 +7,12 @@ namespace OracleSqlParser.Fluent;
 /// <remarks>
 /// For a <see cref="SqlScript"/>, a <see cref="Statement"/> or an <see cref="Expression"/> the printed text is parsed again with
 /// the target version. Any diagnostic is an error, and the reparsed tree must be <see cref="SqlNodeComparer.StructurallyEqual"/>
-/// to the node, so a tree that would print as different SQL is refused. Other node types (a <c>WHERE</c> clause, a table
-/// reference, a select item) are checked for completeness only; they are not printed on their own as a round trip.
+/// to the node, so a tree that would print as different SQL is refused.
+/// <para>
+/// Other node types (a <c>WHERE</c> clause, a <c>FROM</c> clause, a table reference, a select item) are not statements, so
+/// <see cref="Validate{T}"/> checks their completeness only. <see cref="ToSql"/> hands them to <see cref="SqlScriptGenerator"/>,
+/// which throws <see cref="NotSupportedException"/> for a node it cannot print on its own; that exception is not caught.
+/// </para>
 /// </remarks>
 public static class SqlNodeFluentExtensions
 {
@@ -22,12 +26,12 @@ public static class SqlNodeFluentExtensions
     /// <returns>The same node.</returns>
     /// <exception cref="InvalidOperationException">
     /// A part is missing (for example an UPDATE with no SET items), the printed SQL does not parse for <paramref name="target"/>,
-    /// or it does not read back as the same tree.
+    /// or it does not read back as the same tree (statements, scripts and expressions only).
     /// </exception>
     public static T Validate<T>(this T node, OracleVersion target = OracleVersion.Oracle23) where T : SqlNode
     {
         ArgumentNullException.ThrowIfNull(node);
-        Validation.Print(node, new SqlScriptGeneratorOptions(), target);
+        Validation.Check(node, target);
         return node;
     }
 

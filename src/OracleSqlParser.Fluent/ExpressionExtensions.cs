@@ -37,6 +37,19 @@ public static class ExpressionExtensions
         Operand = Parens.Wrap(operand ?? throw new ArgumentNullException(nameof(operand)), 3),
     };
 
+    /// <summary>
+    /// Unary minus, <c>-this</c>. A sum or product is grouped, as <c>-(a + b)</c>. An operand that is itself a unary minus is
+    /// grouped too, so the printed text has no <c>--</c> (which would start a comment).
+    /// </summary>
+    public static Expression Negate(this Expression operand)
+    {
+        ArgumentNullException.ThrowIfNull(operand);
+        var inner = operand is UnaryExpression { Operator: UnaryOperator.Minus }
+            ? new ParenthesizedExpression { Inner = operand }
+            : Parens.Wrap(operand, 7);
+        return new UnaryExpression { Operator = UnaryOperator.Minus, Operand = inner };
+    }
+
     /// <summary><c>this + other</c>.</summary>
     public static Expression Plus(this Expression left, Expression right) => Parens.Binary(left, BinaryOperator.Add, right);
 

@@ -13,13 +13,14 @@ public static class DmlExtensions
     /// <param name="statement">The insert.</param>
     /// <param name="columns">The column names, such as <c>id</c> or <c>e.id</c>. Empty clears the list.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="ArgumentException">A name is not a plain name.</exception>
+    /// <exception cref="ArgumentException">A name is not a plain name, or a column is listed more than once (names compare by their folded last part, so <c>e.id</c> and <c>ID</c> are the same column).</exception>
     /// <exception cref="InvalidOperationException">The insert already has <c>VALUES</c> rows whose width differs from the number of names.</exception>
     public static InsertStatement Columns(this InsertStatement statement, params string[] columns)
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(columns);
         var names = columns.Select(c => Sql.Col(c)).ToList();
+        CheckNoDuplicateColumns(names, nameof(columns));
         if (names.Count > 0 && statement.Values?.Rows is { Count: > 0 } rows && rows[0].Values.Count != names.Count)
             throw new InvalidOperationException(
                 $"INSERT has VALUES rows of {rows[0].Values.Count} value(s); the column list has {names.Count} name(s). Each row must match the column list.");
@@ -75,17 +76,44 @@ public static class DmlExtensions
         return statement;
     }
 
-    /// <summary>Adds an assignment to the <c>SET</c> clause of an <c>UPDATE</c>. Call it again for more columns.</summary>
+    /// <summary>
+    /// Sets the value of a column in the <c>SET</c> clause of an <c>UPDATE</c>. If the clause already assigns that column alone,
+    /// its value is replaced; otherwise the assignment is appended. Call it again for more columns. Columns match by their folded
+    /// last name part, so <c>e.sal</c> and <c>sal</c> are the same column.
+    /// </summary>
     /// <param name="statement">The update.</param>
     /// <param name="column">The column name, such as <c>sal</c> or <c>e.sal</c>.</param>
     /// <param name="value">The new value. Used as-is.</param>
     /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The column is not a plain name.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// The column is assigned inside a row-value assignment such as <c>(a, b) = (...)</c>, or the clause is <c>SET ROW</c>. Either
+    /// way the statement is left unchanged.
+    /// </exception>
     public static UpdateStatement Set(this UpdateStatement statement, string column, Expression value)
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(value);
-        statement.Set.Items.Add(new SetItem { Columns = [Sql.Col(column)], Value = value });
+        var name = Sql.Col(column);
+        var key = name.Parts[^1].Value;
+        var items = statement.Set.Items;
+        if (items.Any(i => i.Row))
+            throw new InvalidOperationException("UPDATE uses SET ROW, which cannot be combined with column assignments.");
+        if (items.Any(i => i.Columns.Count > 1 && i.Columns.Any(c => c.Parts[^1].Value == key)))
+            throw new InvalidOperationException(
+                $"Column {key} is assigned in a row-value assignment (a, b) = (...); it cannot also be set on its own.");
+        var existing = items.FirstOrDefault(i => i.Columns.Count == 1 && i.Columns[0].Parts[^1].Value == key);
+        if (existing is not null) existing.Value = value;
+        else items.Add(new SetItem { Columns = [name], Value = value });
         return statement;
+    }
+
+    /// <summary>Throws when two of the given columns are the same column: their folded last name parts are equal.</summary>
+    private static void CheckNoDuplicateColumns(IEnumerable<ColumnReference> names, string paramName)
+    {
+        var duplicate = names.GroupBy(n => n.Parts[^1].Value).FirstOrDefault(g => g.Count() > 1);
+        if (duplicate is not null)
+            throw new ArgumentException($"Column {duplicate.Key} is listed more than once.", paramName);
     }
 
     /// <summary>Sets the <c>WHERE</c> condition of an <c>UPDATE</c>, replacing any earlier one.</summary>
@@ -242,19 +270,21 @@ public static class DmlExtensions
     /// <param name="statement">The merge.</param>
     /// <param name="set">The assignments as (column name, new value) pairs. At least one.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="ArgumentException">There are no assignments, or a column is not a name.</exception>
+    /// <exception cref="ArgumentException">There are no assignments, a column is not a name, or a column is assigned twice in this call.</exception>
     /// <exception cref="InvalidOperationException">The merge already has a <c>WHEN MATCHED</c> clause.</exception>
     public static MergeStatement WhenMatchedUpdate(this MergeStatement statement, params (string Column, Expression Value)[] set)
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(set);
         if (set.Length == 0) throw new ArgumentException("WHEN MATCHED UPDATE needs at least one assignment.", nameof(set));
-        var items = new List<SetItem>(set.Length);
+        var names = new List<ColumnReference>(set.Length);
         foreach (var (column, value) in set)
         {
             ArgumentNullException.ThrowIfNull(value, nameof(set));
-            items.Add(new SetItem { Columns = [Sql.Col(column)], Value = value });
+            names.Add(Sql.Col(column));
         }
+        CheckNoDuplicateColumns(names, nameof(set));
+        var items = names.Select((name, i) => new SetItem { Columns = [name], Value = set[i].Value }).ToList();
         if (statement.Clauses.OfType<MergeMatchedClause>().Any())
             throw new InvalidOperationException("MERGE already has a WHEN MATCHED clause. Oracle allows one WHEN MATCHED and one WHEN NOT MATCHED clause.");
         statement.Clauses.Add(new MergeMatchedClause { Set = new SetClause { Items = items } });

@@ -63,6 +63,16 @@ internal static class Validation
         return sql;
     }
 
+    /// <summary>
+    /// The check behind <c>Validate</c>. A statement, script or expression is printed and reparsed, as <c>ToSql</c> does. Any
+    /// other node gets the completeness check only, because the generator cannot print it alone and nothing is printed here.
+    /// </summary>
+    internal static void Check(SqlNode node, OracleVersion target)
+    {
+        if (node is SqlScript or Statement or Expression) Print(node, new SqlScriptGeneratorOptions(), target);
+        else CheckComplete(node);
+    }
+
     /// <summary>Throws when the tree has a missing part, or a shape that a fluent call would print as invalid SQL.</summary>
     internal static void CheckComplete(SqlNode node)
     {
@@ -88,6 +98,8 @@ internal static class Validation
         {
             case UpdateStatement { Set.Items.Count: 0 }:
                 throw Incomplete("UPDATE has no SET items. Add one with Set.");
+            case SetClause { Items.Count: 0 }:
+                throw Incomplete("A SET clause has no items. Add one with Set.");
             case MergeStatement merge:
                 if (Placeholders.IsMissing(merge.Source)) throw Incomplete("MERGE has no USING source. Set one with Using.");
                 if (Placeholders.IsMissing(merge.On)) throw Incomplete("MERGE has no ON condition. Set one with On.");

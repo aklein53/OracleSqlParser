@@ -344,7 +344,8 @@ public class ExpressionTests
     [Fact]
     public void ZeroArgumentFunctionPrintsEmptyParentheses()
     {
-        RoundTrip.AssertExpression(Sql.Func("SYSDATE"), "SYSDATE()");
+        // SYSDATE() is not valid Oracle, so the zero-argument case uses a real function (changed in the review fix round).
+        RoundTrip.AssertExpression(Sql.Func("SYS_GUID"), "SYS_GUID()");
     }
 
     [Fact]

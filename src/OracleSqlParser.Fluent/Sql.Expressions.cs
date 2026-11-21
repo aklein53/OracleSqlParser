@@ -15,6 +15,16 @@ public static partial class Sql
         "NULL", "DEFAULT", "SOME", "ANY", "ALL", "PRIOR", "CONNECT_BY_ROOT",
     };
 
+    /// <summary>
+    /// Unquoted pseudo-columns from the core README. Oracle reads them as columns, never as functions, so <c>SYSDATE()</c> is
+    /// invalid; <see cref="Func"/> refuses them for any argument count, and <see cref="Col(string)"/> builds them.
+    /// </summary>
+    private static readonly HashSet<string> PseudoColumnNames = new(StringComparer.Ordinal)
+    {
+        "SYSDATE", "SYSTIMESTAMP", "CURRENT_DATE", "CURRENT_TIMESTAMP", "LOCALTIMESTAMP", "DBTIMEZONE", "SESSIONTIMEZONE",
+        "USER", "UID", "ROWNUM", "ROWID", "ORA_ROWSCN", "LEVEL",
+    };
+
     /// <summary>A bind variable such as <c>:min</c>. The name may be given with or without the leading colon.</summary>
     /// <param name="name">The bind name, such as <c>min</c> or <c>:min</c>, or a quoted name such as <c>"my name"</c>.</param>
     /// <returns>A new <see cref="BindVariable"/>.</returns>
@@ -92,15 +102,23 @@ public static partial class Sql
     /// <param name="name">The function name, optionally schema-qualified, such as <c>NVL</c> or <c>pkg.fn</c>.</param>
     /// <param name="args">The arguments, in order.</param>
     /// <returns>A new <see cref="FunctionCall"/>.</returns>
-    /// <exception cref="ArgumentException">The name is not a plain name, or the parser reads it as a special form such as <c>CAST</c> or <c>TRIM</c>. Use the dedicated factory or <see cref="Expr"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// The name is not a plain name; or it is a special form such as <c>CAST</c> or <c>TRIM</c>, which <see cref="Expr"/> builds; or it
+    /// is an unquoted pseudo-column such as <c>SYSDATE</c>, which <see cref="Col(string)"/> builds (for any argument count).
+    /// </exception>
     public static FunctionCall Func(string name, params Expression[] args)
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(args);
         var trimmed = name.Trim();
-        if (!trimmed.Contains('.') && !trimmed.StartsWith('"') && SpecialFormNames.Contains(trimmed.ToUpperInvariant()))
+        bool unqualifiedUnquoted = !trimmed.Contains('.') && !trimmed.StartsWith('"');
+        if (unqualifiedUnquoted && SpecialFormNames.Contains(trimmed.ToUpperInvariant()))
             throw new ArgumentException(
-                $"'{name}' is a special form in SQL, not a plain function call. Use its dedicated factory, or Sql.Expr for the full syntax.",
+                $"'{name}' is a special form in SQL, not a plain function call. Use Sql.Expr for the full syntax.",
+                nameof(name));
+        if (unqualifiedUnquoted && PseudoColumnNames.Contains(trimmed.ToUpperInvariant()))
+            throw new ArgumentException(
+                $"'{name}' is a pseudo-column, not a function, so it takes no argument list. Use Sql.Col(\"{trimmed.ToUpperInvariant()}\") instead.",
                 nameof(name));
         var parts = Names.Parse(name);
         if (args.Any(a => a is null)) throw new ArgumentNullException(nameof(args), "An argument is null.");

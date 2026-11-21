@@ -130,3 +130,6 @@ OracleSqlParser.Fluent.SqlNodeFluentExtensions
 static OracleSqlParser.Fluent.SqlNodeFluentExtensions.ToSql(this OracleSqlParser.SqlNode! node, OracleSqlParser.SqlScriptGeneratorOptions? options = null, OracleSqlParser.OracleVersion target = OracleSqlParser.OracleVersion.Oracle23) -> string!
 static OracleSqlParser.Fluent.SqlNodeFluentExtensions.Validate<T>(this T! node, OracleSqlParser.OracleVersion target = OracleSqlParser.OracleVersion.Oracle23) -> T!
 static OracleSqlParser.Fluent.Sql.Script(params OracleSqlParser.Statement![]! statements) -> OracleSqlParser.SqlScript!
+static OracleSqlParser.Fluent.ExpressionExtensions.Negate(this OracleSqlParser.Expression! operand) -> OracleSqlParser.Expression!
+static OracleSqlParser.Fluent.SelectExtensions.FetchFirst(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! rows) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Offset(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! rows) -> OracleSqlParser.SelectStatement!

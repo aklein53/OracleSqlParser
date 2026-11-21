@@ -297,30 +297,64 @@ public static class SelectExtensions
     public static SelectStatement OrderByDesc(this SelectStatement statement, string column, NullsOrdering nulls) =>
         AddOrderItem(statement, Sql.Col(column), descending: true, nulls);
 
-    /// <summary><c>OFFSET n ROWS</c>, replacing any existing offset. Works on any body except <c>VALUES</c>.</summary>
+    /// <summary>
+    /// <c>OFFSET n ROWS</c>, replacing any existing offset. Works on any body except <c>VALUES</c>. Use the <see cref="Expression"/>
+    /// overload for a bind variable.
+    /// </summary>
     /// <param name="statement">The statement to change, which is returned.</param>
     /// <param name="rows">The number of rows to skip. Must not be negative.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="rows"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException">The statement is a <c>VALUES</c> list or has <c>FOR UPDATE</c>.</exception>
     public static SelectStatement Offset(this SelectStatement statement, long rows)
     {
         if (rows < 0) throw new ArgumentOutOfRangeException(nameof(rows), "OFFSET cannot be negative.");
+        return Offset(statement, Sql.Lit(rows));
+    }
+
+    /// <summary>
+    /// <c>OFFSET expr ROWS</c>, replacing any existing offset, for example <c>OFFSET :off ROWS</c>. Works on any body except
+    /// <c>VALUES</c>, and cannot be combined with <c>FOR UPDATE</c>.
+    /// </summary>
+    /// <param name="statement">The statement to change, which is returned.</param>
+    /// <param name="rows">The number of rows to skip, such as a bind variable. Used as-is.</param>
+    /// <exception cref="InvalidOperationException">The statement is a <c>VALUES</c> list or has <c>FOR UPDATE</c>.</exception>
+    public static SelectStatement Offset(this SelectStatement statement, Expression rows)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
         RejectValues(statement, "OFFSET");
-        statement.Offset = new OffsetClause { Offset = Sql.Lit(rows) };
+        RejectForUpdateWithRowLimit(statement, "OFFSET");
+        statement.Offset = new OffsetClause { Offset = rows };
         return statement;
     }
 
     /// <summary>
     /// <c>FETCH FIRST n ROWS ONLY</c>, replacing any existing <c>FETCH</c> clause, so <c>WITH TIES</c>, <c>PERCENT</c> and
-    /// <c>WITH TARGET ACCURACY</c> on it are dropped. Works on any body except <c>VALUES</c>.
+    /// <c>WITH TARGET ACCURACY</c> on it are dropped. Works on any body except <c>VALUES</c>. Use the <see cref="Expression"/>
+    /// overload for a bind variable.
     /// </summary>
     /// <param name="statement">The statement to change, which is returned.</param>
     /// <param name="rows">The number of rows to return. Must not be negative.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="rows"/> is negative.</exception>
+    /// <exception cref="InvalidOperationException">The statement is a <c>VALUES</c> list or has <c>FOR UPDATE</c>.</exception>
     public static SelectStatement FetchFirst(this SelectStatement statement, long rows)
     {
         if (rows < 0) throw new ArgumentOutOfRangeException(nameof(rows), "FETCH cannot be negative.");
+        return FetchFirst(statement, Sql.Lit(rows));
+    }
+
+    /// <summary>
+    /// <c>FETCH FIRST expr ROWS ONLY</c>, replacing any existing <c>FETCH</c> clause, for example <c>FETCH FIRST :n ROWS ONLY</c>.
+    /// Works on any body except <c>VALUES</c>, and cannot be combined with <c>FOR UPDATE</c>.
+    /// </summary>
+    /// <param name="statement">The statement to change, which is returned.</param>
+    /// <param name="rows">The number of rows to return, such as a bind variable. Used as-is.</param>
+    /// <exception cref="InvalidOperationException">The statement is a <c>VALUES</c> list or has <c>FOR UPDATE</c>.</exception>
+    public static SelectStatement FetchFirst(this SelectStatement statement, Expression rows)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
         RejectValues(statement, "FETCH");
-        statement.Fetch = new FetchClause { Count = Sql.Lit(rows) };
+        RejectForUpdateWithRowLimit(statement, "FETCH");
+        statement.Fetch = new FetchClause { Count = rows };
         return statement;
     }
 
@@ -330,8 +364,8 @@ public static class SelectExtensions
     /// </summary>
     /// <param name="statement">The statement to change, which is returned.</param>
     /// <exception cref="InvalidOperationException">
-    /// The body is not a query block, or the query block has <c>DISTINCT</c>, <c>UNIQUE</c> or <c>GROUP BY</c>, which Oracle does
-    /// not allow with <c>FOR UPDATE</c>.
+    /// The body is not a query block, the query block has <c>DISTINCT</c>, <c>UNIQUE</c> or <c>GROUP BY</c>, which Oracle does
+    /// not allow with <c>FOR UPDATE</c>, or the statement has <c>OFFSET</c> or <c>FETCH</c>, which Oracle does not allow either.
     /// </exception>
     public static SelectStatement ForUpdate(this SelectStatement statement)
     {
@@ -340,8 +374,17 @@ public static class SelectExtensions
             throw new InvalidOperationException("FOR UPDATE cannot be used with DISTINCT or UNIQUE (ORA-02014).");
         if (query.GroupBy is not null)
             throw new InvalidOperationException("FOR UPDATE cannot be used with GROUP BY (ORA-01786).");
+        if (statement.Offset is not null || statement.Fetch is not null)
+            throw new InvalidOperationException("FOR UPDATE cannot be used with OFFSET or FETCH: Oracle rejects that combination.");
         statement.ForUpdate = new ForUpdateClause();
         return statement;
+    }
+
+    /// <summary>Rejects <c>OFFSET</c> or <c>FETCH</c> on a statement that already has <c>FOR UPDATE</c>, which Oracle rejects.</summary>
+    private static void RejectForUpdateWithRowLimit(SelectStatement statement, string clause)
+    {
+        if (statement.ForUpdate is not null)
+            throw new InvalidOperationException($"{clause} cannot be added to a query with FOR UPDATE: Oracle rejects that combination.");
     }
 
     /// <summary>Appends a common table expression to <c>WITH</c>, such as <c>WITH x AS (SELECT ...)</c>.</summary>
