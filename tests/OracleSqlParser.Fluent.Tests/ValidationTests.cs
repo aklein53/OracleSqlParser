@@ -9,70 +9,67 @@ public class ValidationTests
     private static string Reparse(string sql) => new SqlScriptGenerator().Generate(SqlParser.ParseStatement(sql));
 
     // ---- completeness ----
+    // Each check must fire from the completeness walk, not from the reparse: the printed text of an incomplete tree does not
+    // parse, so every assertion also rules out the "printed SQL" messages.
 
-    [Fact]
-    public void UpdateWithNoSetItemsThrowsNamingSet()
+    private static void AssertRejected(Action action, string part)
     {
-        var ex = Assert.Throws<InvalidOperationException>(() => Sql.Update("t").ToSql());
-        Assert.Contains("SET", ex.Message);
+        var ex = Assert.Throws<InvalidOperationException>(action);
+        Assert.Contains(part, ex.Message);
+        Assert.DoesNotContain("printed SQL", ex.Message);
     }
 
     [Fact]
-    public void MergeWithoutSourceOrOnOrClausesThrows()
-    {
-        Assert.Throws<InvalidOperationException>(() => Sql.MergeInto("t").ToSql());
-        Assert.Throws<InvalidOperationException>(() => Sql.MergeInto("t").Using("s").ToSql());
-    }
+    public void UpdateWithNoSetItemsThrowsNamingSet() =>
+        AssertRejected(() => Sql.Update("t").ToSql(), "has no SET items");
 
     [Fact]
-    public void MergeWithPlaceholderOnThrowsNamingOn()
-    {
-        var merge = Sql.MergeInto("t").Using("s").WhenMatchedUpdate(("a", Sql.Lit(1)));
-        var ex = Assert.Throws<InvalidOperationException>(() => merge.ToSql());
-        Assert.Contains("ON", ex.Message);
-    }
+    public void MergeWithoutSourceThrowsNamingUsing() =>
+        AssertRejected(() => Sql.MergeInto("t").ToSql(), "MERGE has no USING source");
 
     [Fact]
-    public void MergeWithNoClausesThrows()
-    {
-        var merge = Sql.MergeInto("t").Using("s").On(Sql.Col("t.id").Eq(Sql.Col("s.id")));
-        var ex = Assert.Throws<InvalidOperationException>(() => merge.ToSql());
-        Assert.Contains("WHEN", ex.Message);
-    }
+    public void MergeWithoutOnThrowsNamingOn() =>
+        AssertRejected(() => Sql.MergeInto("t").Using("s").WhenMatchedUpdate(("a", Sql.Lit(1))).ToSql(), "has no ON condition");
 
     [Fact]
-    public void InsertWithNeitherValuesNorQueryThrows()
-    {
-        Assert.Throws<InvalidOperationException>(() => Sql.InsertInto("t").ToSql());
-        Assert.Throws<InvalidOperationException>(() => Sql.InsertInto("t").Columns("a").ToSql());
-    }
+    public void MergeWithNoClausesThrowsNamingWhen() =>
+        AssertRejected(
+            () => Sql.MergeInto("t").Using("s").On(Sql.Col("t.id").Eq(Sql.Col("s.id"))).ToSql(),
+            "has no WHEN MATCHED or WHEN NOT MATCHED clause");
 
     [Fact]
-    public void QuerySpecificationWithEmptySelectListThrows()
-    {
-        var statement = new SelectStatement { Body = new QuerySpecification() };
-        Assert.Throws<InvalidOperationException>(() => statement.ToSql());
-    }
+    public void InsertWithNeitherValuesNorQueryThrows() =>
+        AssertRejected(() => Sql.InsertInto("t").Columns("a").ToSql(), "has neither VALUES nor a query");
 
     [Fact]
-    public void InsertTableWithEmptyNameThrows()
-    {
-        var insert = Sql.InsertInto(new NamedTable()).Values(Sql.Lit(1));
-        Assert.Throws<InvalidOperationException>(() => insert.ToSql());
-    }
+    public void QuerySpecificationWithEmptySelectListThrows() =>
+        AssertRejected(() => new SelectStatement { Body = new QuerySpecification() }.ToSql(), "A SELECT list is empty");
 
     [Fact]
-    public void HandMadePlaceholderExpressionInSetThrows()
-    {
-        var update = Sql.Update("t").Set("a", new ColumnReference());
-        Assert.Throws<InvalidOperationException>(() => update.ToSql());
-    }
+    public void InsertTableWithEmptyNameThrows() =>
+        AssertRejected(() => Sql.InsertInto(new NamedTable()).Values(Sql.Lit(1)).ToSql(), "A table name is empty");
 
     [Fact]
-    public void ClonedPlaceholderMergeStillThrows()
+    public void HandMadeEmptyColumnReferenceInSetThrows() =>
+        AssertRejected(() => Sql.Update("t").Set("a", new ColumnReference()).ToSql(), "A column reference has no name");
+
+    [Fact]
+    public void ClonedPlaceholderMergeStillThrows() =>
+        AssertRejected(() => Sql.MergeInto("t").DeepClone<MergeStatement>().ToSql(), "MERGE has no USING source");
+
+    [Fact]
+    public void EmptyTableNestedInsideASubqueryThrows()
     {
-        var clone = Sql.MergeInto("t").DeepClone<MergeStatement>();
-        Assert.Throws<InvalidOperationException>(() => clone.ToSql());
+        // The generic walk reaches nodes below the statement, not only the statement's own parts.
+        var inner = new SelectStatement
+        {
+            Body = new QuerySpecification
+            {
+                SelectList = [new ExpressionSelectItem { Expression = Sql.Col("a") }],
+                From = new FromClause { Tables = [new NamedTable()] },
+            },
+        };
+        AssertRejected(() => Sql.Select("a").From("t").Where(Sql.Exists(inner)).ToSql(), "A table name is empty");
     }
 
     // ---- INSERT width ----
@@ -81,7 +78,7 @@ public class ValidationTests
     public void InsertColumnCountMustMatchQuerySelectList()
     {
         var insert = Sql.InsertInto("t").Columns("a", "b").Query(Sql.Select("b").From("u"));
-        Assert.Throws<InvalidOperationException>(() => insert.ToSql());
+        AssertRejected(() => insert.ToSql(), "INSERT lists 2 column(s) but its query selects 1 item(s)");
     }
 
     [Fact]

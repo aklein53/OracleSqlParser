@@ -9,10 +9,6 @@ namespace OracleSqlParser.Fluent;
 /// the target version. Any diagnostic is an error, and the reparsed tree must be <see cref="SqlNodeComparer.StructurallyEqual"/>
 /// to the node, so a tree that would print as different SQL is refused. Other node types (a <c>WHERE</c> clause, a table
 /// reference, a select item) are checked for completeness only; they are not printed on their own as a round trip.
-/// <para>
-/// A method named <c>Validate</c> on a DDL node (<c>DropStatement</c>, <c>ConstraintState</c>) is a property and hides this
-/// extension. Call it as <c>SqlNodeFluentExtensions.Validate(node)</c> for those.
-/// </para>
 /// </remarks>
 public static class SqlNodeFluentExtensions
 {
