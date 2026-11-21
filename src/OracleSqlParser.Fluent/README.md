@@ -65,8 +65,9 @@ Assert.True(SqlNodeComparer.StructurallyEqual(built, SqlParser.ParseStatement(ex
 - `Sql.Lit("O'Brien")` stores the text unescaped, and the generator quotes it. `Sql.Lit((string)null!)` throws; use `Sql.Null`.
 - `Sql.Lit(decimal)` keeps its scale: `Sql.Lit(1.10m)` prints `1.10`. Numbers are formatted with the invariant culture.
 - Negative numbers are a unary minus over a literal, as the parser reads `-1`.
-- `Sql.Func` refuses the names the parser reads as special forms (`CAST`, `TRIM`, `EXTRACT`, ...). Use the dedicated factory
-  or `Sql.Expr`.
+- `Sql.Func` refuses the names the parser reads as special forms (`CAST`, `TRIM`, `EXTRACT`, ...); use `Sql.Expr` for their
+  syntax. It also refuses the unquoted pseudo-columns (`SYSDATE`, `ROWNUM`, `USER`, ...) for any argument count, since `SYSDATE()`
+  is not valid Oracle. Use `Sql.Col("SYSDATE")` for them.
 
 ## Editing parsed SQL
 
@@ -85,6 +86,11 @@ Edits change the node you call them on, and return it.
   query block.
 - **`Where` replaces, `AndWhere` and `OrWhere` combine.** An existing `OR` condition is grouped:
   `a = 1 OR b = 2` with `AndWhere(c = 3)` becomes `(a = 1 OR b = 2) AND c = 3`.
+- **A column is set once.** `Set` on a column the `UPDATE` already assigns replaces that value. `Columns` and
+  `WhenMatchedUpdate` throw when a column is listed twice. Names compare by their folded last part, so `e.sal` and `sal` are
+  one column. A column inside a row-value assignment `(a, b) = (...)`, or any `SET ROW`, makes `Set` throw.
+- **`FOR UPDATE` and row limits.** `ForUpdate` throws when the statement has `OFFSET` or `FETCH`, and `Offset` or `FetchFirst`
+  throws when it has `FOR UPDATE`. In both cases the statement is left unchanged.
 
 ## Printing and the target Oracle version
 
@@ -98,13 +104,24 @@ Edits change the node you call them on, and return it.
 - `Validate` and `ToSql` check completeness first: an `UPDATE` with no `Set`, a `MERGE` with no source, `ON` or clause, an
   `INSERT` with neither `VALUES` nor a query, an empty select list, and an `INSERT` column list whose count differs from its
   query's select list. A `MERGE` built with `Sql.MergeInto("t")` but never given a source throws.
-- `Validate` and `ToSql` on a `SqlScript`, `Statement` or `Expression` also check the reparse. Other nodes (a `WHERE` clause, a
-  table reference) are checked for completeness only.
+- `Validate` and `ToSql` on a `SqlScript`, `Statement` or `Expression` also check the reparse. For other nodes (a `WHERE` or
+  `FROM` clause, a table reference) `Validate` checks completeness only. `ToSql` passes them to `SqlScriptGenerator`, which throws
+  `NotSupportedException` for a node it cannot print on its own. That exception is not caught.
 - `SqlScriptGenerator.Generate` does not run these checks. On a half-built tree it prints `SET ` or `ON ` with nothing after
   them. Call `ToSql` for built SQL.
 - The reparse checks what the parser checks for the target version, and nothing more. Fluent does not add its own checks on
   the content of expressions you pass in. For example, `Sql.Expr("t.x(+) = u.x")` in an ANSI `LEFT JOIN ... ON` is printed,
   and `ToSql` accepts it, although Oracle rejects an outer-join marker in an ANSI join.
+
+### Paging on both targets
+
+`OFFSET` and `FETCH` work on Oracle 19c and 23ai, with literals or bind variables:
+
+```csharp
+var page = Sql.Select("e.name").From("emp", "e").OrderBy("e.name").Offset(Sql.Bind("off")).FetchFirst(Sql.Bind("n"));
+page.ToSql(target: OracleVersion.Oracle19); // SELECT e.name FROM emp e ORDER BY e.name OFFSET :off ROWS FETCH FIRST :n ROWS ONLY
+page.ToSql(target: OracleVersion.Oracle23); // the same text
+```
 
 ## Not covered in v1
 

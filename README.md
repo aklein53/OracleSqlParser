@@ -13,7 +13,7 @@ The NuGet package, the C# namespace and the assembly are all named `OracleSqlPar
 
 ## Public API changes
 
-The public API of `OracleSqlParser` and `OracleSqlParser.Guard` is checked by
+The public API of `OracleSqlParser`, `OracleSqlParser.Guard` and `OracleSqlParser.Fluent` is checked by
 [Microsoft.CodeAnalysis.PublicApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/tree/main/src/PublicApiAnalyzers).
 Every public member must be listed in the `PublicAPI.Shipped.txt` or `PublicAPI.Unshipped.txt` file of its project
 (one line per member, the analyzer's own signature format). A change that adds, removes or changes a public member
@@ -24,7 +24,7 @@ fails the build with `RS0016` (a public member that is not declared in the file)
   `dotnet format analyzers` alone, which skips generated `override` members. Then check the diff for accidental members
   (helpers, implicit constructors, record-generated members) before committing.
 - `PublicAPI.Shipped.txt` lists the API of released versions. For `OracleSqlParser` it holds the API frozen at 1.0.0;
-  `OracleSqlParser.Guard` is still 0.x, so its shipped file stays empty.
+  `OracleSqlParser.Guard` and `OracleSqlParser.Fluent` are still 0.x, so their shipped files stay empty.
 - At the 1.0.0 release, move every line of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` and leave the
   unshipped file with only its `#nullable enable` header. From then on the public API is frozen until 2.0: a breaking
   change needs a new major version, and additions are added to the unshipped file.
@@ -57,6 +57,9 @@ version, code that compiles and works against one release keeps compiling and wo
 
 `OracleSqlParser.Guard` is experimental (`[Experimental]`) and stays 0.x: any release may change it. Each Guard release
 requires the core version it was built against.
+
+`OracleSqlParser.Fluent` is 0.x too, and any release may change it, but it has no `[Experimental]` attribute. Each Fluent
+release likewise requires the core version it was built against.
 
 ## Guarantees
 
@@ -205,7 +208,8 @@ it is fully typed or a typed header with a token-tree body, and the known gaps. 
 
 ## Tests
 
-`tests/OracleSqlParser.Tests` (and `tests/OracleSqlParser.Guard.Tests` for the guard): explicit expected trees (`*ShapeTests.cs`, compared via `AstPrinter`) plus a smoke
+`tests/OracleSqlParser.Tests` (and `tests/OracleSqlParser.Guard.Tests` for the guard, `tests/OracleSqlParser.Fluent.Tests` for the
+fluent builders): explicit expected trees (`*ShapeTests.cs`, compared via `AstPrinter`) plus a smoke
 corpus (`SmokeCorpusTests.cs`) that only checks inputs parse.
 
 ## Query guard (experimental, separate package)
