@@ -4,15 +4,24 @@ All notable changes to the `OracleSqlParser` packages. Versions follow [Semantic
 1.0 every minor version may contain breaking changes. `OracleSqlParser.Guard` is experimental and versioned separately.
 
 Each release is a git tag `vX.Y.Z[-preview.N]`; the release workflow publishes the section for that version as the
-GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
+GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`. `OracleSqlParser.Fluent` is released on its own
+with a tag `fluent-vX.Y.Z[-preview.N]` and a heading `## [Fluent X.Y.Z...]`.
 
 ## [Unreleased]
+
+## [Fluent 0.1.0-preview.1] - 2026-11-21
+
+First preview of `OracleSqlParser.Fluent`, released on its own. It depends on `OracleSqlParser` 1.0.0 or later.
 
 ### Added
 - `OracleSqlParser.Fluent` 0.1.0-preview.1: a new package of fluent builders that create and edit SELECT, INSERT, UPDATE,
   DELETE and MERGE trees, and the expressions they need. A built tree is structurally equal to the parse of its printed SQL.
   `ToSql` and `Validate` check that the tree is complete and that the SQL parses for the target Oracle version (19c or 23ai).
   It is versioned on its own (0.x), like `OracleSqlParser.Guard`. See its README.
+- Paging with bind variables (`Offset` and `FetchFirst` take an expression), `Set` replaces an existing assignment to the
+  same column, and `Negate` builds a unary minus.
+- The builders refuse combinations Oracle rejects: `FOR UPDATE` with `OFFSET`/`FETCH`, `DISTINCT`, `GROUP BY` or a set
+  operation; `*` mixed with other select items; duplicate INSERT or SET columns; and a second `WHEN MATCHED` clause.
 
 ## [1.0.0] - 2026-11-20
 

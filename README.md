@@ -105,9 +105,13 @@ secret is required.
    The section becomes the GitHub release notes; the release fails if it is missing.
 3. Commit, then tag the commit with the matching `v`-prefixed version (`git tag -a vX.Y.Z -m ...`) and push the tag.
 
+To release only `OracleSqlParser.Fluent`, bump its `<Version>`, add a `## [Fluent X.Y.Z...] - date` section to
+`CHANGELOG.md`, commit, and push a tag `fluent-vX.Y.Z...` with the matching version. That tag checks the Fluent version
+and publishes only the Fluent package. If Fluent needs core API that is not on nuget.org yet, release core first.
+
 The `Build` workflow runs on every push and pull request. It packs `OracleSqlParser`, `OracleSqlParser.Guard`,
-`OracleSqlParser.Fluent` and `OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` tags. It checks that the tag matches the
-`<Version>` of the core and CLI csproj files, then exchanges the GitHub OIDC token for a short-lived key and pushes the packages
+`OracleSqlParser.Fluent` and `OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` and `fluent-v*` tags. It checks that the tag matches the
+`<Version>` of the core and CLI csproj files (or of the Fluent csproj for a `fluent-v` tag), then exchanges the GitHub OIDC token for a short-lived key and pushes the packages
 built by the `build` job to nuget.org (skipping versions that already exist), and creates the GitHub release with the
 packages attached. It runs only when the unit and Oracle integration jobs pass.
 
