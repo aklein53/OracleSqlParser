@@ -96,13 +96,14 @@ secret is required.
 1. Bump `<Version>` in `src/OracleSqlParser/OracleSqlParser.csproj` and `src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj`
    (they always share a version). If `OracleSqlParser.Guard` changed, or uses core API that changed, bump its own
    `<Version>` in `src/OracleSqlParser.Guard/OracleSqlParser.Guard.csproj` too; otherwise leave it (an unchanged Guard
-   version is skipped when publishing).
+   version is skipped when publishing). The same applies to `OracleSqlParser.Fluent`: if it changed, or uses core API that
+   changed, bump its `<Version>` in `src/OracleSqlParser.Fluent/OracleSqlParser.Fluent.csproj`.
 2. Rename `## [Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - date` and add a new empty `## [Unreleased]` above it.
    The section becomes the GitHub release notes; the release fails if it is missing.
 3. Commit, then tag the commit with the matching `v`-prefixed version (`git tag -a vX.Y.Z -m ...`) and push the tag.
 
-The `Build` workflow runs on every push and pull request. It packs `OracleSqlParser`, `OracleSqlParser.Guard` and
-`OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` tags. It checks that the tag matches the
+The `Build` workflow runs on every push and pull request. It packs `OracleSqlParser`, `OracleSqlParser.Guard`,
+`OracleSqlParser.Fluent` and `OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` tags. It checks that the tag matches the
 `<Version>` of the core and CLI csproj files, then exchanges the GitHub OIDC token for a short-lived key and pushes the packages
 built by the `build` job to nuget.org (skipping versions that already exist), and creates the GitHub release with the
 packages attached. It runs only when the unit and Oracle integration jobs pass.
@@ -211,6 +212,13 @@ corpus (`SmokeCorpusTests.cs`) that only checks inputs parse.
 
 An experimental package, `OracleSqlParser.Guard`, validates and rewrites user-supplied SELECT queries. It is **not a
 security boundary**; read its [README](https://github.com/aklein53/OracleSqlParser/blob/main/src/OracleSqlParser.Guard/README.md) before using it.
+
+## Fluent builders (separate package)
+
+`OracleSqlParser.Fluent` creates and edits SELECT, INSERT, UPDATE, DELETE and MERGE trees with chained calls. The builders
+return ordinary parser nodes, and every built tree is the tree the parser returns for the SQL it prints. `ToSql` checks the
+printed SQL for Oracle 19c or 23ai. Read its [README](https://github.com/aklein53/OracleSqlParser/blob/main/src/OracleSqlParser.Fluent/README.md)
+for install, editing parsed SQL and the limits of v1.
 
 
 ## Generating SQL

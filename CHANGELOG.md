@@ -8,6 +8,12 @@ GitHub release notes, so keep the headings in the form `## [X.Y.Z...]`.
 
 ## [Unreleased]
 
+### Added
+- `OracleSqlParser.Fluent` 0.1.0-preview.1: a new package of fluent builders that create and edit SELECT, INSERT, UPDATE,
+  DELETE and MERGE trees, and the expressions they need. A built tree is structurally equal to the parse of its printed SQL.
+  `ToSql` and `Validate` check that the tree is complete and that the SQL parses for the target Oracle version (19c or 23ai).
+  It is versioned on its own (0.x), like `OracleSqlParser.Guard`. See its README.
+
 ## [1.0.0] - 2026-11-20
 
 First stable release. The public API of `OracleSqlParser` is frozen: it is the API of 1.0.0-rc.4, now recorded in

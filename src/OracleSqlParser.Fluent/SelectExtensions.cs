@@ -3,8 +3,8 @@ namespace OracleSqlParser.Fluent;
 /// <summary>
 /// Clause builders for <see cref="SelectStatement"/>. Each method changes the node in place and returns it, so calls chain
 /// on built and parsed trees alike. Clauses of the query block (<c>DISTINCT</c>, <c>FROM</c>, joins, <c>WHERE</c>,
-/// <c>GROUP BY</c>, <c>HAVING</c>, select items) need a <see cref="QuerySpecification"/> body and throw
-/// <see cref="InvalidOperationException"/> otherwise. Ordering, row limiting, locking and <c>WITH</c> apply to any body.
+/// <c>GROUP BY</c>, <c>HAVING</c>, select items, <c>FOR UPDATE</c>) need a <see cref="QuerySpecification"/> body and throw
+/// <see cref="InvalidOperationException"/> otherwise. Ordering, row limiting and <c>WITH</c> apply to any body except <c>VALUES</c>.
 /// A method that throws leaves the statement unchanged.
 /// </summary>
 /// <remarks>
