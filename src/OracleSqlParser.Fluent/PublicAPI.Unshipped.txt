@@ -48,3 +48,34 @@ static OracleSqlParser.Fluent.Sql.Null.get -> OracleSqlParser.Literal!
 static OracleSqlParser.Fluent.Sql.Star() -> OracleSqlParser.StarExpression!
 static OracleSqlParser.Fluent.Sql.Star(string! qualifier) -> OracleSqlParser.StarExpression!
 static OracleSqlParser.Fluent.Sql.Subquery(OracleSqlParser.SelectStatement! query) -> OracleSqlParser.SubqueryExpression!
+OracleSqlParser.Fluent.DmlExtensions
+static OracleSqlParser.Fluent.DmlExtensions.AndWhere(this OracleSqlParser.DeleteStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.DmlExtensions.AndWhere(this OracleSqlParser.UpdateStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Columns(this OracleSqlParser.InsertStatement! statement, params string![]! columns) -> OracleSqlParser.InsertStatement!
+static OracleSqlParser.Fluent.DmlExtensions.On(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.OrWhere(this OracleSqlParser.DeleteStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.DmlExtensions.OrWhere(this OracleSqlParser.UpdateStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Query(this OracleSqlParser.InsertStatement! statement, OracleSqlParser.SelectStatement! query) -> OracleSqlParser.InsertStatement!
+static OracleSqlParser.Fluent.DmlExtensions.RemoveWhere(this OracleSqlParser.DeleteStatement! statement) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.DmlExtensions.RemoveWhere(this OracleSqlParser.UpdateStatement! statement) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Returning<T>(this T! statement, string![]! columns, string![]! into) -> T!
+static OracleSqlParser.Fluent.DmlExtensions.Set(this OracleSqlParser.UpdateStatement! statement, string! column, OracleSqlParser.Expression! value) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.SelectStatement! query, string! alias) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, string! table, string! alias) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, string! table) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Values(this OracleSqlParser.InsertStatement! statement, params OracleSqlParser.Expression![]! values) -> OracleSqlParser.InsertStatement!
+static OracleSqlParser.Fluent.DmlExtensions.WhenMatchedDeleteWhere(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.WhenMatchedUpdate(this OracleSqlParser.MergeStatement! statement, params (string! Column, OracleSqlParser.Expression! Value)[]! set) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.WhenMatchedUpdateWhere(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.WhenNotMatchedInsert(this OracleSqlParser.MergeStatement! statement, string![]! columns, OracleSqlParser.Expression![]! values) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.WhenNotMatchedWhere(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Where(this OracleSqlParser.DeleteStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Where(this OracleSqlParser.UpdateStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.Sql.DeleteFrom(OracleSqlParser.TableReference! table) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.Sql.DeleteFrom(string! table, string? alias = null) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.Sql.InsertInto(OracleSqlParser.TableReference! table) -> OracleSqlParser.InsertStatement!
+static OracleSqlParser.Fluent.Sql.InsertInto(string! table, string? alias = null) -> OracleSqlParser.InsertStatement!
+static OracleSqlParser.Fluent.Sql.MergeInto(OracleSqlParser.TableReference! table) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.Sql.MergeInto(string! table, string? alias = null) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.Sql.Update(OracleSqlParser.TableReference! table) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.Sql.Update(string! table, string? alias = null) -> OracleSqlParser.UpdateStatement!
