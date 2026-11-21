@@ -9,6 +9,7 @@ internal static class RoundTrip
     public static void AssertStatement(Statement built, string expectedSql)
     {
         Assert.Equal(expectedSql, new SqlScriptGenerator().Generate(built));
+        Assert.Equal(expectedSql, built.ToSql());
         var parsed = SqlParser.ParseStatement(expectedSql);
         Assert.True(SqlNodeComparer.StructurallyEqual(built, parsed),
             $"Built tree is not structurally equal to the parse of: {expectedSql}");
@@ -18,6 +19,7 @@ internal static class RoundTrip
     public static void AssertExpression(Expression built, string expectedSql)
     {
         Assert.Equal(expectedSql, new SqlScriptGenerator().Generate(built));
+        Assert.Equal(expectedSql, built.ToSql());
         var parsed = SqlParser.ParseExpression(expectedSql);
         Assert.True(SqlNodeComparer.StructurallyEqual(built, parsed),
             $"Built expression is not structurally equal to the parse of: {expectedSql}");

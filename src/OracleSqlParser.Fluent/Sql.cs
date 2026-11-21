@@ -59,6 +59,16 @@ public static partial class Sql
         return parts[0];
     }
 
+    /// <summary>A script of statements, in the order given. Print it with <c>ToSql</c>, which checks each statement.</summary>
+    /// <param name="statements">The statements, in order. The nodes are used as-is.</param>
+    /// <returns>A new <see cref="SqlScript"/>.</returns>
+    public static SqlScript Script(params Statement[] statements)
+    {
+        ArgumentNullException.ThrowIfNull(statements);
+        if (statements.Any(s => s is null)) throw new ArgumentNullException(nameof(statements), "A statement is null.");
+        return new SqlScript { Statements = [.. statements] };
+    }
+
     /// <summary>A table or view name such as <c>hr.emp</c>, with an optional single-name alias.</summary>
     /// <param name="name">The table name: one or two parts (<c>table</c> or <c>schema.table</c>). Throws <see cref="ArgumentException"/> when it is not a plain name.</param>
     /// <param name="alias">The alias, or null for none. Must be one name that Oracle reads back as an alias (not a keyword such as <c>LEVEL</c>, which is read as a pseudo-column).</param>

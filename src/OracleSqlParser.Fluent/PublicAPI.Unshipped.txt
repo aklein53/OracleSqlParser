@@ -126,3 +126,7 @@ static OracleSqlParser.Fluent.Sql.Update(string! table, string? alias = null) ->
 static OracleSqlParser.Fluent.DmlExtensions.Returning(this OracleSqlParser.DeleteStatement! statement, string![]! columns, string![]! into) -> OracleSqlParser.DeleteStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Returning(this OracleSqlParser.InsertStatement! statement, string![]! columns, string![]! into) -> OracleSqlParser.InsertStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Returning(this OracleSqlParser.UpdateStatement! statement, string![]! columns, string![]! into) -> OracleSqlParser.UpdateStatement!
+OracleSqlParser.Fluent.SqlNodeFluentExtensions
+static OracleSqlParser.Fluent.SqlNodeFluentExtensions.ToSql(this OracleSqlParser.SqlNode! node, OracleSqlParser.SqlScriptGeneratorOptions? options = null, OracleSqlParser.OracleVersion target = OracleSqlParser.OracleVersion.Oracle23) -> string!
+static OracleSqlParser.Fluent.SqlNodeFluentExtensions.Validate<T>(this T! node, OracleSqlParser.OracleVersion target = OracleSqlParser.OracleVersion.Oracle23) -> T!
+static OracleSqlParser.Fluent.Sql.Script(params OracleSqlParser.Statement![]! statements) -> OracleSqlParser.SqlScript!
