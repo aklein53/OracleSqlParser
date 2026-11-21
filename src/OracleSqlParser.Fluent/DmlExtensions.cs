@@ -6,23 +6,37 @@ namespace OracleSqlParser.Fluent;
 /// </summary>
 public static class DmlExtensions
 {
-    /// <summary>Sets the column list of an <c>INSERT</c>, replacing any earlier list. Each name is read with the name rules.</summary>
+    /// <summary>
+    /// Sets the column list of an <c>INSERT</c>, replacing any earlier list. Each name is read with the name rules. When the
+    /// list is not empty, every <c>VALUES</c> row already on the insert must have as many values as there are names.
+    /// </summary>
     /// <param name="statement">The insert.</param>
     /// <param name="columns">The column names, such as <c>id</c> or <c>e.id</c>. Empty clears the list.</param>
     /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">A name is not a plain name.</exception>
+    /// <exception cref="InvalidOperationException">The insert already has <c>VALUES</c> rows whose width differs from the number of names.</exception>
     public static InsertStatement Columns(this InsertStatement statement, params string[] columns)
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(columns);
-        statement.Columns = columns.Select(c => Sql.Col(c)).ToList();
+        var names = columns.Select(c => Sql.Col(c)).ToList();
+        if (names.Count > 0 && statement.Values?.Rows is { Count: > 0 } rows && rows[0].Values.Count != names.Count)
+            throw new InvalidOperationException(
+                $"INSERT has VALUES rows of {rows[0].Values.Count} value(s); the column list has {names.Count} name(s). Each row must match the column list.");
+        statement.Columns = names;
         return statement;
     }
 
-    /// <summary>Adds one row to the <c>VALUES</c> list of an <c>INSERT</c>. Call it again for more rows (Oracle 23 and later).</summary>
+    /// <summary>
+    /// Adds one row to the <c>VALUES</c> list of an <c>INSERT</c>. Call it again for more rows (Oracle 23 and later). Every row
+    /// must have the same number of values, and when the insert has a column list it must match that list. An insert whose
+    /// <c>VALUES</c> is a PL/SQL record (<c>VALUES rec</c>, as parsed) takes no rows, so this throws for it.
+    /// </summary>
     /// <param name="statement">The insert.</param>
     /// <param name="values">The values of the row, in column order.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="InvalidOperationException">The insert already has a <c>Query</c>; an insert takes rows or a query, not both.</exception>
+    /// <exception cref="ArgumentException">The row is empty, or its width differs from the column list or from the rows already added.</exception>
+    /// <exception cref="InvalidOperationException">The insert already has a <c>Query</c>, or its <c>VALUES</c> is a PL/SQL record.</exception>
     public static InsertStatement Values(this InsertStatement statement, params Expression[] values)
     {
         ArgumentNullException.ThrowIfNull(statement);
@@ -33,6 +47,12 @@ public static class DmlExtensions
             throw new InvalidOperationException("INSERT already has a query; Values cannot be added. An INSERT takes either VALUES rows or a query, not both.");
         if (statement.Values?.Record is not null)
             throw new InvalidOperationException("INSERT has a PL/SQL record in VALUES (VALUES rec); rows cannot be added beside it.");
+        if (statement.Columns.Count > 0 && values.Length != statement.Columns.Count)
+            throw new ArgumentException(
+                $"A VALUES row has {values.Length} value(s) but the column list has {statement.Columns.Count} name(s).", nameof(values));
+        if (statement.Values?.Rows is { Count: > 0 } rows && rows[0].Values.Count != values.Length)
+            throw new ArgumentException(
+                $"A VALUES row has {values.Length} value(s) but earlier rows have {rows[0].Values.Count}; all rows must have the same width.", nameof(values));
         statement.Values ??= new ValuesClause();
         statement.Values.Rows.Add(new RowValue { Values = [.. values] });
         return statement;
@@ -42,13 +62,15 @@ public static class DmlExtensions
     /// <param name="statement">The insert.</param>
     /// <param name="query">The query that supplies the rows. Used as-is.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="InvalidOperationException">The insert already has <c>VALUES</c> rows; an insert takes rows or a query, not both.</exception>
+    /// <exception cref="InvalidOperationException">The insert already has <c>VALUES</c> rows, or a <c>VALUES</c> record (<c>VALUES rec</c>); an insert takes rows or a query, not both.</exception>
     public static InsertStatement Query(this InsertStatement statement, SelectStatement query)
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(query);
-        if (statement.Values is not null)
-            throw new InvalidOperationException("INSERT already has VALUES rows; a query cannot be added. An INSERT takes either VALUES rows or a query, not both.");
+        if (statement.Values is { } values)
+            throw new InvalidOperationException(values.Record is not null
+                ? "INSERT has a VALUES record (VALUES rec); a query cannot be added. An INSERT takes either VALUES rows or a query, not both."
+                : "INSERT already has VALUES rows; a query cannot be added. An INSERT takes either VALUES rows or a query, not both.");
         statement.Query = query;
         return statement;
     }
@@ -213,10 +235,15 @@ public static class DmlExtensions
         };
     }
 
-    /// <summary>Adds a <c>WHEN MATCHED THEN UPDATE SET</c> clause to a <c>MERGE</c>. Set the clause's <c>WHERE</c> with <see cref="WhenMatchedUpdateWhere"/>.</summary>
+    /// <summary>
+    /// Adds the <c>WHEN MATCHED THEN UPDATE SET</c> clause to a <c>MERGE</c>. Oracle allows one such clause, so this throws when
+    /// the merge already has one. Set the clause's <c>WHERE</c> with <see cref="WhenMatchedUpdateWhere"/>.
+    /// </summary>
     /// <param name="statement">The merge.</param>
     /// <param name="set">The assignments as (column name, new value) pairs. At least one.</param>
     /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">There are no assignments, or a column is not a name.</exception>
+    /// <exception cref="InvalidOperationException">The merge already has a <c>WHEN MATCHED</c> clause.</exception>
     public static MergeStatement WhenMatchedUpdate(this MergeStatement statement, params (string Column, Expression Value)[] set)
     {
         ArgumentNullException.ThrowIfNull(statement);
@@ -228,16 +255,22 @@ public static class DmlExtensions
             ArgumentNullException.ThrowIfNull(value, nameof(set));
             items.Add(new SetItem { Columns = [Sql.Col(column)], Value = value });
         }
+        if (statement.Clauses.OfType<MergeMatchedClause>().Any())
+            throw new InvalidOperationException("MERGE already has a WHEN MATCHED clause. Oracle allows one WHEN MATCHED and one WHEN NOT MATCHED clause.");
         statement.Clauses.Add(new MergeMatchedClause { Set = new SetClause { Items = items } });
         return statement;
     }
 
-    /// <summary>Adds a <c>WHEN NOT MATCHED THEN INSERT</c> clause to a <c>MERGE</c>. Set its <c>WHERE</c> with <see cref="WhenNotMatchedWhere"/>.</summary>
+    /// <summary>
+    /// Adds the <c>WHEN NOT MATCHED THEN INSERT</c> clause to a <c>MERGE</c>. Oracle allows one such clause, so this throws when
+    /// the merge already has one. Set its <c>WHERE</c> with <see cref="WhenNotMatchedWhere"/>.
+    /// </summary>
     /// <param name="statement">The merge.</param>
     /// <param name="columns">The column names to insert into. Empty means the insert has no column list.</param>
     /// <param name="values">The values of the one inserted row. At least one.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="ArgumentException">There are no values, or columns are given and their count differs from the values.</exception>
+    /// <exception cref="ArgumentException">There are no values, columns are given and their count differs from the values, or a column is not a name.</exception>
+    /// <exception cref="InvalidOperationException">The merge already has a <c>WHEN NOT MATCHED</c> clause.</exception>
     public static MergeStatement WhenNotMatchedInsert(this MergeStatement statement, string[] columns, Expression[] values)
     {
         ArgumentNullException.ThrowIfNull(statement);
@@ -247,9 +280,12 @@ public static class DmlExtensions
         if (columns.Length > 0 && columns.Length != values.Length)
             throw new ArgumentException($"WHEN NOT MATCHED INSERT lists {columns.Length} column(s) but {values.Length} value(s); they must match.", nameof(values));
         if (values.Any(v => v is null)) throw new ArgumentNullException(nameof(values), "A value is null.");
+        var names = columns.Select(c => Sql.Col(c)).ToList();
+        if (statement.Clauses.OfType<MergeNotMatchedClause>().Any())
+            throw new InvalidOperationException("MERGE already has a WHEN NOT MATCHED clause. Oracle allows one WHEN MATCHED and one WHEN NOT MATCHED clause.");
         statement.Clauses.Add(new MergeNotMatchedClause
         {
-            Columns = columns.Select(c => Sql.Col(c)).ToList(),
+            Columns = names,
             Values = new ValuesClause { Rows = [new RowValue { Values = [.. values] }] },
         });
         return statement;
@@ -278,17 +314,20 @@ public static class DmlExtensions
         return statement;
     }
 
-    /// <summary>Sets the source of a <c>MERGE</c> to a subquery with its alias, replacing any earlier source.</summary>
+    /// <summary>
+    /// Sets the source of a <c>MERGE</c> to a subquery, with an alias or without one, replacing any earlier source. The parser
+    /// accepts <c>USING (SELECT ...) ON (...)</c> without an alias.
+    /// </summary>
     /// <param name="statement">The merge.</param>
     /// <param name="query">The source query. Used as-is.</param>
-    /// <param name="alias">The alias of the subquery. Must be one name.</param>
+    /// <param name="alias">The alias of the subquery, or null for none. When given, it must be one name.</param>
     /// <returns>The same statement.</returns>
-    public static MergeStatement Using(this MergeStatement statement, SelectStatement query, string alias)
+    /// <exception cref="ArgumentException">The alias is not one name.</exception>
+    public static MergeStatement Using(this MergeStatement statement, SelectStatement query, string? alias)
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(query);
-        ArgumentNullException.ThrowIfNull(alias);
-        statement.Source = new SubqueryTable { Query = query, Alias = Sql.SingleName(alias, nameof(alias)) };
+        statement.Source = new SubqueryTable { Query = query, Alias = alias is null ? null : Sql.SingleName(alias, nameof(alias)) };
         return statement;
     }
 
@@ -304,48 +343,68 @@ public static class DmlExtensions
         return statement;
     }
 
-    /// <summary>Sets the <c>WHERE</c> of the last <c>WHEN MATCHED ... UPDATE</c> clause, replacing any earlier one.</summary>
+    /// <summary>Sets the <c>WHERE</c> of the <c>WHEN MATCHED ... UPDATE</c> clause, replacing any earlier one.</summary>
     /// <param name="statement">The merge.</param>
     /// <param name="condition">The condition. Used as-is.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN MATCHED</c> clause.</exception>
+    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN MATCHED</c> clause, or more than one (as a parsed tree may have).</exception>
     public static MergeStatement WhenMatchedUpdateWhere(this MergeStatement statement, Expression condition)
     {
         ArgumentNullException.ThrowIfNull(statement);
-        LastMatched(statement, "WhenMatchedUpdateWhere").UpdateWhere = NewMergeWhere(condition);
+        var matched = SingleMatched(statement, "WhenMatchedUpdateWhere");
+        matched.UpdateWhere = NewMergeWhere(condition);
         return statement;
     }
 
-    /// <summary>Sets the <c>DELETE WHERE</c> of the last <c>WHEN MATCHED ... UPDATE</c> clause, replacing any earlier one.</summary>
+    /// <summary>Sets the <c>DELETE WHERE</c> of the <c>WHEN MATCHED ... UPDATE</c> clause, replacing any earlier one.</summary>
     /// <param name="statement">The merge.</param>
     /// <param name="condition">The condition. Used as-is.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN MATCHED</c> clause.</exception>
+    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN MATCHED</c> clause, or more than one (as a parsed tree may have).</exception>
     public static MergeStatement WhenMatchedDeleteWhere(this MergeStatement statement, Expression condition)
     {
         ArgumentNullException.ThrowIfNull(statement);
-        LastMatched(statement, "WhenMatchedDeleteWhere").DeleteWhere = NewMergeWhere(condition);
+        var matched = SingleMatched(statement, "WhenMatchedDeleteWhere");
+        matched.DeleteWhere = NewMergeWhere(condition);
         return statement;
     }
 
-    /// <summary>Sets the <c>WHERE</c> of the last <c>WHEN NOT MATCHED</c> clause, replacing any earlier one.</summary>
+    /// <summary>Sets the <c>WHERE</c> of the <c>WHEN NOT MATCHED</c> clause, replacing any earlier one.</summary>
     /// <param name="statement">The merge.</param>
     /// <param name="condition">The condition. Used as-is.</param>
     /// <returns>The same statement.</returns>
-    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN NOT MATCHED</c> clause.</exception>
+    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN NOT MATCHED</c> clause, or more than one (as a parsed tree may have).</exception>
     public static MergeStatement WhenNotMatchedWhere(this MergeStatement statement, Expression condition)
     {
         ArgumentNullException.ThrowIfNull(statement);
-        var last = statement.Clauses.OfType<MergeNotMatchedClause>().LastOrDefault()
-            ?? throw new InvalidOperationException("WhenNotMatchedWhere needs a WHEN NOT MATCHED clause; add one with WhenNotMatchedInsert first.");
-        last.Where = NewMergeWhere(condition);
+        var notMatched = SingleNotMatched(statement, "WhenNotMatchedWhere");
+        notMatched.Where = NewMergeWhere(condition);
         return statement;
     }
 
-    /// <summary>The last <c>WHEN MATCHED</c> clause, or throws naming the method.</summary>
-    private static MergeMatchedClause LastMatched(MergeStatement statement, string method) =>
-        statement.Clauses.OfType<MergeMatchedClause>().LastOrDefault()
-        ?? throw new InvalidOperationException($"{method} needs a WHEN MATCHED clause; add one with WhenMatchedUpdate first.");
+    /// <summary>The one <c>WHEN MATCHED</c> clause of a merge; throws when there is none or more than one.</summary>
+    private static MergeMatchedClause SingleMatched(MergeStatement statement, string method)
+    {
+        var clauses = statement.Clauses.OfType<MergeMatchedClause>().ToList();
+        return clauses.Count switch
+        {
+            0 => throw new InvalidOperationException($"{method} needs a WHEN MATCHED clause; add one with WhenMatchedUpdate first."),
+            1 => clauses[0],
+            _ => throw new InvalidOperationException($"{method} needs one WHEN MATCHED clause, but the merge has {clauses.Count}; Oracle allows one."),
+        };
+    }
+
+    /// <summary>The one <c>WHEN NOT MATCHED</c> clause of a merge; throws when there is none or more than one.</summary>
+    private static MergeNotMatchedClause SingleNotMatched(MergeStatement statement, string method)
+    {
+        var clauses = statement.Clauses.OfType<MergeNotMatchedClause>().ToList();
+        return clauses.Count switch
+        {
+            0 => throw new InvalidOperationException($"{method} needs a WHEN NOT MATCHED clause; add one with WhenNotMatchedInsert first."),
+            1 => clauses[0],
+            _ => throw new InvalidOperationException($"{method} needs one WHEN NOT MATCHED clause, but the merge has {clauses.Count}; Oracle allows one."),
+        };
+    }
 
     /// <summary>A <c>WHERE</c> clause of an <c>UPDATE</c> or <c>DELETE</c>. Such a clause may be <c>WHERE CURRENT OF</c>.</summary>
     private static WhereClause NewWhere(Expression condition)

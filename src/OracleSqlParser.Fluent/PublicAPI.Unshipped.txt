@@ -59,7 +59,7 @@ static OracleSqlParser.Fluent.DmlExtensions.Query(this OracleSqlParser.InsertSta
 static OracleSqlParser.Fluent.DmlExtensions.RemoveWhere(this OracleSqlParser.DeleteStatement! statement) -> OracleSqlParser.DeleteStatement!
 static OracleSqlParser.Fluent.DmlExtensions.RemoveWhere(this OracleSqlParser.UpdateStatement! statement) -> OracleSqlParser.UpdateStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Set(this OracleSqlParser.UpdateStatement! statement, string! column, OracleSqlParser.Expression! value) -> OracleSqlParser.UpdateStatement!
-static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.SelectStatement! query, string! alias) -> OracleSqlParser.MergeStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.SelectStatement! query, string? alias) -> OracleSqlParser.MergeStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, string! table, string! alias) -> OracleSqlParser.MergeStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, string! table) -> OracleSqlParser.MergeStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Values(this OracleSqlParser.InsertStatement! statement, params OracleSqlParser.Expression![]! values) -> OracleSqlParser.InsertStatement!

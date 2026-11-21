@@ -194,4 +194,125 @@ public class DmlTests
         var update = Sql.Update("t").DeepClone<UpdateStatement>();
         Assert.Empty(update.Set.Items);
     }
+
+    /// <summary>Asserts that the call throws and that the statement is structurally unchanged afterwards.</summary>
+    private static void AssertThrowsAndUnchanged<TNode, TException>(TNode node, Action act)
+        where TNode : SqlNode
+        where TException : Exception
+    {
+        var before = (TNode)node.DeepClone();
+        Assert.Throws<TException>(act);
+        Assert.True(SqlNodeComparer.StructurallyEqual(node, before), "A call that threw changed the statement.");
+    }
+
+    [Fact]
+    public void WhenMatchedUpdateTwiceThrowsAndLeavesMergeUnchanged()
+    {
+        var merge = Sql.MergeInto("t").Using("s").On(Sql.Col("t.id").Eq(Sql.Col("s.id")))
+            .WhenMatchedUpdate(("a", Sql.Lit(1)));
+        AssertThrowsAndUnchanged<MergeStatement, InvalidOperationException>(merge, () => merge.WhenMatchedUpdate(("b", Sql.Lit(2))));
+    }
+
+    [Fact]
+    public void WhenNotMatchedInsertTwiceThrowsAndLeavesMergeUnchanged()
+    {
+        var merge = Sql.MergeInto("t").Using("s").On(Sql.Col("t.id").Eq(Sql.Col("s.id")))
+            .WhenNotMatchedInsert(["id"], [Sql.Col("s.id")]);
+        AssertThrowsAndUnchanged<MergeStatement, InvalidOperationException>(merge,
+            () => merge.WhenNotMatchedInsert(["id"], [Sql.Col("s.id")]));
+    }
+
+    [Fact]
+    public void WhenMatchedUpdateWithNullValueLeavesMergeUnchanged()
+    {
+        var merge = Sql.MergeInto("t").Using("s").On(Sql.Col("t.id").Eq(Sql.Col("s.id")));
+        AssertThrowsAndUnchanged<MergeStatement, ArgumentNullException>(merge,
+            () => merge.WhenMatchedUpdate(("a", Sql.Lit(1)), ("b", null!)));
+    }
+
+    [Fact]
+    public void WhenNotMatchedInsertWithMismatchedCountLeavesMergeUnchanged()
+    {
+        var merge = Sql.MergeInto("t").Using("s").On(Sql.Col("t.id").Eq(Sql.Col("s.id")));
+        AssertThrowsAndUnchanged<MergeStatement, ArgumentException>(merge,
+            () => merge.WhenNotMatchedInsert(["a", "b"], [Sql.Lit(1)]));
+    }
+
+    [Fact]
+    public void ColumnsThatDoNotMatchExistingRowWidthThrowAndLeaveInsertUnchanged()
+    {
+        var insert = Sql.InsertInto("t").Values(Sql.Lit(1), Sql.Lit(2));
+        AssertThrowsAndUnchanged<InsertStatement, InvalidOperationException>(insert, () => insert.Columns("a", "b", "c"));
+    }
+
+    [Fact]
+    public void ValuesThatDoNotMatchColumnCountThrowAndLeaveInsertUnchanged()
+    {
+        var insert = Sql.InsertInto("t").Columns("a", "b");
+        AssertThrowsAndUnchanged<InsertStatement, ArgumentException>(insert, () => insert.Values(Sql.Lit(1)));
+    }
+
+    [Fact]
+    public void ValuesOfDifferentWidthThrowAndLeaveInsertUnchanged()
+    {
+        var insert = Sql.InsertInto("t").Values(Sql.Lit(1), Sql.Lit(2));
+        AssertThrowsAndUnchanged<InsertStatement, ArgumentException>(insert, () => insert.Values(Sql.Lit(3)));
+    }
+
+    [Fact]
+    public void ValuesWithNullLeavesInsertUnchanged()
+    {
+        var insert = Sql.InsertInto("t").Columns("a", "b").Values(Sql.Lit(1), Sql.Lit(2));
+        AssertThrowsAndUnchanged<InsertStatement, ArgumentNullException>(insert, () => insert.Values(Sql.Lit(3), null!));
+    }
+
+    [Fact]
+    public void ColumnsWithInvalidNameLeavesInsertUnchanged()
+    {
+        var insert = Sql.InsertInto("t").Columns("a");
+        AssertThrowsAndUnchanged<InsertStatement, ArgumentException>(insert, () => insert.Columns("b", "c d"));
+    }
+
+    [Fact]
+    public void SetWithNullValueLeavesUpdateUnchanged()
+    {
+        var update = Sql.Update("t").Set("a", Sql.Lit(1));
+        AssertThrowsAndUnchanged<UpdateStatement, ArgumentNullException>(update, () => update.Set("b", null!));
+    }
+
+    [Fact]
+    public void ReturningCountMismatchThrowsAndLeavesStatementUnchanged()
+    {
+        var insert = Sql.InsertInto("t").Values(Sql.Lit(1));
+        AssertThrowsAndUnchanged<InsertStatement, ArgumentException>(insert, () => insert.Returning(["a", "b"], [":x"]));
+    }
+
+    [Fact]
+    public void MergeOnWithOrConditionIsParenthesizedOnce()
+    {
+        RoundTrip.AssertStatement(
+            Sql.MergeInto("tgt").Using("src")
+                .On(Sql.Col("tgt.id").Eq(Sql.Lit(1)).Or(Sql.Col("tgt.id").Eq(Sql.Lit(2))))
+                .WhenNotMatchedInsert(["id"], [Sql.Col("src.id")]),
+            "MERGE INTO tgt USING src ON (tgt.id = 1 OR tgt.id = 2) WHEN NOT MATCHED THEN INSERT (id) VALUES (src.id)");
+    }
+
+    [Fact]
+    public void MergeUsingSubqueryWithoutAliasRoundTrips()
+    {
+        RoundTrip.AssertStatement(
+            Sql.MergeInto("tgt")
+                .Using((SelectStatement)SqlParser.ParseStatement("SELECT id FROM u"), null)
+                .On(Sql.Col("tgt.id").Eq(Sql.Lit(1)))
+                .WhenNotMatchedInsert(["id"], [Sql.Lit(1)]),
+            "MERGE INTO tgt USING (SELECT id FROM u) ON (tgt.id = 1) WHEN NOT MATCHED THEN INSERT (id) VALUES (1)");
+    }
+
+    [Fact]
+    public void InsertColumnsAndValuesInEitherOrderRoundTrip()
+    {
+        RoundTrip.AssertStatement(
+            Sql.InsertInto("t").Columns("a", "b").Values(Sql.Lit(1), Sql.Lit(2)).Values(Sql.Lit(3), Sql.Lit(4)),
+            "INSERT INTO t (a, b) VALUES (1, 2), (3, 4)");
+    }
 }
