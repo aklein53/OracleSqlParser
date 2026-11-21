@@ -48,3 +48,48 @@ static OracleSqlParser.Fluent.Sql.Null.get -> OracleSqlParser.Literal!
 static OracleSqlParser.Fluent.Sql.Star() -> OracleSqlParser.StarExpression!
 static OracleSqlParser.Fluent.Sql.Star(string! qualifier) -> OracleSqlParser.StarExpression!
 static OracleSqlParser.Fluent.Sql.Subquery(OracleSqlParser.SelectStatement! query) -> OracleSqlParser.SubqueryExpression!
+OracleSqlParser.Fluent.SelectExtensions
+static OracleSqlParser.Fluent.SelectExtensions.AddColumn(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! expression, string? alias = null) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.AddColumn(this OracleSqlParser.SelectStatement! statement, string! column) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.AddColumns(this OracleSqlParser.SelectStatement! statement, params string![]! columns) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.AndWhere(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.CrossJoin(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.TableReference! table) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.CrossJoin(this OracleSqlParser.SelectStatement! statement, string! table, string? alias = null) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Distinct(this OracleSqlParser.SelectStatement! statement) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.FetchFirst(this OracleSqlParser.SelectStatement! statement, long rows) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.ForUpdate(this OracleSqlParser.SelectStatement! statement) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.From(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.SelectStatement! subquery, string! alias) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.From(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.TableReference! table) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.From(this OracleSqlParser.SelectStatement! statement, string! table, string! alias) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.From(this OracleSqlParser.SelectStatement! statement, string! table) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.FullJoin(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.TableReference! table, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.FullJoin(this OracleSqlParser.SelectStatement! statement, string! table, string? alias, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.GroupBy(this OracleSqlParser.SelectStatement! statement, params OracleSqlParser.Expression![]! expressions) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.GroupBy(this OracleSqlParser.SelectStatement! statement, params string![]! columns) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Having(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Intersect(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.SelectStatement! other) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Join(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.TableReference! table, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Join(this OracleSqlParser.SelectStatement! statement, string! table, string? alias, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.LeftJoin(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.TableReference! table, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.LeftJoin(this OracleSqlParser.SelectStatement! statement, string! table, string? alias, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Minus(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.SelectStatement! other) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Offset(this OracleSqlParser.SelectStatement! statement, long rows) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderBy(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! expression, OracleSqlParser.NullsOrdering nulls) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderBy(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! expression) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderBy(this OracleSqlParser.SelectStatement! statement, string! column, OracleSqlParser.NullsOrdering nulls) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderBy(this OracleSqlParser.SelectStatement! statement, string! column) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderByDesc(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! expression, OracleSqlParser.NullsOrdering nulls) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderByDesc(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! expression) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderByDesc(this OracleSqlParser.SelectStatement! statement, string! column, OracleSqlParser.NullsOrdering nulls) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrderByDesc(this OracleSqlParser.SelectStatement! statement, string! column) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.OrWhere(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.RemoveWhere(this OracleSqlParser.SelectStatement! statement) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.RightJoin(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.TableReference! table, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.RightJoin(this OracleSqlParser.SelectStatement! statement, string! table, string? alias, OracleSqlParser.Expression! on) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Union(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.SelectStatement! other) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.UnionAll(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.SelectStatement! other) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.Where(this OracleSqlParser.SelectStatement! statement, OracleSqlParser.Expression! condition) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.SelectExtensions.With(this OracleSqlParser.SelectStatement! statement, string! name, OracleSqlParser.SelectStatement! query) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.Sql.Select(params OracleSqlParser.Expression![]! expressions) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.Sql.Select(params OracleSqlParser.SelectItem![]! items) -> OracleSqlParser.SelectStatement!
+static OracleSqlParser.Fluent.Sql.Select(params string![]! columns) -> OracleSqlParser.SelectStatement!

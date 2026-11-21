@@ -60,14 +60,70 @@ public static partial class Sql
     }
 
     /// <summary>A table or view name such as <c>hr.emp</c>, with an optional single-name alias.</summary>
-    /// <param name="name">The dotted table name. Throws <see cref="ArgumentException"/> when it is not a plain name.</param>
-    /// <param name="alias">The alias, or null for none. Must be one name.</param>
+    /// <param name="name">The table name: one or two parts (<c>table</c> or <c>schema.table</c>). Throws <see cref="ArgumentException"/> when it is not a plain name.</param>
+    /// <param name="alias">The alias, or null for none. Must be one name that Oracle reads back as an alias (not a keyword such as <c>LEVEL</c>, which is read as a pseudo-column).</param>
     /// <returns>A new <see cref="NamedTable"/>.</returns>
+    /// <exception cref="ArgumentException">The name has more than two parts, or the alias would not read back as an alias.</exception>
     public static NamedTable Table(string name, string? alias = null) => new()
     {
-        Name = Names.Parse(name),
-        Alias = alias is null ? null : SingleName(alias, nameof(alias)),
+        Name = TableName(name, nameof(name)),
+        Alias = alias is null ? null : TableAlias(alias, nameof(alias)),
     };
+
+    /// <summary>Reads a table name: one or two parts, such as <c>t</c> or <c>schema.t</c>.</summary>
+    internal static List<Identifier> TableName(string name, string paramName)
+    {
+        var parts = Names.Parse(name, paramName);
+        if (parts.Count > 2) throw new ArgumentException($"'{name}' has {parts.Count} parts; a table name is at most schema.table.", paramName);
+        return parts;
+    }
+
+    /// <summary>Reads a table alias, one name that must print and read back as that alias.</summary>
+    internal static Identifier TableAlias(string alias, string paramName)
+    {
+        var id = SingleName(alias, paramName);
+        CheckAliasReadsBack(id, alias, paramName);
+        return id;
+    }
+
+    /// <summary>
+    /// Checks that a table alias reads back as itself in each place the builders print one: last in <c>FROM</c>, before a
+    /// comma, and before a join keyword. Oracle reads some words (LEVEL, ROWNUM, JOIN, LEFT, NATURAL, ...) as something else
+    /// in one of those places. Checking by parsing keeps the rule exact, with no word list to maintain.
+    /// </summary>
+    internal static void CheckAliasReadsBack(Identifier id, string alias, string paramName)
+    {
+        // Printed the way the generator prints a name: quoted names keep their case, and unquoted ones their spelling.
+        string text = id.Quoted ? "\"" + id.Value + "\"" : id.Text ?? id.Value;
+        foreach (var context in AliasContexts)
+        {
+            if (!ReadsBack(id, text, context.Suffix, context.Pick))
+                throw new ArgumentException(
+                    $"'{alias}' cannot be a table alias: Oracle would not read it back as the alias {text}.", paramName);
+        }
+    }
+
+    private static readonly (string Suffix, Func<FromClause, TableReference?> Pick)[] AliasContexts =
+    [
+        ("", from => from.Tables.Count == 1 ? from.Tables[0] : null),
+        (", u", from => from.Tables.Count == 2 ? from.Tables[0] : null),
+        (" JOIN u ON 1 = 1", from => from.Tables.Count == 1 && from.Tables[0] is JoinTable { Kind: JoinKind.Inner, Natural: false } join ? join.Left : null),
+    ];
+
+    private static bool ReadsBack(Identifier id, string text, string suffix, Func<FromClause, TableReference?> pick)
+    {
+        try
+        {
+            var parsed = (SelectStatement)SqlParser.ParseStatement("SELECT 1 FROM t " + text + suffix);
+            var from = ((QuerySpecification)parsed.Body).From;
+            var table = from is null ? null : pick(from);
+            return table is NamedTable { Alias: { } read } && read.Value == id.Value && read.Quoted == id.Quoted;
+        }
+        catch (ParseException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>Reads a name that must be one part, such as an alias.</summary>
     internal static Identifier SingleName(string name, string paramName)
