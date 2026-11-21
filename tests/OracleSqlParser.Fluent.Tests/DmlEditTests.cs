@@ -38,6 +38,20 @@ public class DmlEditTests
     }
 
     [Fact]
+    public void AndWhereOnWhereCurrentOfThrows()
+    {
+        var delete = (DeleteStatement)SqlParser.ParseStatement("DELETE FROM t WHERE CURRENT OF c");
+        Assert.Throws<InvalidOperationException>(() => delete.AndWhere(Sql.Col("a").Eq(Sql.Lit(1))));
+    }
+
+    [Fact]
+    public void ValuesOnRecordFormInsertThrows()
+    {
+        var insert = (InsertStatement)SqlParser.ParseStatement("INSERT INTO t VALUES r");
+        Assert.Throws<InvalidOperationException>(() => insert.Values(Sql.Lit(1)));
+    }
+
+    [Fact]
     public void RemoveWhereOnParsedDelete()
     {
         var delete = (DeleteStatement)SqlParser.ParseStatement("DELETE FROM t WHERE a = 1");

@@ -31,6 +31,8 @@ public static class DmlExtensions
         if (values.Any(v => v is null)) throw new ArgumentNullException(nameof(values), "A value is null.");
         if (statement.Query is not null)
             throw new InvalidOperationException("INSERT already has a query; Values cannot be added. An INSERT takes either VALUES rows or a query, not both.");
+        if (statement.Values?.Record is not null)
+            throw new InvalidOperationException("INSERT has a PL/SQL record in VALUES (VALUES rec); rows cannot be added beside it.");
         statement.Values ??= new ValuesClause();
         statement.Values.Rows.Add(new RowValue { Values = [.. values] });
         return statement;
@@ -154,27 +156,61 @@ public static class DmlExtensions
         return statement;
     }
 
-    /// <summary>Sets the <c>RETURNING ... INTO</c> clause of an <c>INSERT</c>, <c>UPDATE</c>, <c>DELETE</c> or <c>MERGE</c>, replacing any earlier one.</summary>
-    /// <typeparam name="T">The statement type.</typeparam>
-    /// <param name="statement">The statement.</param>
+    /// <summary>
+    /// Sets the <c>RETURNING ... INTO</c> clause of an <c>INSERT</c>, replacing any earlier one. The parser reads RETURNING on
+    /// <c>INSERT</c>, <c>UPDATE</c> and <c>DELETE</c>; it does not read it on <c>MERGE</c>, so there is no overload for <c>MERGE</c>.
+    /// </summary>
+    /// <param name="statement">The insert.</param>
     /// <param name="columns">The returned column names, such as <c>id</c>.</param>
     /// <param name="into">The receiving targets, one per column: a bind such as <c>:out_id</c>, or a plain variable name.</param>
     /// <returns>The same statement.</returns>
     /// <exception cref="ArgumentException">The lists are empty or differ in length, a column is not a name, or a target is neither a bind nor a plain name.</exception>
-    public static T Returning<T>(this T statement, string[] columns, string[] into) where T : DmlStatement
+    public static InsertStatement Returning(this InsertStatement statement, string[] columns, string[] into)
     {
         ArgumentNullException.ThrowIfNull(statement);
+        statement.Returning = NewReturning(columns, into);
+        return statement;
+    }
+
+    /// <summary>Sets the <c>RETURNING ... INTO</c> clause of an <c>UPDATE</c>, replacing any earlier one.</summary>
+    /// <param name="statement">The update.</param>
+    /// <param name="columns">The returned column names, such as <c>sal</c>.</param>
+    /// <param name="into">The receiving targets, one per column: a bind such as <c>:new_sal</c>, or a plain variable name.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The lists are empty or differ in length, a column is not a name, or a target is neither a bind nor a plain name.</exception>
+    public static UpdateStatement Returning(this UpdateStatement statement, string[] columns, string[] into)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Returning = NewReturning(columns, into);
+        return statement;
+    }
+
+    /// <summary>Sets the <c>RETURNING ... INTO</c> clause of a <c>DELETE</c>, replacing any earlier one.</summary>
+    /// <param name="statement">The delete.</param>
+    /// <param name="columns">The returned column names, such as <c>name</c>.</param>
+    /// <param name="into">The receiving targets, one per column: a bind such as <c>:old_name</c>, or a plain variable name.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The lists are empty or differ in length, a column is not a name, or a target is neither a bind nor a plain name.</exception>
+    public static DeleteStatement Returning(this DeleteStatement statement, string[] columns, string[] into)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Returning = NewReturning(columns, into);
+        return statement;
+    }
+
+    /// <summary>The <c>RETURNING</c> clause for the given columns and targets, with the counts checked.</summary>
+    private static ReturningClause NewReturning(string[] columns, string[] into)
+    {
         ArgumentNullException.ThrowIfNull(columns);
         ArgumentNullException.ThrowIfNull(into);
         if (columns.Length == 0) throw new ArgumentException("RETURNING needs at least one column.", nameof(columns));
         if (columns.Length != into.Length)
             throw new ArgumentException($"RETURNING lists {columns.Length} column(s) but INTO has {into.Length} target(s); they must match.", nameof(into));
-        statement.Returning = new ReturningClause
+        return new ReturningClause
         {
             Items = columns.Select(c => new ReturningItem { Expression = Sql.Col(c) }).ToList(),
             Into = new IntoClause { Targets = into.Select(IntoTarget).ToList() },
         };
-        return statement;
     }
 
     /// <summary>Adds a <c>WHEN MATCHED THEN UPDATE SET</c> clause to a <c>MERGE</c>. Set the clause's <c>WHERE</c> with <see cref="WhenMatchedUpdateWhere"/>.</summary>
@@ -276,7 +312,7 @@ public static class DmlExtensions
     public static MergeStatement WhenMatchedUpdateWhere(this MergeStatement statement, Expression condition)
     {
         ArgumentNullException.ThrowIfNull(statement);
-        LastMatched(statement, "WhenMatchedUpdateWhere").UpdateWhere = NewWhere(condition);
+        LastMatched(statement, "WhenMatchedUpdateWhere").UpdateWhere = NewMergeWhere(condition);
         return statement;
     }
 
@@ -288,7 +324,7 @@ public static class DmlExtensions
     public static MergeStatement WhenMatchedDeleteWhere(this MergeStatement statement, Expression condition)
     {
         ArgumentNullException.ThrowIfNull(statement);
-        LastMatched(statement, "WhenMatchedDeleteWhere").DeleteWhere = NewWhere(condition);
+        LastMatched(statement, "WhenMatchedDeleteWhere").DeleteWhere = NewMergeWhere(condition);
         return statement;
     }
 
@@ -302,7 +338,7 @@ public static class DmlExtensions
         ArgumentNullException.ThrowIfNull(statement);
         var last = statement.Clauses.OfType<MergeNotMatchedClause>().LastOrDefault()
             ?? throw new InvalidOperationException("WhenNotMatchedWhere needs a WHEN NOT MATCHED clause; add one with WhenNotMatchedInsert first.");
-        last.Where = NewWhere(condition);
+        last.Where = NewMergeWhere(condition);
         return statement;
     }
 
@@ -311,8 +347,15 @@ public static class DmlExtensions
         statement.Clauses.OfType<MergeMatchedClause>().LastOrDefault()
         ?? throw new InvalidOperationException($"{method} needs a WHEN MATCHED clause; add one with WhenMatchedUpdate first.");
 
-    /// <summary>A <c>WHERE</c> clause around a condition.</summary>
-    private static WhereClause NewWhere(Expression condition) => new() { Condition = RequiredCondition(condition) };
+    /// <summary>A <c>WHERE</c> clause of an <c>UPDATE</c> or <c>DELETE</c>. Such a clause may be <c>WHERE CURRENT OF</c>.</summary>
+    private static WhereClause NewWhere(Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(condition);
+        return new WhereClause { Condition = condition };
+    }
+
+    /// <summary>A <c>WHERE</c> clause of a MERGE action. The parser reads it as a plain condition, so <c>WHERE CURRENT OF</c> is refused.</summary>
+    private static WhereClause NewMergeWhere(Expression condition) => new() { Condition = RequiredCondition(condition) };
 
     /// <summary>The existing condition of a <c>WHERE</c>, or null when there is none. <c>WHERE CURRENT OF</c> is not a condition and cannot be combined.</summary>
     private static Expression? ExistingCondition(WhereClause? where)

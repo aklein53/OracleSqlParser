@@ -158,4 +158,40 @@ public class DmlTests
         Assert.Throws<ArgumentException>(() => Sql.MergeInto("t").Using("s").On(Sql.Lit(1).Eq(Sql.Lit(1)))
             .WhenMatchedUpdate());
     }
+
+    [Fact]
+    public void UpdateReturningInto()
+    {
+        RoundTrip.AssertStatement(
+            Sql.Update("emp").Set("sal", Sql.Lit(1)).Where(Sql.Col("id").Eq(Sql.Bind("id")))
+                .Returning(["sal"], [":new_sal"]),
+            "UPDATE emp SET sal = 1 WHERE id = :id RETURNING sal INTO :new_sal");
+    }
+
+    [Fact]
+    public void DeleteReturningInto()
+    {
+        RoundTrip.AssertStatement(
+            Sql.DeleteFrom("emp").Where(Sql.Col("id").Eq(Sql.Bind("id")))
+                .Returning(["name"], [":old_name"]),
+            "DELETE FROM emp WHERE id = :id RETURNING name INTO :old_name");
+    }
+
+    [Fact]
+    public void PlainWhereAcceptsWhereCurrentOf()
+    {
+        RoundTrip.AssertStatement(
+            Sql.DeleteFrom("emp").Where(new CurrentOfExpression { Cursor = Sql.Id("c") }),
+            "DELETE FROM emp WHERE CURRENT OF c");
+    }
+
+    [Fact]
+    public void MergePlaceholdersKeepTheirShapeAfterDeepClone()
+    {
+        var merge = Sql.MergeInto("t").DeepClone<MergeStatement>();
+        Assert.True(merge.Source is NamedTable { Name.Count: 0 });
+        Assert.True(merge.On is ColumnReference { Parts.Count: 0 });
+        var update = Sql.Update("t").DeepClone<UpdateStatement>();
+        Assert.Empty(update.Set.Items);
+    }
 }

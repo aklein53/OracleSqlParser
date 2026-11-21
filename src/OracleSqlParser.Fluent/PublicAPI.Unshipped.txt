@@ -58,7 +58,6 @@ static OracleSqlParser.Fluent.DmlExtensions.OrWhere(this OracleSqlParser.UpdateS
 static OracleSqlParser.Fluent.DmlExtensions.Query(this OracleSqlParser.InsertStatement! statement, OracleSqlParser.SelectStatement! query) -> OracleSqlParser.InsertStatement!
 static OracleSqlParser.Fluent.DmlExtensions.RemoveWhere(this OracleSqlParser.DeleteStatement! statement) -> OracleSqlParser.DeleteStatement!
 static OracleSqlParser.Fluent.DmlExtensions.RemoveWhere(this OracleSqlParser.UpdateStatement! statement) -> OracleSqlParser.UpdateStatement!
-static OracleSqlParser.Fluent.DmlExtensions.Returning<T>(this T! statement, string![]! columns, string![]! into) -> T!
 static OracleSqlParser.Fluent.DmlExtensions.Set(this OracleSqlParser.UpdateStatement! statement, string! column, OracleSqlParser.Expression! value) -> OracleSqlParser.UpdateStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, OracleSqlParser.SelectStatement! query, string! alias) -> OracleSqlParser.MergeStatement!
 static OracleSqlParser.Fluent.DmlExtensions.Using(this OracleSqlParser.MergeStatement! statement, string! table, string! alias) -> OracleSqlParser.MergeStatement!
@@ -79,3 +78,6 @@ static OracleSqlParser.Fluent.Sql.MergeInto(OracleSqlParser.TableReference! tabl
 static OracleSqlParser.Fluent.Sql.MergeInto(string! table, string? alias = null) -> OracleSqlParser.MergeStatement!
 static OracleSqlParser.Fluent.Sql.Update(OracleSqlParser.TableReference! table) -> OracleSqlParser.UpdateStatement!
 static OracleSqlParser.Fluent.Sql.Update(string! table, string? alias = null) -> OracleSqlParser.UpdateStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Returning(this OracleSqlParser.DeleteStatement! statement, string![]! columns, string![]! into) -> OracleSqlParser.DeleteStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Returning(this OracleSqlParser.InsertStatement! statement, string![]! columns, string![]! into) -> OracleSqlParser.InsertStatement!
+static OracleSqlParser.Fluent.DmlExtensions.Returning(this OracleSqlParser.UpdateStatement! statement, string![]! columns, string![]! into) -> OracleSqlParser.UpdateStatement!
