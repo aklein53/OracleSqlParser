@@ -1,0 +1,476 @@
+namespace OracleSqlParser.Fluent;
+
+/// <summary>
+/// Clauses of <c>INSERT</c>, <c>UPDATE</c>, <c>DELETE</c> and <c>MERGE</c>. Each method changes the statement in place and returns
+/// it, so the chain continues. Column names are names, never SQL text; only <see cref="Sql.Expr"/> takes SQL.
+/// </summary>
+public static class DmlExtensions
+{
+    /// <summary>
+    /// Sets the column list of an <c>INSERT</c>, replacing any earlier list. Each name is read with the name rules. When the
+    /// list is not empty, every <c>VALUES</c> row already on the insert must have as many values as there are names.
+    /// </summary>
+    /// <param name="statement">The insert.</param>
+    /// <param name="columns">The column names, such as <c>id</c> or <c>e.id</c>. Empty clears the list.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">A name is not a plain name, or a column is listed more than once (names compare by their folded last part, so <c>e.id</c> and <c>ID</c> are the same column).</exception>
+    /// <exception cref="InvalidOperationException">The insert already has <c>VALUES</c> rows whose width differs from the number of names.</exception>
+    public static InsertStatement Columns(this InsertStatement statement, params string[] columns)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(columns);
+        var names = columns.Select(c => Sql.Col(c)).ToList();
+        CheckNoDuplicateColumns(names, nameof(columns));
+        if (names.Count > 0 && statement.Values?.Rows is { Count: > 0 } rows && rows[0].Values.Count != names.Count)
+            throw new InvalidOperationException(
+                $"INSERT has VALUES rows of {rows[0].Values.Count} value(s); the column list has {names.Count} name(s). Each row must match the column list.");
+        statement.Columns = names;
+        return statement;
+    }
+
+    /// <summary>
+    /// Adds one row to the <c>VALUES</c> list of an <c>INSERT</c>. Call it again for more rows (Oracle 23 and later). Every row
+    /// must have the same number of values, and when the insert has a column list it must match that list. An insert whose
+    /// <c>VALUES</c> is a PL/SQL record (<c>VALUES rec</c>, as parsed) takes no rows, so this throws for it.
+    /// </summary>
+    /// <param name="statement">The insert.</param>
+    /// <param name="values">The values of the row, in column order.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The row is empty, or its width differs from the column list or from the rows already added.</exception>
+    /// <exception cref="InvalidOperationException">The insert already has a <c>Query</c>, or its <c>VALUES</c> is a PL/SQL record.</exception>
+    public static InsertStatement Values(this InsertStatement statement, params Expression[] values)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(values);
+        if (values.Length == 0) throw new ArgumentException("A VALUES row needs at least one value.", nameof(values));
+        if (values.Any(v => v is null)) throw new ArgumentNullException(nameof(values), "A value is null.");
+        if (statement.Query is not null)
+            throw new InvalidOperationException("INSERT already has a query; Values cannot be added. An INSERT takes either VALUES rows or a query, not both.");
+        if (statement.Values?.Record is not null)
+            throw new InvalidOperationException("INSERT has a PL/SQL record in VALUES (VALUES rec); rows cannot be added beside it.");
+        if (statement.Columns.Count > 0 && values.Length != statement.Columns.Count)
+            throw new ArgumentException(
+                $"A VALUES row has {values.Length} value(s) but the column list has {statement.Columns.Count} name(s).", nameof(values));
+        if (statement.Values?.Rows is { Count: > 0 } rows && rows[0].Values.Count != values.Length)
+            throw new ArgumentException(
+                $"A VALUES row has {values.Length} value(s) but earlier rows have {rows[0].Values.Count}; all rows must have the same width.", nameof(values));
+        statement.Values ??= new ValuesClause();
+        statement.Values.Rows.Add(new RowValue { Values = [.. values] });
+        return statement;
+    }
+
+    /// <summary>Sets the rows of an <c>INSERT ... SELECT</c> from a query, replacing any earlier query.</summary>
+    /// <param name="statement">The insert.</param>
+    /// <param name="query">The query that supplies the rows. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The insert already has <c>VALUES</c> rows, or a <c>VALUES</c> record (<c>VALUES rec</c>); an insert takes rows or a query, not both.</exception>
+    public static InsertStatement Query(this InsertStatement statement, SelectStatement query)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(query);
+        if (statement.Values is { } values)
+            throw new InvalidOperationException(values.Record is not null
+                ? "INSERT has a VALUES record (VALUES rec); a query cannot be added. An INSERT takes either VALUES rows or a query, not both."
+                : "INSERT already has VALUES rows; a query cannot be added. An INSERT takes either VALUES rows or a query, not both.");
+        statement.Query = query;
+        return statement;
+    }
+
+    /// <summary>
+    /// Sets the value of a column in the <c>SET</c> clause of an <c>UPDATE</c>. If the clause already assigns that column alone,
+    /// its value is replaced; otherwise the assignment is appended. Call it again for more columns. Columns match by their folded
+    /// last name part, so <c>e.sal</c> and <c>sal</c> are the same column.
+    /// </summary>
+    /// <param name="statement">The update.</param>
+    /// <param name="column">The column name, such as <c>sal</c> or <c>e.sal</c>.</param>
+    /// <param name="value">The new value. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The column is not a plain name.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// The column is assigned inside a row-value assignment such as <c>(a, b) = (...)</c>, or the clause is <c>SET ROW</c>. Either
+    /// way the statement is left unchanged.
+    /// </exception>
+    public static UpdateStatement Set(this UpdateStatement statement, string column, Expression value)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(value);
+        var name = Sql.Col(column);
+        var key = name.Parts[^1].Value;
+        var items = statement.Set.Items;
+        if (items.Any(i => i.Row))
+            throw new InvalidOperationException("UPDATE uses SET ROW, which cannot be combined with column assignments.");
+        if (items.Any(i => i.Columns.Count > 1 && i.Columns.Any(c => c.Parts[^1].Value == key)))
+            throw new InvalidOperationException(
+                $"Column {key} is assigned in a row-value assignment (a, b) = (...); it cannot also be set on its own.");
+        var existing = items.FirstOrDefault(i => i.Columns.Count == 1 && i.Columns[0].Parts[^1].Value == key);
+        if (existing is not null) existing.Value = value;
+        else items.Add(new SetItem { Columns = [name], Value = value });
+        return statement;
+    }
+
+    /// <summary>Throws when two of the given columns are the same column: their folded last name parts are equal.</summary>
+    private static void CheckNoDuplicateColumns(IEnumerable<ColumnReference> names, string paramName)
+    {
+        var duplicate = names.GroupBy(n => n.Parts[^1].Value).FirstOrDefault(g => g.Count() > 1);
+        if (duplicate is not null)
+            throw new ArgumentException($"Column {duplicate.Key} is listed more than once.", paramName);
+    }
+
+    /// <summary>Sets the <c>WHERE</c> condition of an <c>UPDATE</c>, replacing any earlier one.</summary>
+    /// <param name="statement">The update.</param>
+    /// <param name="condition">The search condition. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    public static UpdateStatement Where(this UpdateStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = NewWhere(condition);
+        return statement;
+    }
+
+    /// <summary>Adds <paramref name="condition"/> to the <c>WHERE</c> of an <c>UPDATE</c> with AND. Without a <c>WHERE</c> it acts as <see cref="Where(UpdateStatement, Expression)"/>.</summary>
+    /// <param name="statement">The update.</param>
+    /// <param name="condition">The condition to add.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The existing condition is <c>WHERE CURRENT OF</c>, which cannot be combined.</exception>
+    public static UpdateStatement AndWhere(this UpdateStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = NewWhere(Conditions.And(ExistingCondition(statement.Where), RequiredCondition(condition)));
+        return statement;
+    }
+
+    /// <summary>Adds <paramref name="condition"/> to the <c>WHERE</c> of an <c>UPDATE</c> with OR. Without a <c>WHERE</c> it acts as <see cref="Where(UpdateStatement, Expression)"/>.</summary>
+    /// <param name="statement">The update.</param>
+    /// <param name="condition">The condition to add.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The existing condition is <c>WHERE CURRENT OF</c>, which cannot be combined.</exception>
+    public static UpdateStatement OrWhere(this UpdateStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = NewWhere(Conditions.Or(ExistingCondition(statement.Where), RequiredCondition(condition)));
+        return statement;
+    }
+
+    /// <summary>Removes the <c>WHERE</c> clause of an <c>UPDATE</c>.</summary>
+    /// <param name="statement">The update.</param>
+    /// <returns>The same statement.</returns>
+    public static UpdateStatement RemoveWhere(this UpdateStatement statement)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = null;
+        return statement;
+    }
+
+    /// <summary>Sets the <c>WHERE</c> condition of a <c>DELETE</c>, replacing any earlier one.</summary>
+    /// <param name="statement">The delete.</param>
+    /// <param name="condition">The search condition. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    public static DeleteStatement Where(this DeleteStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = NewWhere(condition);
+        return statement;
+    }
+
+    /// <summary>Adds <paramref name="condition"/> to the <c>WHERE</c> of a <c>DELETE</c> with AND. Without a <c>WHERE</c> it acts as <see cref="Where(DeleteStatement, Expression)"/>.</summary>
+    /// <param name="statement">The delete.</param>
+    /// <param name="condition">The condition to add.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The existing condition is <c>WHERE CURRENT OF</c>, which cannot be combined.</exception>
+    public static DeleteStatement AndWhere(this DeleteStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = NewWhere(Conditions.And(ExistingCondition(statement.Where), RequiredCondition(condition)));
+        return statement;
+    }
+
+    /// <summary>Adds <paramref name="condition"/> to the <c>WHERE</c> of a <c>DELETE</c> with OR. Without a <c>WHERE</c> it acts as <see cref="Where(DeleteStatement, Expression)"/>.</summary>
+    /// <param name="statement">The delete.</param>
+    /// <param name="condition">The condition to add.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The existing condition is <c>WHERE CURRENT OF</c>, which cannot be combined.</exception>
+    public static DeleteStatement OrWhere(this DeleteStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = NewWhere(Conditions.Or(ExistingCondition(statement.Where), RequiredCondition(condition)));
+        return statement;
+    }
+
+    /// <summary>Removes the <c>WHERE</c> clause of a <c>DELETE</c>.</summary>
+    /// <param name="statement">The delete.</param>
+    /// <returns>The same statement.</returns>
+    public static DeleteStatement RemoveWhere(this DeleteStatement statement)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Where = null;
+        return statement;
+    }
+
+    /// <summary>
+    /// Sets the <c>RETURNING ... INTO</c> clause of an <c>INSERT</c>, replacing any earlier one. The parser reads RETURNING on
+    /// <c>INSERT</c>, <c>UPDATE</c> and <c>DELETE</c>; it does not read it on <c>MERGE</c>, so there is no overload for <c>MERGE</c>.
+    /// </summary>
+    /// <param name="statement">The insert.</param>
+    /// <param name="columns">The returned column names, such as <c>id</c>.</param>
+    /// <param name="into">The receiving targets, one per column: a bind such as <c>:out_id</c>, or a plain variable name.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The lists are empty or differ in length, a column is not a name, or a target is neither a bind nor a plain name.</exception>
+    public static InsertStatement Returning(this InsertStatement statement, string[] columns, string[] into)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Returning = NewReturning(columns, into);
+        return statement;
+    }
+
+    /// <summary>Sets the <c>RETURNING ... INTO</c> clause of an <c>UPDATE</c>, replacing any earlier one.</summary>
+    /// <param name="statement">The update.</param>
+    /// <param name="columns">The returned column names, such as <c>sal</c>.</param>
+    /// <param name="into">The receiving targets, one per column: a bind such as <c>:new_sal</c>, or a plain variable name.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The lists are empty or differ in length, a column is not a name, or a target is neither a bind nor a plain name.</exception>
+    public static UpdateStatement Returning(this UpdateStatement statement, string[] columns, string[] into)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Returning = NewReturning(columns, into);
+        return statement;
+    }
+
+    /// <summary>Sets the <c>RETURNING ... INTO</c> clause of a <c>DELETE</c>, replacing any earlier one.</summary>
+    /// <param name="statement">The delete.</param>
+    /// <param name="columns">The returned column names, such as <c>name</c>.</param>
+    /// <param name="into">The receiving targets, one per column: a bind such as <c>:old_name</c>, or a plain variable name.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The lists are empty or differ in length, a column is not a name, or a target is neither a bind nor a plain name.</exception>
+    public static DeleteStatement Returning(this DeleteStatement statement, string[] columns, string[] into)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Returning = NewReturning(columns, into);
+        return statement;
+    }
+
+    /// <summary>The <c>RETURNING</c> clause for the given columns and targets, with the counts checked.</summary>
+    private static ReturningClause NewReturning(string[] columns, string[] into)
+    {
+        ArgumentNullException.ThrowIfNull(columns);
+        ArgumentNullException.ThrowIfNull(into);
+        if (columns.Length == 0) throw new ArgumentException("RETURNING needs at least one column.", nameof(columns));
+        if (columns.Length != into.Length)
+            throw new ArgumentException($"RETURNING lists {columns.Length} column(s) but INTO has {into.Length} target(s); they must match.", nameof(into));
+        return new ReturningClause
+        {
+            Items = columns.Select(c => new ReturningItem { Expression = Sql.Col(c) }).ToList(),
+            Into = new IntoClause { Targets = into.Select(IntoTarget).ToList() },
+        };
+    }
+
+    /// <summary>
+    /// Adds the <c>WHEN MATCHED THEN UPDATE SET</c> clause to a <c>MERGE</c>. Oracle allows one such clause, so this throws when
+    /// the merge already has one. Set the clause's <c>WHERE</c> with <see cref="WhenMatchedUpdateWhere"/>.
+    /// </summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="set">The assignments as (column name, new value) pairs. At least one.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">There are no assignments, a column is not a name, or a column is assigned twice in this call.</exception>
+    /// <exception cref="InvalidOperationException">The merge already has a <c>WHEN MATCHED</c> clause.</exception>
+    public static MergeStatement WhenMatchedUpdate(this MergeStatement statement, params (string Column, Expression Value)[] set)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(set);
+        if (set.Length == 0) throw new ArgumentException("WHEN MATCHED UPDATE needs at least one assignment.", nameof(set));
+        var names = new List<ColumnReference>(set.Length);
+        foreach (var (column, value) in set)
+        {
+            ArgumentNullException.ThrowIfNull(value, nameof(set));
+            names.Add(Sql.Col(column));
+        }
+        CheckNoDuplicateColumns(names, nameof(set));
+        var items = names.Select((name, i) => new SetItem { Columns = [name], Value = set[i].Value }).ToList();
+        if (statement.Clauses.OfType<MergeMatchedClause>().Any())
+            throw new InvalidOperationException("MERGE already has a WHEN MATCHED clause. Oracle allows one WHEN MATCHED and one WHEN NOT MATCHED clause.");
+        statement.Clauses.Add(new MergeMatchedClause { Set = new SetClause { Items = items } });
+        return statement;
+    }
+
+    /// <summary>
+    /// Adds the <c>WHEN NOT MATCHED THEN INSERT</c> clause to a <c>MERGE</c>. Oracle allows one such clause, so this throws when
+    /// the merge already has one. Set its <c>WHERE</c> with <see cref="WhenNotMatchedWhere"/>.
+    /// </summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="columns">The column names to insert into. Empty means the insert has no column list.</param>
+    /// <param name="values">The values of the one inserted row. At least one.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">There are no values, columns are given and their count differs from the values, or a column is not a name.</exception>
+    /// <exception cref="InvalidOperationException">The merge already has a <c>WHEN NOT MATCHED</c> clause.</exception>
+    public static MergeStatement WhenNotMatchedInsert(this MergeStatement statement, string[] columns, Expression[] values)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(columns);
+        ArgumentNullException.ThrowIfNull(values);
+        if (values.Length == 0) throw new ArgumentException("WHEN NOT MATCHED INSERT needs at least one value.", nameof(values));
+        if (columns.Length > 0 && columns.Length != values.Length)
+            throw new ArgumentException($"WHEN NOT MATCHED INSERT lists {columns.Length} column(s) but {values.Length} value(s); they must match.", nameof(values));
+        if (values.Any(v => v is null)) throw new ArgumentNullException(nameof(values), "A value is null.");
+        var names = columns.Select(c => Sql.Col(c)).ToList();
+        if (statement.Clauses.OfType<MergeNotMatchedClause>().Any())
+            throw new InvalidOperationException("MERGE already has a WHEN NOT MATCHED clause. Oracle allows one WHEN MATCHED and one WHEN NOT MATCHED clause.");
+        statement.Clauses.Add(new MergeNotMatchedClause
+        {
+            Columns = names,
+            Values = new ValuesClause { Rows = [new RowValue { Values = [.. values] }] },
+        });
+        return statement;
+    }
+
+    /// <summary>Sets the source of a <c>MERGE</c> to a table, replacing any earlier source.</summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="table">The dotted table name.</param>
+    /// <returns>The same statement.</returns>
+    public static MergeStatement Using(this MergeStatement statement, string table)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Source = Sql.Table(table);
+        return statement;
+    }
+
+    /// <summary>Sets the source of a <c>MERGE</c> to a table with an alias, replacing any earlier source.</summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="table">The dotted table name.</param>
+    /// <param name="alias">The single-name alias.</param>
+    /// <returns>The same statement.</returns>
+    public static MergeStatement Using(this MergeStatement statement, string table, string alias)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        statement.Source = Sql.Table(table, alias);
+        return statement;
+    }
+
+    /// <summary>
+    /// Sets the source of a <c>MERGE</c> to a subquery, with an alias or without one, replacing any earlier source. The parser
+    /// accepts <c>USING (SELECT ...) ON (...)</c> without an alias.
+    /// </summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="query">The source query. Used as-is.</param>
+    /// <param name="alias">The alias of the subquery, or null for none. When given, it must be one name.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="ArgumentException">The alias is not one name.</exception>
+    public static MergeStatement Using(this MergeStatement statement, SelectStatement query, string? alias)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(query);
+        statement.Source = new SubqueryTable { Query = query, Alias = alias is null ? null : Sql.SingleName(alias, nameof(alias)) };
+        return statement;
+    }
+
+    /// <summary>Sets the <c>ON</c> condition of a <c>MERGE</c>. It is stored in parentheses, as the parser stores <c>ON (cond)</c>.</summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="condition">The join condition. Used as-is; wrapped in parentheses unless it already is.</param>
+    /// <returns>The same statement.</returns>
+    public static MergeStatement On(this MergeStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        ArgumentNullException.ThrowIfNull(condition);
+        statement.On = condition is ParenthesizedExpression ? condition : new ParenthesizedExpression { Inner = condition };
+        return statement;
+    }
+
+    /// <summary>Sets the <c>WHERE</c> of the <c>WHEN MATCHED ... UPDATE</c> clause, replacing any earlier one.</summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="condition">The condition. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN MATCHED</c> clause, or more than one (as a parsed tree may have).</exception>
+    public static MergeStatement WhenMatchedUpdateWhere(this MergeStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        var matched = SingleMatched(statement, "WhenMatchedUpdateWhere");
+        matched.UpdateWhere = NewMergeWhere(condition);
+        return statement;
+    }
+
+    /// <summary>Sets the <c>DELETE WHERE</c> of the <c>WHEN MATCHED ... UPDATE</c> clause, replacing any earlier one.</summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="condition">The condition. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN MATCHED</c> clause, or more than one (as a parsed tree may have).</exception>
+    public static MergeStatement WhenMatchedDeleteWhere(this MergeStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        var matched = SingleMatched(statement, "WhenMatchedDeleteWhere");
+        matched.DeleteWhere = NewMergeWhere(condition);
+        return statement;
+    }
+
+    /// <summary>Sets the <c>WHERE</c> of the <c>WHEN NOT MATCHED</c> clause, replacing any earlier one.</summary>
+    /// <param name="statement">The merge.</param>
+    /// <param name="condition">The condition. Used as-is.</param>
+    /// <returns>The same statement.</returns>
+    /// <exception cref="InvalidOperationException">The merge has no <c>WHEN NOT MATCHED</c> clause, or more than one (as a parsed tree may have).</exception>
+    public static MergeStatement WhenNotMatchedWhere(this MergeStatement statement, Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        var notMatched = SingleNotMatched(statement, "WhenNotMatchedWhere");
+        notMatched.Where = NewMergeWhere(condition);
+        return statement;
+    }
+
+    /// <summary>The one <c>WHEN MATCHED</c> clause of a merge; throws when there is none or more than one.</summary>
+    private static MergeMatchedClause SingleMatched(MergeStatement statement, string method)
+    {
+        var clauses = statement.Clauses.OfType<MergeMatchedClause>().ToList();
+        return clauses.Count switch
+        {
+            0 => throw new InvalidOperationException($"{method} needs a WHEN MATCHED clause; add one with WhenMatchedUpdate first."),
+            1 => clauses[0],
+            _ => throw new InvalidOperationException($"{method} needs one WHEN MATCHED clause, but the merge has {clauses.Count}; Oracle allows one."),
+        };
+    }
+
+    /// <summary>The one <c>WHEN NOT MATCHED</c> clause of a merge; throws when there is none or more than one.</summary>
+    private static MergeNotMatchedClause SingleNotMatched(MergeStatement statement, string method)
+    {
+        var clauses = statement.Clauses.OfType<MergeNotMatchedClause>().ToList();
+        return clauses.Count switch
+        {
+            0 => throw new InvalidOperationException($"{method} needs a WHEN NOT MATCHED clause; add one with WhenNotMatchedInsert first."),
+            1 => clauses[0],
+            _ => throw new InvalidOperationException($"{method} needs one WHEN NOT MATCHED clause, but the merge has {clauses.Count}; Oracle allows one."),
+        };
+    }
+
+    /// <summary>A <c>WHERE</c> clause of an <c>UPDATE</c> or <c>DELETE</c>. Such a clause may be <c>WHERE CURRENT OF</c>.</summary>
+    private static WhereClause NewWhere(Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(condition);
+        return new WhereClause { Condition = condition };
+    }
+
+    /// <summary>A <c>WHERE</c> clause of a MERGE action. The parser reads it as a plain condition, so <c>WHERE CURRENT OF</c> is refused.</summary>
+    private static WhereClause NewMergeWhere(Expression condition) => new() { Condition = RequiredCondition(condition) };
+
+    /// <summary>The existing condition of a <c>WHERE</c>, or null when there is none. <c>WHERE CURRENT OF</c> is not a condition and cannot be combined.</summary>
+    private static Expression? ExistingCondition(WhereClause? where)
+    {
+        if (where?.Condition is CurrentOfExpression)
+            throw new InvalidOperationException("WHERE CURRENT OF cannot be combined with AND or OR; replace it with Where instead.");
+        return where?.Condition;
+    }
+
+    private static Expression RequiredCondition(Expression condition)
+    {
+        ArgumentNullException.ThrowIfNull(condition);
+        if (condition is CurrentOfExpression)
+            throw new InvalidOperationException("WHERE CURRENT OF cannot be combined with AND or OR; use it alone.");
+        return condition;
+    }
+
+    /// <summary>
+    /// A <c>RETURNING ... INTO</c> target: a bind such as <c>:out_id</c>, or a plain name. Anything else is rejected, because
+    /// <see cref="Sql.Expr"/> is not used for targets.
+    /// </summary>
+    private static Expression IntoTarget(string target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        var trimmed = target.Trim();
+        if (trimmed.StartsWith(':')) return Sql.Bind(trimmed);
+        return Sql.Col(trimmed);
+    }
+}

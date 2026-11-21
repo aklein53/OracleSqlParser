@@ -27,10 +27,12 @@ jobs:
         run: |
           dotnet test tests/OracleSqlParser.Tests --configuration Release --no-build
           dotnet test tests/OracleSqlParser.Guard.Tests --configuration Release --no-build
+          dotnet test tests/OracleSqlParser.Fluent.Tests --configuration Release --no-build
       - name: Pack
         run: |
           dotnet pack src/OracleSqlParser --configuration Release --no-build --output ./artifacts
           dotnet pack src/OracleSqlParser.Guard --configuration Release --no-build --output ./artifacts
+          dotnet pack src/OracleSqlParser.Fluent --configuration Release --no-build --output ./artifacts
           dotnet pack src/OracleSqlParser.Cli --configuration Release --no-build --output ./artifacts
       - name: Native AOT smoke test (after pack, so it cannot affect the packed build)
         run: |
@@ -81,8 +83,8 @@ jobs:
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
           status=0
-          # The tag versions the core library and the CLI. OracleSqlParser.Guard is versioned on its own (experimental, 0.x):
-          # bump its <Version> when it changes; an unchanged Guard version is skipped by --skip-duplicate.
+          # The tag versions the core library and the CLI. OracleSqlParser.Guard and OracleSqlParser.Fluent are versioned on their own (0.x):
+          # bump their <Version> when they change; an unchanged version is skipped by --skip-duplicate.
           for csproj in src/OracleSqlParser/OracleSqlParser.csproj src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj; do
             csproj_version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$csproj" | head -n1)
             if [ -z "$csproj_version" ]; then

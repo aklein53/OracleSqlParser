@@ -13,7 +13,7 @@ The NuGet package, the C# namespace and the assembly are all named `OracleSqlPar
 
 ## Public API changes
 
-The public API of `OracleSqlParser` and `OracleSqlParser.Guard` is checked by
+The public API of `OracleSqlParser`, `OracleSqlParser.Guard` and `OracleSqlParser.Fluent` is checked by
 [Microsoft.CodeAnalysis.PublicApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/tree/main/src/PublicApiAnalyzers).
 Every public member must be listed in the `PublicAPI.Shipped.txt` or `PublicAPI.Unshipped.txt` file of its project
 (one line per member, the analyzer's own signature format). A change that adds, removes or changes a public member
@@ -24,7 +24,7 @@ fails the build with `RS0016` (a public member that is not declared in the file)
   `dotnet format analyzers` alone, which skips generated `override` members. Then check the diff for accidental members
   (helpers, implicit constructors, record-generated members) before committing.
 - `PublicAPI.Shipped.txt` lists the API of released versions. For `OracleSqlParser` it holds the API frozen at 1.0.0;
-  `OracleSqlParser.Guard` is still 0.x, so its shipped file stays empty.
+  `OracleSqlParser.Guard` and `OracleSqlParser.Fluent` are still 0.x, so their shipped files stay empty.
 - At the 1.0.0 release, move every line of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt` and leave the
   unshipped file with only its `#nullable enable` header. From then on the public API is frozen until 2.0: a breaking
   change needs a new major version, and additions are added to the unshipped file.
@@ -57,6 +57,9 @@ version, code that compiles and works against one release keeps compiling and wo
 
 `OracleSqlParser.Guard` is experimental (`[Experimental]`) and stays 0.x: any release may change it. Each Guard release
 requires the core version it was built against.
+
+`OracleSqlParser.Fluent` is 0.x too, and any release may change it, but it has no `[Experimental]` attribute. Each Fluent
+release likewise requires the core version it was built against.
 
 ## Guarantees
 
@@ -96,13 +99,14 @@ secret is required.
 1. Bump `<Version>` in `src/OracleSqlParser/OracleSqlParser.csproj` and `src/OracleSqlParser.Cli/OracleSqlParser.Cli.csproj`
    (they always share a version). If `OracleSqlParser.Guard` changed, or uses core API that changed, bump its own
    `<Version>` in `src/OracleSqlParser.Guard/OracleSqlParser.Guard.csproj` too; otherwise leave it (an unchanged Guard
-   version is skipped when publishing).
+   version is skipped when publishing). The same applies to `OracleSqlParser.Fluent`: if it changed, or uses core API that
+   changed, bump its `<Version>` in `src/OracleSqlParser.Fluent/OracleSqlParser.Fluent.csproj`.
 2. Rename `## [Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - date` and add a new empty `## [Unreleased]` above it.
    The section becomes the GitHub release notes; the release fails if it is missing.
 3. Commit, then tag the commit with the matching `v`-prefixed version (`git tag -a vX.Y.Z -m ...`) and push the tag.
 
-The `Build` workflow runs on every push and pull request. It packs `OracleSqlParser`, `OracleSqlParser.Guard` and
-`OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` tags. It checks that the tag matches the
+The `Build` workflow runs on every push and pull request. It packs `OracleSqlParser`, `OracleSqlParser.Guard`,
+`OracleSqlParser.Fluent` and `OracleSqlParser.Cli` (the dotnet tool). Its `publish` job runs only on `v*` tags. It checks that the tag matches the
 `<Version>` of the core and CLI csproj files, then exchanges the GitHub OIDC token for a short-lived key and pushes the packages
 built by the `build` job to nuget.org (skipping versions that already exist), and creates the GitHub release with the
 packages attached. It runs only when the unit and Oracle integration jobs pass.
@@ -204,13 +208,21 @@ it is fully typed or a typed header with a token-tree body, and the known gaps. 
 
 ## Tests
 
-`tests/OracleSqlParser.Tests` (and `tests/OracleSqlParser.Guard.Tests` for the guard): explicit expected trees (`*ShapeTests.cs`, compared via `AstPrinter`) plus a smoke
+`tests/OracleSqlParser.Tests` (and `tests/OracleSqlParser.Guard.Tests` for the guard, `tests/OracleSqlParser.Fluent.Tests` for the
+fluent builders): explicit expected trees (`*ShapeTests.cs`, compared via `AstPrinter`) plus a smoke
 corpus (`SmokeCorpusTests.cs`) that only checks inputs parse.
 
 ## Query guard (experimental, separate package)
 
 An experimental package, `OracleSqlParser.Guard`, validates and rewrites user-supplied SELECT queries. It is **not a
 security boundary**; read its [README](https://github.com/aklein53/OracleSqlParser/blob/main/src/OracleSqlParser.Guard/README.md) before using it.
+
+## Fluent builders (separate package)
+
+`OracleSqlParser.Fluent` creates and edits SELECT, INSERT, UPDATE, DELETE and MERGE trees with chained calls. The builders
+return ordinary parser nodes, and every built tree is the tree the parser returns for the SQL it prints. `ToSql` checks the
+printed SQL for Oracle 19c or 23ai. Read its [README](https://github.com/aklein53/OracleSqlParser/blob/main/src/OracleSqlParser.Fluent/README.md)
+for install, editing parsed SQL and the limits of v1.
 
 
 ## Generating SQL
