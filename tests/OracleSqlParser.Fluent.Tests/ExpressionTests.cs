@@ -245,6 +245,114 @@ public class ExpressionTests
             "CASE a WHEN 1 THEN 'one' END");
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(":")]
+    [InlineData("x.y")]
+    public void BindNameThatIsEmptyOrDottedIsRejected(string name)
+    {
+        Assert.Throws<ArgumentException>(() => Sql.Bind(name));
+    }
+
+    [Theory]
+    [InlineData("SOME")]
+    [InlineData("ANY")]
+    [InlineData("ALL")]
+    [InlineData("PRIOR")]
+    [InlineData("CONNECT_BY_ROOT")]
+    [InlineData("some")]
+    public void FunctionNamesRoutedByTheParserInAnyContextAreRejected(string name)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => Sql.Func(name, Sql.Col("b")));
+        Assert.Contains("special form", ex.Message);
+        Assert.Contains("Sql.Expr", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("CASE")]
+    [InlineData("PRIOR")]
+    [InlineData("CONNECT_BY_ROOT")]
+    [InlineData("TRIM")]
+    public void SpecialFormNamesGiveTheSpecialFormMessage(string name)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => Sql.Func(name));
+        Assert.Contains("special form", ex.Message);
+        Assert.DoesNotContain("not a valid name", ex.Message);
+    }
+
+    [Fact]
+    public void QuotedFunctionNameIsAPlainCall()
+    {
+        RoundTrip.AssertExpression(Sql.Func("\"SOME\"", Sql.Col("b")), "\"SOME\"(b)");
+    }
+
+    [Fact]
+    public void StarPrintsAsStarAndQualifiedStar()
+    {
+        RoundTrip.AssertExpression(Sql.Star(), "*");
+        RoundTrip.AssertExpression(Sql.Star("e"), "e.*");
+    }
+
+    [Fact]
+    public void NotEqualsPrintsAndRoundTrips()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Ne(Sql.Lit(1)), "a <> 1");
+    }
+
+    [Fact]
+    public void LessThanPrintsAndRoundTrips()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Lt(Sql.Lit(1)), "a < 1");
+    }
+
+    [Fact]
+    public void LessThanOrEqualPrintsAndRoundTrips()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Le(Sql.Lit(1)), "a <= 1");
+    }
+
+    [Fact]
+    public void GreaterThanOrEqualPrintsAndRoundTrips()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Ge(Sql.Lit(1)), "a >= 1");
+    }
+
+    [Fact]
+    public void GreaterThanPrintsAndRoundTrips()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Gt(Sql.Lit(1)), "a > 1");
+    }
+
+    [Fact]
+    public void ConcatThenPlusIsLeftAssociative()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Concat(Sql.Col("b")).Plus(Sql.Col("c")), "a || b + c");
+    }
+
+    [Fact]
+    public void PlusOverConcatIsParenthesized()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Plus(Sql.Col("b").Concat(Sql.Col("c"))), "a + (b || c)");
+    }
+
+    [Fact]
+    public void ComparisonChainIsLeftAssociativeWithoutParentheses()
+    {
+        RoundTrip.AssertExpression(Sql.Col("a").Eq(Sql.Col("b")).Eq(Sql.Col("c")), "a = b = c");
+    }
+
+    [Fact]
+    public void ZeroArgumentFunctionPrintsEmptyParentheses()
+    {
+        RoundTrip.AssertExpression(Sql.Func("SYSDATE"), "SYSDATE()");
+    }
+
+    [Fact]
+    public void DecimalKeepsItsScale()
+    {
+        RoundTrip.AssertExpression(Sql.Lit(1.10m), "1.10");
+    }
+
     [Fact]
     public void ExistsOverSubquery()
     {

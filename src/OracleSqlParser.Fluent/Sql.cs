@@ -21,7 +21,32 @@ public static partial class Sql
         ArgumentNullException.ThrowIfNull(parts);
         if (parts.Length == 0) throw new ArgumentException("A column reference needs at least one name part.", nameof(parts));
         if (parts.Any(p => p is null)) throw new ArgumentNullException(nameof(parts), "A name part is null.");
+        foreach (var part in parts) ValidatePart(part, nameof(parts));
         return new ColumnReference { Parts = [.. parts] };
+    }
+
+    /// <summary>
+    /// Checks a caller's identifier before it is printed. A quoted part must be non-empty and have no double quote. An
+    /// unquoted part is printed as its spelling, so that spelling must read back as one plain name whose folded value is
+    /// <see cref="Identifier.Value"/>.
+    /// </summary>
+    internal static void ValidatePart(Identifier part, string paramName)
+    {
+        if (part.Value is null) throw new ArgumentException("A name part has no value.", paramName);
+        if (part.Quoted)
+        {
+            if (part.Value.Length == 0) throw new ArgumentException("A quoted name part cannot be empty.", paramName);
+            if (part.Value.Contains('"')) throw new ArgumentException($"A quoted name part cannot contain a double quote: {part.Value}", paramName);
+            return;
+        }
+        var spelling = part.Text ?? part.Value;
+        if (spelling.Length == 0 || spelling.Trim() != spelling)
+            throw new ArgumentException($"'{spelling}' is not an unquoted name.", paramName);
+        var read = Names.Parse(spelling, paramName);
+        if (read.Count != 1 || read[0].Quoted || read[0].Value != part.Value)
+            throw new ArgumentException(
+                $"'{spelling}' does not read back as the unquoted name '{part.Value}'. Use Quoted = true for names that are not plain upper-case identifiers.",
+                paramName);
     }
 
     /// <summary>A single name, such as <c>emp</c> or <c>"MixedCase"</c>. Throws <see cref="ArgumentException"/> when the text is not one name.</summary>

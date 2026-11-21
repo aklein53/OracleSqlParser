@@ -4,11 +4,15 @@ namespace OracleSqlParser.Fluent;
 
 public static partial class Sql
 {
-    /// <summary>Names the parser routes to a special form when written as a call, so <see cref="Func"/> refuses them.</summary>
+    /// <summary>
+    /// Unquoted names the parser routes to a special form, so <see cref="Func"/> refuses them. The first group is routed
+    /// when followed by <c>(</c> or in a fixed position; SOME, ANY and ALL are routed after a comparison operator; PRIOR and
+    /// CONNECT_BY_ROOT are unary operators in any position.
+    /// </summary>
     private static readonly HashSet<string> SpecialFormNames = new(StringComparer.Ordinal)
     {
         "CAST", "XMLCAST", "TREAT", "VALIDATE_CONVERSION", "XMLSERIALIZE", "EXTRACT", "TRIM", "CASE", "CURSOR", "EXISTS",
-        "NULL", "DEFAULT",
+        "NULL", "DEFAULT", "SOME", "ANY", "ALL", "PRIOR", "CONNECT_BY_ROOT",
     };
 
     /// <summary>A bind variable such as <c>:min</c>. The name may be given with or without the leading colon.</summary>
@@ -18,7 +22,10 @@ public static partial class Sql
     public static BindVariable Bind(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        var text = name.StartsWith(':') ? name : ":" + name;
+        var trimmed = name.Trim();
+        var text = trimmed.StartsWith(':') ? trimmed : ":" + trimmed;
+        if (text.Length == 1) throw new ArgumentException("A bind name is required.", nameof(name));
+        Names.RejectComments(text, name, nameof(name));
         Expression parsed;
         try
         {
@@ -28,8 +35,12 @@ public static partial class Sql
         {
             throw new ArgumentException($"'{name}' is not a valid bind name: {ex.Message}", nameof(name));
         }
-        if (parsed is not BindVariable bind)
+        if (parsed is not BindVariable bind || parsed.Start != 0 || parsed.End != text.Length)
             throw new ArgumentException($"'{name}' is not a bind name.", nameof(name));
+        if (bind.Name.Length == 0)
+            throw new ArgumentException($"'{name}' has an empty bind name.", nameof(name));
+        if (!bind.Quoted && bind.Name.Contains('.'))
+            throw new ArgumentException($"'{name}' is a dotted bind name, which Oracle does not allow.", nameof(name));
         return new BindVariable { Name = bind.Name, Quoted = bind.Quoted };
     }
 
@@ -86,11 +97,12 @@ public static partial class Sql
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(args);
-        var parts = Names.Parse(name);
-        if (parts is [{ Quoted: false } only] && SpecialFormNames.Contains(only.Value))
+        var trimmed = name.Trim();
+        if (!trimmed.Contains('.') && !trimmed.StartsWith('"') && SpecialFormNames.Contains(trimmed.ToUpperInvariant()))
             throw new ArgumentException(
                 $"'{name}' is a special form in SQL, not a plain function call. Use its dedicated factory, or Sql.Expr for the full syntax.",
                 nameof(name));
+        var parts = Names.Parse(name);
         if (args.Any(a => a is null)) throw new ArgumentNullException(nameof(args), "An argument is null.");
         return new FunctionCall { Name = parts, Arguments = args.Select(a => new Argument { Value = a }).ToList() };
     }
