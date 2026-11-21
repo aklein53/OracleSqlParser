@@ -176,11 +176,13 @@ public class SelectEditTests
     }
 
     [Fact]
-    public void ForUpdateOnParsedUnionAppliesToStatement()
+    public void ForUpdateOnParsedUnionThrowsAndLeavesItUnchanged()
     {
         var s = Parse("SELECT a FROM t UNION SELECT b FROM u");
-        s.ForUpdate();
-        RoundTrip.AssertStatement(s, "SELECT a FROM t UNION SELECT b FROM u FOR UPDATE");
+        var ex = Assert.Throws<InvalidOperationException>(() => s.ForUpdate());
+        Assert.Contains("SetOperation", ex.Message);
+        Assert.Null(s.ForUpdate);
+        RoundTrip.AssertStatement(s, "SELECT a FROM t UNION SELECT b FROM u");
     }
 
     [Fact]

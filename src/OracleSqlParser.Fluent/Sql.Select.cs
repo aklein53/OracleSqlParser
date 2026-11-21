@@ -35,6 +35,7 @@ public static partial class Sql
     private static SelectStatement NewSelect(List<SelectItem> items, string paramName)
     {
         if (items.Count == 0) throw new ArgumentException("A SELECT list needs at least one item.", paramName);
+        if (SelectItems.MixesBareStar(items)) throw new ArgumentException("A bare * cannot be combined with other select items; use a qualified star such as t.* instead.", paramName);
         return new SelectStatement { Body = new QuerySpecification { SelectList = items } };
     }
 }
@@ -42,6 +43,12 @@ public static partial class Sql
 /// <summary>Turns select-list names and expressions into select items, the way the parser builds them.</summary>
 internal static class SelectItems
 {
+    /// <summary>True for a bare <c>*</c>, which Oracle allows only as the whole select list.</summary>
+    internal static bool IsBareStar(SelectItem item) => item is StarSelectItem { Qualifier.Count: 0 };
+
+    /// <summary>True when a list holds a bare <c>*</c> together with another item, which Oracle rejects. A qualified <c>t.*</c> is fine.</summary>
+    internal static bool MixesBareStar(IReadOnlyList<SelectItem> items) => items.Count > 1 && items.Any(IsBareStar);
+
     /// <summary>
     /// A name item: <c>*</c> is a plain star, <c>q.*</c> a qualified star, and anything else a column reference read by
     /// <see cref="Names"/>.
